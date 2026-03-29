@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useToast } from '../context/ToastContext';
-import { Layout, PageHeader, Grid } from '../components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Search, Filter, ArrowRight, Package, Megaphone, Users, UserCheck, CheckCircle2, ChevronDown } from 'lucide-react';
+import { Layout, PageHeader } from '../components/Layout';
+import { Search, ArrowRight, Package, Megaphone, Users, UserCheck, CheckCircle2 } from 'lucide-react';
 
 const PIPELINE_STAGES = [
   { key: 'intake', label: 'Intake', icon: <Package size={18} />, color: 'neon-cyan', description: 'Uploaded to system' },
