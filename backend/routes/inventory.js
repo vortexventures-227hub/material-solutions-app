@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { inventorySchema } = require('../validation/schemas');
+const { parsePagination, paginatedResponse } = require('../utils/pagination');
 
 // Allowlist of valid column names for PATCH updates (SQL injection prevention)
 const ALLOWED_INVENTORY_FIELDS = new Set([
@@ -44,21 +45,32 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// GET / - List all inventory with optional status filter
+// GET / - List inventory with optional status filter and pagination
 router.get('/', async (req, res, next) => {
   const { status } = req.query;
-  
+  const { page, limit, offset } = parsePagination(req.query);
+
   try {
-    let query = 'SELECT * FROM inventory ORDER BY created_at DESC';
+    const conditions = [];
     const params = [];
-    
+
     if (status) {
-      query = 'SELECT * FROM inventory WHERE status = $1 ORDER BY created_at DESC';
       params.push(status);
+      conditions.push(`status = $${params.length}`);
     }
-    
-    const result = await db.query(query, params);
-    res.json(result.rows);
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const countResult = await db.query(`SELECT COUNT(*) FROM inventory ${where}`, params);
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    params.push(limit, offset);
+    const result = await db.query(
+      `SELECT * FROM inventory ${where} ORDER BY created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      params
+    );
+
+    res.json(paginatedResponse(result.rows, total, page, limit));
   } catch (error) {
     console.error('Error fetching inventory:', error);
     next(error);

@@ -6,6 +6,7 @@ const { scheduleDripCampaign } = require('../services/drip');
 const { sendNewLeadSMS } = require('../services/sms');
 const { syncToCRM } = require('../services/crm');
 const { leadSchema } = require('../validation/schemas');
+const { parsePagination, paginatedResponse } = require('../utils/pagination');
 
 // Allowlist of valid column names for PATCH updates (SQL injection prevention)
 const ALLOWED_LEAD_FIELDS = new Set([
@@ -54,27 +55,36 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// GET / - List all leads with optional status filter
+// GET / - List leads with optional status/score filter and pagination
 router.get('/', async (req, res, next) => {
   const { status, minScore } = req.query;
-  
+  const { page, limit, offset } = parsePagination(req.query);
+
   try {
-    let query = 'SELECT * FROM leads ORDER BY score DESC, created_at DESC';
+    const conditions = [];
     const params = [];
-    
-    if (status && minScore) {
-      query = 'SELECT * FROM leads WHERE status = $1 AND score >= $2 ORDER BY score DESC, created_at DESC';
-      params.push(status, minScore);
-    } else if (status) {
-      query = 'SELECT * FROM leads WHERE status = $1 ORDER BY score DESC, created_at DESC';
+
+    if (status) {
       params.push(status);
-    } else if (minScore) {
-      query = 'SELECT * FROM leads WHERE score >= $1 ORDER BY score DESC, created_at DESC';
-      params.push(minScore);
+      conditions.push(`status = $${params.length}`);
     }
-    
-    const result = await db.query(query, params);
-    res.json(result.rows);
+    if (minScore) {
+      params.push(minScore);
+      conditions.push(`score >= $${params.length}`);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const countResult = await db.query(`SELECT COUNT(*) FROM leads ${where}`, params);
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    params.push(limit, offset);
+    const result = await db.query(
+      `SELECT * FROM leads ${where} ORDER BY score DESC, created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      params
+    );
+
+    res.json(paginatedResponse(result.rows, total, page, limit));
   } catch (error) {
     console.error('Error fetching leads:', error);
     next(error);

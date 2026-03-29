@@ -1,10 +1,38 @@
 // frontend/src/components/InventoryDetailModal.js
 import React, { useState, useEffect, useRef } from 'react';
 import ListingTemplates from './ListingTemplates';
+import api from '../api';
+import { useToast } from '../context/ToastContext';
+import { Loader2, CheckCircle, Clock, AlertCircle, ShoppingCart, Archive, DollarSign } from 'lucide-react';
 
-const InventoryDetailModal = ({ isOpen, onClose, inventory }) => {
+const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { addToast } = useToast();
   const modalRef = useRef(null);
+
+  // Status update handler
+  const updateStatus = async (newStatus) => {
+    if (isUpdating || inventory.status === newStatus) return;
+
+    setIsUpdating(true);
+    try {
+      const response = await api.patch(`/api/inventory/${inventory.id}`, {
+        status: newStatus
+      });
+      
+      if (onUpdate) {
+        onUpdate(response.data);
+      }
+      
+      addToast(`Status updated to ${newStatus}`, 'success');
+    } catch (err) {
+      console.error('Error updating status:', err);
+      addToast('Failed to update status', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   // Escape key closes modal
   useEffect(() => {
@@ -213,6 +241,72 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory }) => {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Quick Actions / Status Update */}
+          <div className="mb-8 border-t pt-6">
+            <h3 className="text-base lg:text-lg font-semibold mb-4 text-gray-800 flex items-center">
+              <span className="w-1.5 h-6 bg-brand-600 rounded-full mr-3" />
+              Quick Actions
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <button
+                onClick={() => updateStatus('listed')}
+                disabled={isUpdating || inventory.status === 'listed'}
+                className={`
+                  flex items-center justify-center space-x-2 p-3 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:cursor-not-allowed
+                  ${inventory.status === 'listed' 
+                    ? 'bg-green-100 text-green-700 border-2 border-green-200' 
+                    : 'bg-white text-gray-700 border border-gray-200 hover:border-green-500 hover:text-green-600 shadow-sm'
+                  }
+                `}
+              >
+                {isUpdating && inventory.status !== 'listed' ? <Loader2 className="animate-spin" size={14} /> : <CheckCircle size={14} />}
+                <span>LISTED</span>
+              </button>
+              <button
+                onClick={() => updateStatus('reserved')}
+                disabled={isUpdating || inventory.status === 'reserved'}
+                className={`
+                  flex items-center justify-center space-x-2 p-3 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:cursor-not-allowed
+                  ${inventory.status === 'reserved' 
+                    ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-200' 
+                    : 'bg-white text-gray-700 border border-gray-200 hover:border-yellow-500 hover:text-yellow-600 shadow-sm'
+                  }
+                `}
+              >
+                {isUpdating && inventory.status !== 'reserved' ? <Loader2 className="animate-spin" size={14} /> : <Clock size={14} />}
+                <span>RESERVED</span>
+              </button>
+              <button
+                onClick={() => updateStatus('pending')}
+                disabled={isUpdating || inventory.status === 'pending'}
+                className={`
+                  flex items-center justify-center space-x-2 p-3 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:cursor-not-allowed
+                  ${inventory.status === 'pending' 
+                    ? 'bg-orange-100 text-orange-700 border-2 border-orange-200' 
+                    : 'bg-white text-gray-700 border border-gray-200 hover:border-orange-500 hover:text-orange-600 shadow-sm'
+                  }
+                `}
+              >
+                {isUpdating && inventory.status !== 'pending' ? <Loader2 className="animate-spin" size={14} /> : <AlertCircle size={14} />}
+                <span>PENDING</span>
+              </button>
+              <button
+                onClick={() => updateStatus('sold')}
+                disabled={isUpdating || inventory.status === 'sold'}
+                className={`
+                  flex items-center justify-center space-x-2 p-3 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:cursor-not-allowed
+                  ${inventory.status === 'sold' 
+                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-200' 
+                    : 'bg-white text-gray-700 border border-gray-200 hover:border-blue-500 hover:text-blue-600 shadow-sm'
+                  }
+                `}
+              >
+                {isUpdating && inventory.status !== 'sold' ? <Loader2 className="animate-spin" size={14} /> : <ShoppingCart size={14} />}
+                <span>SOLD</span>
+              </button>
             </div>
           </div>
 

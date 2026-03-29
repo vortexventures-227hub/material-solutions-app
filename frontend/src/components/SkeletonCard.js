@@ -90,5 +90,28 @@ export const SkeletonActivityCard = () => (
   </div>
 );
 
+export const SkeletonPage = () => (
+  <div className="min-h-screen bg-gray-50">
+    <div className="bg-white border-b border-gray-200 shadow-sm mb-6 lg:mb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+        <SkeletonPulse className="h-8 w-48 mb-2" />
+        <SkeletonPulse className="h-4 w-72" />
+      </div>
+    </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8 space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white rounded-xl shadow-card p-6">
+            <SkeletonPulse className="h-6 w-3/4 mb-4" />
+            <SkeletonPulse className="h-4 w-full mb-2" />
+            <SkeletonPulse className="h-4 w-5/6 mb-6" />
+            <SkeletonPulse className="h-10 w-full rounded-lg" />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
 const SkeletonCard = SkeletonKPICard;
 export default SkeletonCard;

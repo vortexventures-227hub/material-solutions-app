@@ -2,6 +2,9 @@
 import React, { useState } from 'react';
 import api from '../api';
 import { useToast } from '../context/ToastContext';
+import { trackLeadSubmission } from '../utils/analytics';
+
+const PHONE_NUMBER = '+(1) 800-555-0199'; // Replace with actual business phone
 
 const LeadForm = () => {
   const [formData, setFormData] = useState({
@@ -47,6 +50,10 @@ const LeadForm = () => {
       });
 
       setSuccess(true);
+      
+      // Track successful lead submission
+      trackLeadSubmission('Contact Form', window.location.pathname);
+      
       addToast('Lead submitted successfully!', 'success');
       setFormData({
         name: '',

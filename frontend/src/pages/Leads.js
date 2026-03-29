@@ -1,22 +1,45 @@
+// frontend/src/pages/Leads.js
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useToast } from '../context/ToastContext';
 import { SkeletonLeadRow, SkeletonLeadCard } from '../components/SkeletonCard';
+import FilterBottomSheet from '../components/FilterBottomSheet';
+import { Layout, PageHeader } from '../components/Layout';
+import { Card, CardContent } from '../components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Button } from '../components/ui/button';
+import { SlidersHorizontal } from 'lucide-react';
 
 const Leads = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1, hasNext: false, hasPrev: false });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const { addToast } = useToast();
+
+  const statusOptions = [
+    { value: '', label: 'All Status', icon: '🔍' },
+    { value: 'new', label: 'New', icon: '🆕' },
+    { value: 'contacted', label: 'Contacted', icon: '📞' },
+    { value: 'engaged', label: 'Engaged', icon: '🗣️' },
+    { value: 'qualified', label: 'Qualified', icon: '🌟' },
+    { value: 'hot', label: 'Hot', icon: '🔥' },
+    { value: 'converted', label: 'Converted', icon: '💸' },
+    { value: 'lost', label: 'Lost', icon: '❌' },
+  ];
 
   useEffect(() => {
     const fetchLeads = async () => {
+      setLoading(true);
       try {
-        const url = filter
-          ? `/api/leads?status=${filter}`
-          : '/api/leads';
-        const response = await api.get(url);
-        setLeads(response.data);
+        const params = new URLSearchParams({ page, limit: 25 });
+        if (filter) params.set('status', filter);
+        const response = await api.get(`/api/leads?${params}`);
+        const { data, total, totalPages, hasNext, hasPrev } = response.data;
+        setLeads(data);
+        setPagination({ total, totalPages, hasNext, hasPrev });
       } catch (err) {
         console.error('Error fetching leads:', err);
         addToast('Failed to load leads', 'error');
@@ -26,13 +49,17 @@ const Leads = () => {
     };
 
     fetchLeads();
-  }, [filter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filter, page]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
 
   const getScoreColor = (score) => {
     if (score >= 80) return 'text-red-600 font-bold';
     if (score >= 50) return 'text-orange-600 font-semibold';
     if (score >= 20) return 'text-yellow-600';
-    return 'text-gray-600';
+    return 'text-muted-foreground';
   };
 
   const getStatusBadge = (status) => {
@@ -43,155 +70,172 @@ const Leads = () => {
       qualified: 'bg-green-100 text-green-800',
       hot: 'bg-red-100 text-red-800',
       converted: 'bg-emerald-100 text-emerald-800',
-      lost: 'bg-gray-100 text-gray-600',
+      lost: 'bg-muted text-muted-foreground',
     };
     return colors[status] || 'bg-blue-100 text-blue-800';
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Leads</h2>
+    <Layout>
+      <PageHeader 
+        title="Leads" 
+        description={`${loading ? 'Loading...' : `${pagination.total} leads found`}`}
+      >
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* Mobile Filter Button */}
+          <Button
+            variant="outline"
+            className="flex-1 sm:hidden h-[44px] rounded-xl font-bold flex items-center space-x-2 border-gray-200"
+            onClick={() => setIsFilterOpen(true)}
+          >
+            <SlidersHorizontal size={18} />
+            <span>Filter</span>
+            {filter && <span className="w-2 h-2 rounded-full bg-brand-600 animate-pulse ml-1" />}
+          </Button>
+
+          {/* Desktop Filter Select */}
+          <div className="hidden sm:flex items-center space-x-2">
+            <label htmlFor="leads-filter" className="text-sm font-medium">Filter:</label>
             <select
+              id="leads-filter"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              aria-label="Filter leads by status"
-              className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent text-base sm:text-sm min-h-[44px]"
+              className="px-4 py-2 border border-input bg-background rounded-lg text-sm focus:ring-2 focus:ring-primary transition-all min-h-[44px] w-full sm:w-auto cursor-pointer"
             >
-              <option value="">All Status</option>
-              <option value="new">New</option>
-              <option value="contacted">Contacted</option>
-              <option value="engaged">Engaged</option>
-              <option value="qualified">Qualified</option>
-              <option value="hot">Hot</option>
-              <option value="converted">Converted</option>
-              <option value="lost">Lost</option>
+              {statusOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
           </div>
         </div>
-      </div>
+      </PageHeader>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
-        {loading ? (
-          <>
-            {/* Mobile skeleton */}
-            <div className="md:hidden space-y-3">
-              {[1, 2, 3, 4].map((i) => (
-                <SkeletonLeadCard key={i} />
-              ))}
-            </div>
-            {/* Desktop skeleton */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="min-w-full bg-white rounded-xl shadow-card overflow-hidden">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
-                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Phone</th>
-                    <th className="px-4 lg:px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Score</th>
-                    <th className="px-4 lg:px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <SkeletonLeadRow key={i} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ) : leads.length === 0 ? (
-          /* Empty State */
-          <div className="text-center py-16">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No leads yet</h3>
-            <p className="text-gray-500 max-w-sm mx-auto">
-              Leads will appear here as potential buyers express interest in your equipment.
-            </p>
+      {loading ? (
+        <div className="space-y-4">
+          <div className="md:hidden space-y-3">
+            {[1, 2, 3, 4].map((i) => <SkeletonLeadCard key={i} />)}
           </div>
-        ) : (
-          <>
-            {/* Mobile Card Layout (below md) */}
-            <div className="md:hidden space-y-3">
-              {leads.map((lead) => (
-                <div key={lead.id} className="bg-white rounded-xl shadow-card p-4 active:scale-[0.98] transition-transform">
+          <Card className="hidden md:block">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="text-center">Score</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[1, 2, 3, 4, 5].map((i) => <SkeletonLeadRow key={i} />)}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      ) : leads.length === 0 ? (
+        <div className="text-center py-24 bg-card rounded-xl border border-dashed border-border shadow-sm">
+          <div className="text-5xl mb-4">👥</div>
+          <h3 className="text-xl font-semibold mb-2">No leads yet</h3>
+          <p className="text-muted-foreground max-w-sm mx-auto">Leads will appear here as potential buyers express interest in your equipment.</p>
+        </div>
+      ) : (
+        <>
+          {/* Mobile Card Layout */}
+          <div className="md:hidden space-y-3">
+            {leads.map((lead) => (
+              <Card key={lead.id} className="active:scale-95 transition-transform select-none touch-manipulation cursor-pointer" onClick={() => {/* potentially open lead detail modal */}}>
+                <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="text-base font-semibold text-gray-900">{lead.name}</h3>
-                      {lead.company && (
-                        <p className="text-sm text-gray-500">{lead.company}</p>
-                      )}
+                      <h3 className="text-base font-semibold">{lead.name}</h3>
+                      {lead.company && <p className="text-sm text-muted-foreground">{lead.company}</p>}
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className={`text-lg ${getScoreColor(lead.score)}`}>{lead.score}</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadge(lead.status)}`}>
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(lead.status)}`}>
                         {lead.status}
                       </span>
                     </div>
                   </div>
-                  <div className="space-y-1.5 text-sm text-gray-600">
-                    {lead.email && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-gray-500 w-5">✉️</span>
-                        <a href={`mailto:${lead.email}`} className="text-brand-600 truncate">{lead.email}</a>
-                      </div>
-                    )}
-                    {lead.phone && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-gray-500 w-5">📱</span>
-                        <a href={`tel:${lead.phone}`} className="text-brand-600">{lead.phone}</a>
-                      </div>
-                    )}
+                  <div className="space-y-1.5 text-sm">
+                    {lead.email && <div className="truncate"><span className="text-muted-foreground mr-2">✉️</span> {lead.email}</div>}
+                    {lead.phone && <div><span className="text-muted-foreground mr-2">📱</span> {lead.phone}</div>}
                   </div>
-                </div>
-              ))}
-            </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-            {/* Desktop Table Layout (md and up) */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="min-w-full bg-white rounded-xl shadow-card overflow-hidden">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
-                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Phone</th>
-                    <th className="px-4 lg:px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Score</th>
-                    <th className="px-4 lg:px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
+          {/* Desktop Table Layout */}
+          <Card className="hidden md:block overflow-hidden">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead>Name</TableHead>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="text-center">Score</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {leads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 lg:px-6 py-4 text-sm font-medium text-gray-900">{lead.name}</td>
-                      <td className="px-4 lg:px-6 py-4 text-sm text-gray-600">{lead.company || '-'}</td>
-                      <td className="px-4 lg:px-6 py-4 text-sm text-gray-600">{lead.email || '-'}</td>
-                      <td className="px-4 lg:px-6 py-4 text-sm text-gray-600">{lead.phone || '-'}</td>
-                      <td className={`px-4 lg:px-6 py-4 text-sm text-center ${getScoreColor(lead.score)}`}>
-                        {lead.score}
-                      </td>
-                      <td className="px-4 lg:px-6 py-4 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadge(lead.status)}`}>
+                    <TableRow key={lead.id}>
+                      <TableCell className="font-medium">{lead.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{lead.company || '-'}</TableCell>
+                      <TableCell className="text-muted-foreground">{lead.email || '-'}</TableCell>
+                      <TableCell className="text-muted-foreground">{lead.phone || '-'}</TableCell>
+                      <TableCell className={`text-center ${getScoreColor(lead.score)}`}>{lead.score}</TableCell>
+                      <TableCell className="text-center">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(lead.status)}`}>
                           {lead.status}
                         </span>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {!loading && leads.length > 0 && (
+        <div className="flex items-center justify-between mt-12 pt-6 border-t">
+          <Button 
+            variant="outline" 
+            disabled={!pagination.hasPrev}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            ← Previous
+          </Button>
+          <span className="text-sm font-medium text-muted-foreground">
+            Page {page} of {pagination.totalPages}
+          </span>
+          <Button 
+            variant="outline"
+            disabled={!pagination.hasNext}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next →
+          </Button>
+        </div>
+      )}
+
+      <FilterBottomSheet
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        title="Leads Filter"
+        options={statusOptions}
+        value={filter}
+        onChange={setFilter}
+      />
+    </Layout>
   );
 };
 

@@ -75,6 +75,7 @@ const dripRoutes = require('./routes/drip');
 const smsRoutes = require('./routes/sms');
 const marketRoutes = require('./routes/market');
 const crmRoutes = require('./routes/crm');
+const signalRoutes = require('./routes/signals');
 
 // Import auth middleware
 const { verifyToken } = require('./middleware/auth');
@@ -102,6 +103,7 @@ app.use('/api/lens', verifyToken, strictLimiter, lensRoutes);
 app.use('/api/drip', verifyToken, strictLimiter, dripRoutes);
 app.use('/api/sms', verifyToken, strictLimiter, smsRoutes);
 app.use('/api/market', verifyToken, marketRoutes);
+app.use('/api/signals', signalRoutes);
 
 // CRM routes: webhooks must be public (called by external services), other CRM routes require auth
 const crmWebhookAuth = (req, res, next) => {
@@ -113,8 +115,22 @@ const crmWebhookAuth = (req, res, next) => {
 app.use('/api/crm', crmWebhookAuth, crmRoutes);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+  try {
+    await db.query('SELECT 1');
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: 'connected'
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'error',
+      database: 'disconnected',
+      error: error.message
+    });
+  }
 });
 
 // Error handling middleware
