@@ -17,7 +17,6 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
-  const firstName = user?.name?.split(' ')[0] || 'Chris';
 
   useEffect(() => {
     const fetchKPIs = async () => {
