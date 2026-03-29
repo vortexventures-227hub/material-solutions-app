@@ -242,20 +242,28 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
               Quick Actions
             </h3>
 
-            {/* Publish to Marketplaces */}
+            {/* Publish to Marketplaces - Always visible */}
             <button
               onClick={() => setShowPublishModal(true)}
               disabled={hasListings || inventory.status === 'sold' || inventory.status === 'archived'}
               className={`
-                w-full mb-4 flex items-center justify-center gap-2 p-3.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] disabled:cursor-not-allowed
+                w-full mb-4 flex items-center justify-center gap-2 p-4 rounded-xl text-sm font-bold transition-all duration-200
                 ${hasListings
-                  ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-200 dark:border-emerald-800'
-                  : 'bg-gradient-to-r from-brand-600 to-brand-500 text-white hover:from-brand-500 hover:to-brand-400 shadow-md shadow-brand-500/20 hover:shadow-lg'
+                  ? 'bg-neon-green/10 text-neon-green border-2 border-neon-green/30 cursor-default'
+                  : inventory.status === 'sold' || inventory.status === 'archived'
+                    ? 'bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-50'
+                    : 'bg-gradient-to-r from-neon-cyan to-neon-purple text-white hover:shadow-glow-neon hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] shadow-md shadow-neon-cyan/20'
                 }
               `}
             >
               <Megaphone size={18} />
-              <span>{hasListings ? 'Published to Marketplaces' : 'Publish to Marketplaces'}</span>
+              <span>
+                {hasListings
+                  ? 'Already Published to Marketplaces'
+                  : inventory.status === 'sold'
+                    ? 'Item Sold — Cannot Publish'
+                    : 'Publish to Marketplaces'}
+              </span>
             </button>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

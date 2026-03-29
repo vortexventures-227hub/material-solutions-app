@@ -3,32 +3,39 @@
 
 export const theme = {
   colors: {
-    // Primary Brand Colors
+    // Vortex Ventures Neon Theme
     primary: {
-      50: '#f0f9ff',
-      100: '#e0f2fe',
-      200: '#bae6fd',
-      300: '#7dd3fc',
-      400: '#38bdf8',
-      500: '#0ea5e9',  // Main brand blue
-      600: '#0284c7',
-      700: '#0369a1',
-      800: '#075985',
-      900: '#0c4a6e',
+      50: '#E0F7FF',
+      100: '#B3ECFF',
+      200: '#80DFFF',
+      300: '#4DD2FF',
+      400: '#26C8FF',
+      500: '#00D4FF',  // Neon Cyan
+      600: '#00A8CC',
+      700: '#007D99',
+      800: '#005266',
+      900: '#0F172A',
     },
-    
-    // Neutral Grays
+
+    neon: {
+      cyan: '#00D4FF',
+      purple: '#8B5CF6',
+      green: '#10B981',
+      yellow: '#FDE047',
+    },
+
+    // Neutral Grays (Dark theme)
     gray: {
-      50: '#f9fafb',
-      100: '#f3f4f6',
-      200: '#e5e7eb',
-      300: '#d1d5db',
-      400: '#9ca3af',
-      500: '#6b7280',
-      600: '#4b5563',
-      700: '#374151',
-      800: '#1f2937',
-      900: '#111827',
+      50: '#f8fafc',
+      100: '#f1f5f9',
+      200: '#e2e8f0',
+      300: '#cbd5e1',
+      400: '#94a3b8',
+      500: '#64748b',
+      600: '#475569',
+      700: '#334155',
+      800: '#1e293b',
+      900: '#0f172a',
     },
     
     // Success (for listed/sold)
@@ -55,19 +62,19 @@ export const theme = {
       700: '#b91c1c',
     },
     
-    // Background
+    // Background (Dark-first)
     background: {
-      primary: '#ffffff',
-      secondary: '#f9fafb',
-      dark: '#111827',
+      primary: '#0F172A',
+      secondary: '#1E293B',
+      dark: '#0A1120',
     },
-    
+
     // Text
     text: {
-      primary: '#111827',
-      secondary: '#6b7280',
-      light: '#9ca3af',
-      inverse: '#ffffff',
+      primary: '#f8fafc',
+      secondary: '#94a3b8',
+      light: '#64748b',
+      inverse: '#0f172a',
     }
   },
   

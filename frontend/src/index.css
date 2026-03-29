@@ -4,65 +4,70 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 216 54% 34%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 190 100% 50%;
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217 33% 22%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 217 33% 22%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 25 76% 50%;
+    --accent: 263 70% 66%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 222.2 84% 4.9%;
+    --border: 217 33% 25%;
+    --input: 217 33% 25%;
+    --ring: 190 100% 50%;
 
     --radius: 0.75rem;
+
+    --neon-cyan: #00D4FF;
+    --neon-purple: #8B5CF6;
+    --neon-green: #10B981;
+    --neon-yellow: #FDE047;
   }
 
   .dark {
-    --background: 224 71% 4%;
+    --background: 222 47% 5%;
     --foreground: 210 40% 98%;
 
-    --card: 224 71% 6%;
+    --card: 222 47% 8%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 224 71% 6%;
+    --popover: 222 47% 8%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 190 100% 50%;
+    --primary-foreground: 222 47% 5%;
 
-    --secondary: 215 28% 12%;
+    --secondary: 217 33% 14%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 215 28% 12%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 217 33% 14%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 215 28% 12%;
+    --accent: 263 70% 66%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 215 28% 14%;
-    --input: 215 28% 14%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
+    --ring: 190 100% 50%;
   }
 }
 
@@ -94,7 +99,39 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-500 to-brand-700;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-cyan to-neon-purple;
+  }
+
+  .neon-glow {
+    box-shadow: 0 0 15px -3px var(--neon-cyan), 0 0 30px -6px var(--neon-purple);
+  }
+
+  .neon-glow-green {
+    box-shadow: 0 0 15px -3px var(--neon-green), 0 0 30px -6px var(--neon-green);
+  }
+
+  .neon-border {
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+  }
+
+  .neon-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple), var(--neon-green));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .neon-border:hover::before {
+    opacity: 1;
   }
 }
 
@@ -106,11 +143,11 @@
 
   /* ---------- Card ---------- */
   .card {
-    @apply bg-white rounded-xl shadow-card transition-all duration-300;
+    @apply bg-card rounded-xl shadow-card transition-all duration-300 border border-border/50;
   }
 
   .card-interactive {
-    @apply card hover:shadow-card-hover cursor-pointer;
+    @apply card hover:shadow-glow-neon hover:border-neon-cyan/30 cursor-pointer;
   }
 
   /* ---------- Buttons ---------- */
@@ -119,27 +156,28 @@
            text-base lg:text-sm font-medium transition-all duration-200
            focus:outline-none focus:ring-2 focus:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed
-           min-h-[44px];
+           min-h-[44px]
+           hover:scale-[1.05] hover:-translate-y-0.5;
   }
 
   .btn-primary {
-    @apply btn bg-brand-600 text-white hover:bg-brand-500
-           focus:ring-brand-500;
+    @apply btn bg-gradient-to-r from-neon-cyan to-neon-purple text-white
+           hover:shadow-glow-neon focus:ring-neon-cyan;
   }
 
   .btn-secondary {
-    @apply btn bg-white text-brand-600 border border-brand-200
-           hover:bg-brand-50 focus:ring-brand-500;
+    @apply btn bg-secondary text-foreground border border-border
+           hover:border-neon-cyan/50 hover:shadow-glow focus:ring-neon-cyan;
   }
 
   .btn-accent {
-    @apply btn bg-accent-500 text-white hover:bg-accent-600
-           focus:ring-accent-500;
+    @apply btn bg-neon-purple text-white hover:shadow-glow-purple
+           focus:ring-neon-purple;
   }
 
   .btn-danger {
     @apply btn bg-danger-500 text-white hover:bg-danger-600
-           focus:ring-danger-500;
+           hover:shadow-lg focus:ring-danger-500;
   }
 
   /* ---------- Badge / Status ---------- */

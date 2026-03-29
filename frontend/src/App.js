@@ -16,6 +16,7 @@ const Leads = lazy(() => import('./pages/Leads'));
 const Login = lazy(() => import('./pages/Login'));
 const Services = lazy(() => import('./pages/Services'));
 const Resources = lazy(() => import('./pages/Resources'));
+const Pipeline = lazy(() => import('./pages/Pipeline'));
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -37,7 +38,7 @@ function AppRoutes() {
   }, [location]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground">
       <SkipLink />
       {isAuthenticated && <Navigation />}
       <Suspense fallback={<SkeletonPage />}>
@@ -73,6 +74,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Inventory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pipeline"
+          element={
+            <ProtectedRoute>
+              <Pipeline />
             </ProtectedRoute>
           }
         />

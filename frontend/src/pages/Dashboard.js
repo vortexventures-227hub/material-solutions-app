@@ -2,19 +2,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SkeletonKPICard, SkeletonActivityCard } from '../components/SkeletonCard';
 import { LocalBusinessSchema } from '../components/SEO';
 import { Layout, PageHeader, Grid } from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Package, CheckCircle2, DollarSign, Users, TrendingUp, Target, Camera, UserPlus, BarChart3, Settings, ArrowUpRight, Truck } from 'lucide-react';
+import { Package, CheckCircle2, DollarSign, Users, TrendingUp, Target, Camera, UserPlus, BarChart3, Settings, ArrowUpRight, Truck, GitBranch } from 'lucide-react';
 
 const Dashboard = () => {
   const [kpis, setKpis] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
+  const firstName = user?.name?.split(' ')[0] || 'Chris';
 
   useEffect(() => {
     const fetchKPIs = async () => {
@@ -108,12 +111,18 @@ const Dashboard = () => {
       <LocalBusinessSchema />
       <PageHeader
         title="Dashboard"
-        description="Welcome back! Here's your sales overview."
+        description={`Welcome back, ${firstName}! Here's your sales overview.`}
       >
-        <Button variant="brand" onClick={() => navigate('/intake')} className="gap-2">
-          <Camera size={16} />
-          Add Equipment
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/pipeline')} className="gap-2">
+            <GitBranch size={16} />
+            Pipeline
+          </Button>
+          <Button variant="brand" onClick={() => navigate('/intake')} className="gap-2">
+            <Camera size={16} />
+            Add Equipment
+          </Button>
+        </div>
       </PageHeader>
 
       <Grid cols={3} mobile={2}>
@@ -175,7 +184,7 @@ const Dashboard = () => {
           <CardContent className="space-y-1 pt-0">
             {[1, 2, 3].map((item) => (
               <div key={item} className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition-colors -mx-1">
-                <div className="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-sm">
+                <div className="w-10 h-10 bg-gradient-to-br from-neon-cyan to-neon-purple text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-sm shadow-neon-cyan/20">
                   JD
                 </div>
                 <div className="flex-1 min-w-0">
@@ -193,8 +202,8 @@ const Dashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <Card className="mt-8 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900 text-white border-none shadow-xl shadow-brand-900/20 overflow-hidden relative">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/[0.08] via-transparent to-transparent" />
+      <Card className="mt-8 bg-gradient-to-br from-[#0F172A] via-[#1a1f3a] to-[#0F172A] text-white border border-neon-cyan/20 shadow-xl shadow-neon-cyan/10 overflow-hidden relative">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-neon-cyan/[0.08] via-neon-purple/[0.04] to-transparent" />
         <CardHeader className="relative">
           <CardTitle className="text-white text-base font-semibold">Quick Actions</CardTitle>
         </CardHeader>
