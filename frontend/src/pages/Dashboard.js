@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SkeletonKPICard, SkeletonActivityCard } from '../components/SkeletonCard';
 import { LocalBusinessSchema } from '../components/SEO';
