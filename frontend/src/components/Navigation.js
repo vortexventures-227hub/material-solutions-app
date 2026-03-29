@@ -64,6 +64,7 @@ const Navigation = () => {
     { path: '/inventory', label: 'Inventory', icon: <Truck size={20} /> },
     { path: '/pipeline', label: 'Pipeline', icon: <GitBranch size={20} /> },
     { path: '/leads', label: 'Leads', icon: <Users size={20} /> },
+    { path: '/david', label: 'David', icon: <span className="text-lg">🤖</span> },
   ];
 
   const secondaryNavItems = [
