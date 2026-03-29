@@ -111,7 +111,7 @@ const Dashboard = () => {
       <LocalBusinessSchema />
       <PageHeader
         title="Dashboard"
-        description={`Welcome Back ${firstName}. Here's your sales overview.`}
+        description="Welcome back to the Machine Chris."
       >
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => navigate('/pipeline')} className="gap-2">
