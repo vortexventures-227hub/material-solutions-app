@@ -2,24 +2,32 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 // Create a PostgreSQL connection pool
-// SSL config: In production, verify certificates properly (rejectUnauthorized: true)
-// Set DATABASE_SSL=false to disable SSL entirely (local dev only)
+// SSL config: Render requires rejectUnauthorized: false
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/material_solutions',
   ssl: process.env.DATABASE_SSL === 'false' 
     ? false 
     : process.env.NODE_ENV === 'production' 
-      ? { rejectUnauthorized: false }  // Render requires rejectUnauthorized: false
+      ? { rejectUnauthorized: false }
       : false
 });
 
-// Test the connection
-pool.connect()
-  .then(() => console.log('✅ Database connected'))
-  .catch(err => {
-    console.error('❌ Database connection error:', err);
-    process.exit(1);
-  });
+// Lazy connection test - only on first query, not on startup
+let connected = false;
+const originalQuery = pool.query.bind(pool);
+pool.query = async (...args) => {
+  if (!connected) {
+    try {
+      await pool.connect();
+      console.log('✅ Database connected');
+      connected = true;
+    } catch (err) {
+      console.error('❌ Database connection error:', err.message);
+      // Don't exit - let the query fail naturally
+    }
+  }
+  return originalQuery(...args);
+};
 
 // Handle graceful shutdown
 const shutdown = () => {
