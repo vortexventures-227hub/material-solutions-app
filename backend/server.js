@@ -117,6 +117,7 @@ const smsRoutes = require('./routes/sms');
 const marketRoutes = require('./routes/market');
 const crmRoutes = require('./routes/crm');
 const signalRoutes = require('./routes/signals');
+const marketplaceRoutes = require('./routes/marketplace');
 
 // ─── Auth Middleware ─────────────────────────────────────────────────────────
 const { verifyToken } = require('./middleware/auth');
@@ -142,6 +143,7 @@ app.use('/api/lens', verifyToken, strictLimiter, lensRoutes);
 app.use('/api/drip', verifyToken, strictLimiter, dripRoutes);
 app.use('/api/sms', verifyToken, strictLimiter, smsRoutes);
 app.use('/api/market', verifyToken, marketRoutes);
+app.use('/api/inventory', verifyToken, marketplaceRoutes); // Marketplace publish routes (nested under /api/inventory/:id/publish)
 app.use('/api/signals', signalRoutes); // Signal webhooks are intentionally public
 
 // ─── CRM Webhook Routes (Signature-Verified, Not JWT) ───────────────────────
@@ -193,6 +195,12 @@ app.post('/api/migrate', async (req, res) => {
 });
 
 // ─── Health Check ───────────────────────────────────────────────────────────
+// Basic ping for Railway healthcheck (no DB required)
+app.get('/ping', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Full health check (includes DB)
 app.get('/health', async (req, res) => {
   const start = Date.now();
   try {

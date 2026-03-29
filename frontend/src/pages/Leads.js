@@ -8,7 +8,7 @@ import { Layout, PageHeader } from '../components/Layout';
 import { Card, CardContent } from '../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Button } from '../components/ui/button';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, Mail, Phone, Users } from 'lucide-react';
 
 const Leads = () => {
   const [leads, setLeads] = useState([]);
@@ -56,51 +56,56 @@ const Leads = () => {
   }, [filter]);
 
   const getScoreColor = (score) => {
-    if (score >= 80) return 'text-red-600 font-bold';
-    if (score >= 50) return 'text-orange-600 font-semibold';
-    if (score >= 20) return 'text-yellow-600';
+    if (score >= 80) return 'text-red-500 font-bold';
+    if (score >= 50) return 'text-orange-500 font-semibold';
+    if (score >= 20) return 'text-amber-500';
     return 'text-muted-foreground';
+  };
+
+  const getScoreBg = (score) => {
+    if (score >= 80) return 'bg-red-50 dark:bg-red-950/30';
+    if (score >= 50) return 'bg-orange-50 dark:bg-orange-950/30';
+    if (score >= 20) return 'bg-amber-50 dark:bg-amber-950/30';
+    return 'bg-muted';
   };
 
   const getStatusBadge = (status) => {
     const colors = {
-      new: 'bg-blue-100 text-blue-800',
-      contacted: 'bg-purple-100 text-purple-800',
-      engaged: 'bg-indigo-100 text-indigo-800',
-      qualified: 'bg-green-100 text-green-800',
-      hot: 'bg-red-100 text-red-800',
-      converted: 'bg-emerald-100 text-emerald-800',
-      lost: 'bg-muted text-muted-foreground',
+      new: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400',
+      contacted: 'bg-violet-50 dark:bg-violet-950/30 text-violet-600 dark:text-violet-400',
+      engaged: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400',
+      qualified: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400',
+      hot: 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400',
+      converted: 'bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400',
+      lost: 'bg-gray-100 dark:bg-gray-800/50 text-gray-500',
     };
-    return colors[status] || 'bg-blue-100 text-blue-800';
+    return colors[status] || 'bg-blue-50 text-blue-600';
   };
 
   return (
     <Layout>
-      <PageHeader 
-        title="Leads" 
+      <PageHeader
+        title="Leads"
         description={`${loading ? 'Loading...' : `${pagination.total} leads found`}`}
       >
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          {/* Mobile Filter Button */}
           <Button
             variant="outline"
-            className="flex-1 sm:hidden h-[44px] rounded-xl font-bold flex items-center space-x-2 border-gray-200"
+            className="flex-1 sm:hidden h-[44px] rounded-xl font-semibold flex items-center gap-2"
             onClick={() => setIsFilterOpen(true)}
           >
-            <SlidersHorizontal size={18} />
+            <SlidersHorizontal size={16} />
             <span>Filter</span>
-            {filter && <span className="w-2 h-2 rounded-full bg-brand-600 animate-pulse ml-1" />}
+            {filter && <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />}
           </Button>
 
-          {/* Desktop Filter Select */}
-          <div className="hidden sm:flex items-center space-x-2">
-            <label htmlFor="leads-filter" className="text-sm font-medium">Filter:</label>
+          <div className="hidden sm:flex items-center gap-2">
+            <label htmlFor="leads-filter" className="text-sm font-medium text-muted-foreground">Filter:</label>
             <select
               id="leads-filter"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="px-4 py-2 border border-input bg-background rounded-lg text-sm focus:ring-2 focus:ring-primary transition-all min-h-[44px] w-full sm:w-auto cursor-pointer"
+              className="px-4 py-2 border border-border/60 bg-card rounded-xl text-sm focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all min-h-[44px] w-full sm:w-auto cursor-pointer"
             >
               {statusOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -136,33 +141,47 @@ const Leads = () => {
           </Card>
         </div>
       ) : leads.length === 0 ? (
-        <div className="text-center py-24 bg-card rounded-xl border border-dashed border-border shadow-sm">
-          <div className="text-5xl mb-4">👥</div>
-          <h3 className="text-xl font-semibold mb-2">No leads yet</h3>
-          <p className="text-muted-foreground max-w-sm mx-auto">Leads will appear here as potential buyers express interest in your equipment.</p>
+        <div className="text-center py-24 bg-card rounded-2xl border border-dashed border-border/50 shadow-premium">
+          <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Users size={28} className="text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2 text-foreground">No leads yet</h3>
+          <p className="text-muted-foreground max-w-sm mx-auto text-sm">Leads will appear here as potential buyers express interest in your equipment.</p>
         </div>
       ) : (
         <>
           {/* Mobile Card Layout */}
           <div className="md:hidden space-y-3">
             {leads.map((lead) => (
-              <Card key={lead.id} className="active:scale-95 transition-transform select-none touch-manipulation cursor-pointer" onClick={() => {/* potentially open lead detail modal */}}>
+              <Card key={lead.id} className="active:scale-[0.97] transition-all select-none touch-manipulation cursor-pointer hover:shadow-premium-hover">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="text-base font-semibold">{lead.name}</h3>
-                      {lead.company && <p className="text-sm text-muted-foreground">{lead.company}</p>}
+                      <h3 className="text-sm font-semibold text-foreground">{lead.name}</h3>
+                      {lead.company && <p className="text-xs text-muted-foreground mt-0.5">{lead.company}</p>}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className={`text-lg ${getScoreColor(lead.score)}`}>{lead.score}</span>
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(lead.status)}`}>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm tabular-nums w-8 h-8 rounded-lg flex items-center justify-center ${getScoreColor(lead.score)} ${getScoreBg(lead.score)}`}>
+                        {lead.score}
+                      </span>
+                      <span className={`px-2 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-wider ${getStatusBadge(lead.status)}`}>
                         {lead.status}
                       </span>
                     </div>
                   </div>
-                  <div className="space-y-1.5 text-sm">
-                    {lead.email && <div className="truncate"><span className="text-muted-foreground mr-2">✉️</span> {lead.email}</div>}
-                    {lead.phone && <div><span className="text-muted-foreground mr-2">📱</span> {lead.phone}</div>}
+                  <div className="space-y-1.5 text-sm text-muted-foreground">
+                    {lead.email && (
+                      <div className="flex items-center gap-2 truncate">
+                        <Mail size={13} className="text-muted-foreground/60 flex-shrink-0" />
+                        <span className="truncate">{lead.email}</span>
+                      </div>
+                    )}
+                    {lead.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone size={13} className="text-muted-foreground/60 flex-shrink-0" />
+                        <span>{lead.phone}</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -174,25 +193,29 @@ const Leads = () => {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead>Name</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead className="text-center">Score</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
+                  <TableRow className="bg-muted/30 border-b border-border/50">
+                    <TableHead className="font-semibold">Name</TableHead>
+                    <TableHead className="font-semibold">Company</TableHead>
+                    <TableHead className="font-semibold">Email</TableHead>
+                    <TableHead className="font-semibold">Phone</TableHead>
+                    <TableHead className="text-center font-semibold">Score</TableHead>
+                    <TableHead className="text-center font-semibold">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {leads.map((lead) => (
-                    <TableRow key={lead.id}>
-                      <TableCell className="font-medium">{lead.name}</TableCell>
+                    <TableRow key={lead.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell className="font-medium text-foreground">{lead.name}</TableCell>
                       <TableCell className="text-muted-foreground">{lead.company || '-'}</TableCell>
                       <TableCell className="text-muted-foreground">{lead.email || '-'}</TableCell>
                       <TableCell className="text-muted-foreground">{lead.phone || '-'}</TableCell>
-                      <TableCell className={`text-center ${getScoreColor(lead.score)}`}>{lead.score}</TableCell>
                       <TableCell className="text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(lead.status)}`}>
+                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs tabular-nums ${getScoreColor(lead.score)} ${getScoreBg(lead.score)}`}>
+                          {lead.score}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-wider ${getStatusBadge(lead.status)}`}>
                           {lead.status}
                         </span>
                       </TableCell>
@@ -206,23 +229,23 @@ const Leads = () => {
       )}
 
       {!loading && leads.length > 0 && (
-        <div className="flex items-center justify-between mt-12 pt-6 border-t">
-          <Button 
-            variant="outline" 
+        <div className="flex items-center justify-between mt-10 pt-6 border-t border-border/50">
+          <Button
+            variant="outline"
             disabled={!pagination.hasPrev}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
           >
-            ← Previous
+            Previous
           </Button>
-          <span className="text-sm font-medium text-muted-foreground">
+          <span className="text-sm font-medium text-muted-foreground tabular-nums">
             Page {page} of {pagination.totalPages}
           </span>
-          <Button 
+          <Button
             variant="outline"
             disabled={!pagination.hasNext}
             onClick={() => setPage((p) => p + 1)}
           >
-            Next →
+            Next
           </Button>
         </div>
       )}

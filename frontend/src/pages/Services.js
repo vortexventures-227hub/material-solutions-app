@@ -7,7 +7,7 @@ const Services = () => {
   const forkliftSalesFAQ = [
     {
       question: "How much does a forklift cost in New Jersey?",
-      answer: "New forklifts range from $20,000 to $50,000 depending on capacity and features. Certified pre-owned forklifts start at $8,000. Material Solutions offers financing options and free quotes. Call (800) 555-0199 for current inventory pricing."
+      answer: "New forklifts range from $20,000 to $50,000 depending on capacity and features. Certified pre-owned forklifts start at $8,000. Vortex Forklift offers financing options and free quotes. Call (800) 555-0199 for current inventory pricing."
     },
     {
       question: "What brands of forklifts do you sell?",
@@ -15,7 +15,7 @@ const Services = () => {
     },
     {
       question: "Do you offer forklift financing?",
-      answer: "Yes. Material Solutions partners with equipment financing providers. We offer lease-to-own, rental purchase, and traditional financing options. Approval typically takes 24-48 hours."
+      answer: "Yes. Vortex Forklift partners with equipment financing providers. We offer lease-to-own, rental purchase, and traditional financing options. Approval typically takes 24-48 hours."
     },
     {
       question: "What areas do you serve?",
@@ -23,7 +23,7 @@ const Services = () => {
     },
     {
       question: "Are used forklifts safe to buy?",
-      answer: "Yes, when certified. Every Material Solutions pre-owned forklift undergoes a 50-point OSHA safety inspection covering brakes, mast, hydraulics, tires, lights, and load capacity. We replace worn components before sale and include a warranty."
+      answer: "Yes, when certified. Every Vortex Forklift pre-owned forklift undergoes a 50-point OSHA safety inspection covering brakes, mast, hydraulics, tires, lights, and load capacity. We replace worn components before sale and include a warranty."
     }
   ];
 
@@ -34,7 +34,7 @@ const Services = () => {
     },
     {
       question: "How much does OSHA forklift certification cost in NJ?",
-      answer: "Individual training costs $150-250 per operator. Group discounts available for 5+ employees. On-site training at your facility may have additional travel fees. Contact Material Solutions for a custom quote: (800) 555-0199."
+      answer: "Individual training costs $150-250 per operator. Group discounts available for 5+ employees. On-site training at your facility may have additional travel fees. Contact Vortex Forklift for a custom quote: (800) 555-0199."
     },
     {
       question: "Is forklift certification required in New Jersey?",
@@ -46,7 +46,7 @@ const Services = () => {
     },
     {
       question: "Do you offer Spanish-language training?",
-      answer: "Yes. Material Solutions offers OSHA forklift training in English and Spanish. Bilingual instructors are available for on-site training sessions."
+      answer: "Yes. Vortex Forklift offers OSHA forklift training in English and Spanish. Bilingual instructors are available for on-site training sessions."
     }
   ];
 
@@ -69,7 +69,7 @@ const Services = () => {
           
           <FAQSchema questions={forkliftSalesFAQ} />
           <p className="text-lg text-gray-600 mb-8 max-w-4xl">
-            Material Solutions has been New Jersey's trusted forklift dealer since 1999. We sell new and certified pre-owned forklifts from Toyota, Hyster, Yale, and Crown. Serving warehouse, distribution, and manufacturing facilities throughout NJ, PA, and NY.
+            Vortex Forklift has been New Jersey's trusted forklift dealer since 1999. We sell new and certified pre-owned forklifts from Toyota, Hyster, Yale, and Crown. Serving warehouse, distribution, and manufacturing facilities throughout NJ, PA, and NY.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

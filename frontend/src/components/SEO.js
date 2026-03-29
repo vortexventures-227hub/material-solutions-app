@@ -21,7 +21,7 @@ import React from 'react';
  * @param {string} props.foundingDate - Year founded
  */
 export function LocalBusinessSchema({
-  name = 'Material Solutions',
+  name = 'Vortex Forklift',
   description = 'New Jersey\'s trusted forklift dealer since 1999.',
   phone = '+1-800-555-0199',
   email = 'info@materialsolutionsnj.com',
@@ -37,7 +37,7 @@ export function LocalBusinessSchema({
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name,
-    alternateName: 'Material Solutions NJ',
+    alternateName: 'Vortex Forklift NJ',
     description,
     url,
     telephone: phone,
@@ -139,7 +139,7 @@ export function ProductSchema({
   condition = 'UsedCondition',
   image,
   url,
-  seller = { name: 'Material Solutions' },
+  seller = { name: 'Vortex Forklift' },
   specs = [],
   rating = { ratingValue: '4.8', reviewCount: '12' }
 }) {
@@ -227,7 +227,7 @@ export function OrganizationSchema() {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Material Solutions',
+    name: 'Vortex Forklift',
     url: 'https://materialsolutionsnj.com',
     logo: 'https://materialsolutionsnj.com/logo.png',
     contactPoint: {

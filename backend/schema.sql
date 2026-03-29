@@ -108,3 +108,24 @@ CREATE TABLE refresh_tokens (
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
+
+-- Marketplace automation tables
+CREATE TABLE marketplace_listings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    inventory_id UUID NOT NULL REFERENCES inventory(id) ON DELETE CASCADE,
+    platform VARCHAR(50) NOT NULL,
+    listing_id VARCHAR(255),
+    url TEXT,
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'pending', 'failed', 'removed', 'expired')),
+    title TEXT,
+    description TEXT,
+    seo_content JSONB DEFAULT '{}'::jsonb,
+    published_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    error TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_marketplace_listings_inventory_id ON marketplace_listings(inventory_id);
+CREATE INDEX idx_marketplace_listings_platform ON marketplace_listings(platform);
+CREATE INDEX idx_marketplace_listings_status ON marketplace_listings(status);

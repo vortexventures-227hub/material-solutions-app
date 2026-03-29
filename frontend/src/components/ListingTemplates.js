@@ -64,12 +64,12 @@ WARRANTY:
 
 Serving NJ, Eastern PA, and NYC area for 29 years.
 
-Contact Material Solutions for details.`
+Contact Vortex Forklift for details.`
     },
     {
       name: 'LinkedIn',
       color: 'purple',
-      text: `Material Solutions | ${inventory.year} ${inventory.make} ${inventory.model}
+      text: `Vortex Forklift | ${inventory.year} ${inventory.make} ${inventory.model}
 
 We're pleased to offer a reconditioned ${inventory.year} ${inventory.make} ${inventory.model} forklift, ideal for narrow aisle warehouse operations.
 
@@ -88,7 +88,7 @@ Includes comprehensive warranty coverage:
 • 6-month major component coverage
 • 1-year battery & charger warranty
 
-With 29 years serving businesses across NJ, Eastern PA, and NYC, Material Solutions is your trusted partner for material handling equipment.
+With 29 years serving businesses across NJ, Eastern PA, and NYC, Vortex Forklift is your trusted partner for material handling equipment.
 
 Contact us to schedule an inspection or request additional details.
 
