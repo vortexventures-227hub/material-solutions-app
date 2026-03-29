@@ -7,6 +7,7 @@ import { trackPageView } from './utils/analytics';
 import Navigation from './components/Navigation';
 import ToastContainer from './components/Toast';
 import { SkeletonPage } from './components/SkeletonCard';
+import { SkipLink } from './components/SkipLink';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Intake = lazy(() => import('./pages/Intake'));
@@ -37,9 +38,11 @@ function AppRoutes() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <SkipLink />
       {isAuthenticated && <Navigation />}
       <Suspense fallback={<SkeletonPage />}>
-      <Routes>
+        <main id="main-content" tabIndex={-1}>
+          <Routes>
         <Route path="/login" element={<Login />} />
         <Route
           path="/"
@@ -98,6 +101,7 @@ function AppRoutes() {
           }
         />
       </Routes>
+        </main>
       </Suspense>
     </div>
   );

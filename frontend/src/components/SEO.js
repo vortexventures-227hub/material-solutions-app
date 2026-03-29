@@ -254,10 +254,12 @@ export function OrganizationSchema() {
 /**
  * Default exports for easy importing
  */
-export default {
+const SEOSchemas = {
   LocalBusinessSchema,
   FAQSchema,
   ProductSchema,
   HowToSchema,
   OrganizationSchema
 };
+
+export default SEOSchemas;

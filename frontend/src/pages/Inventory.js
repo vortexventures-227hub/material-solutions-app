@@ -8,7 +8,7 @@ import InventoryDetailModal from '../components/InventoryDetailModal';
 import FilterBottomSheet from '../components/FilterBottomSheet';
 import { ProductSchema } from '../components/SEO';
 import { Layout, PageHeader, Grid } from '../components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { SlidersHorizontal } from 'lucide-react';
 

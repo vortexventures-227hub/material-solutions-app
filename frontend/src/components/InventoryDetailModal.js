@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ListingTemplates from './ListingTemplates';
 import api from '../api';
 import { useToast } from '../context/ToastContext';
-import { Loader2, CheckCircle, Clock, AlertCircle, ShoppingCart, Archive, DollarSign } from 'lucide-react';
+import { Loader2, CheckCircle, Clock, AlertCircle, ShoppingCart } from 'lucide-react';
 
 const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

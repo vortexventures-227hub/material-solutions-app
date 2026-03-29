@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { ModeToggle } from '../components/ModeToggle';
-import { Button } from '../components/ui/ui/button'; // Assuming button was moved or I should use native as I didn't see it in read
 
 export default function Login() {
   const [email, setEmail] = useState('');
