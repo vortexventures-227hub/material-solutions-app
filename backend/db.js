@@ -9,7 +9,7 @@ const pool = new Pool({
   ssl: process.env.DATABASE_SSL === 'false' 
     ? false 
     : process.env.NODE_ENV === 'production' 
-      ? { rejectUnauthorized: true }  // Proper SSL verification in production
+      ? { rejectUnauthorized: false }  // Render requires rejectUnauthorized: false
       : false
 });
 
