@@ -78,15 +78,15 @@ const Navigation = () => {
       {/* Desktop Top Navigation */}
       <nav className="hidden lg:block bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             {/* Logo - Vortex Ventures Branding */}
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-9 h-9 bg-gradient-to-br from-neon-cyan to-neon-purple rounded-xl flex items-center justify-center shadow-md shadow-neon-cyan/20 group-hover:shadow-lg group-hover:shadow-neon-cyan/40 transition-all duration-300">
-                <span className="text-white text-sm font-bold tracking-tight">MS</span>
+              <div className="w-11 h-11 bg-gradient-to-br from-neon-cyan to-neon-purple rounded-lg flex items-center justify-center shadow-md shadow-neon-cyan/20 group-hover:shadow-lg group-hover:shadow-neon-cyan/40 transition-all duration-300">
+                <span className="text-white text-base font-bold tracking-tight">MS</span>
               </div>
               <div>
-                <h1 className="text-sm font-bold text-foreground tracking-tight leading-tight">Material Solutions Forklift Sales Machine</h1>
-                <p className="text-[10px] text-neon-cyan/70 uppercase tracking-[0.15em] font-semibold -mt-0.5">A Vortex Ventures Product</p>
+                <h1 className="text-base font-bold text-foreground tracking-tight leading-tight">Material Solutions Forklift Sales Machine</h1>
+                <p className="text-xs text-neon-cyan/70 uppercase tracking-[0.15em] font-semibold whitespace-nowrap">A Vortex Ventures Product</p>
               </div>
             </Link>
 
@@ -200,14 +200,14 @@ const Navigation = () => {
 
       {/* Mobile Top Bar */}
       <nav className="lg:hidden bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-40">
-        <div className="px-4 h-14 flex items-center justify-between">
+        <div className="px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gradient-to-br from-neon-cyan to-neon-purple rounded-lg flex items-center justify-center shadow-md shadow-neon-cyan/20">
-              <span className="text-white text-xs font-bold">MS</span>
+            <div className="w-10 h-10 bg-gradient-to-br from-neon-cyan to-neon-purple rounded-lg flex items-center justify-center shadow-md shadow-neon-cyan/20">
+              <span className="text-white text-sm font-bold">MS</span>
             </div>
             <div>
-              <h1 className="text-sm font-bold text-foreground leading-tight">Sales Machine</h1>
-              <p className="text-[8px] text-neon-cyan/70 uppercase tracking-wider font-semibold">Vortex Ventures</p>
+              <h1 className="text-base font-bold text-foreground leading-tight">Sales Machine</h1>
+              <p className="text-[9px] text-neon-cyan/70 uppercase tracking-wider font-semibold whitespace-nowrap">A Vortex Ventures Product</p>
             </div>
           </Link>
 
@@ -267,12 +267,12 @@ const Navigation = () => {
               <div className="p-6 border-b border-border/50">
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-neon-cyan to-neon-purple rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-neon-cyan/20">
+                    <div className="w-11 h-11 bg-gradient-to-br from-neon-cyan to-neon-purple rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-neon-cyan/20">
                       MS
                     </div>
                     <div>
-                      <h2 className="font-bold text-foreground text-sm">Sales Machine</h2>
-                      <p className="text-[10px] text-neon-cyan/70 uppercase tracking-[0.15em] font-semibold">Vortex Ventures</p>
+                      <h2 className="font-bold text-foreground text-base">Sales Machine</h2>
+                      <p className="text-xs text-neon-cyan/70 uppercase tracking-[0.15em] font-semibold whitespace-nowrap">A Vortex Ventures Product</p>
                     </div>
                   </div>
                   <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors">

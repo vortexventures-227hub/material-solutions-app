@@ -16,6 +16,7 @@ const Pipeline = () => {
   const [inventory, setInventory] = useState([]);
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const { addToast } = useToast();
@@ -23,14 +24,36 @@ const Pipeline = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [invRes, leadsRes] = await Promise.all([
+        // Fetch independently so one failure doesn't block the other
+        const results = await Promise.allSettled([
           api.get('/api/inventory'),
           api.get('/api/leads'),
         ]);
-        setInventory(invRes.data.inventory || invRes.data || []);
-        setLeads(leadsRes.data.leads || leadsRes.data || []);
+
+        const invRes = results[0];
+        const leadsRes = results[1];
+
+        if (invRes.status === 'fulfilled') {
+          const invData = invRes.value?.data;
+          setInventory(Array.isArray(invData?.inventory) ? invData.inventory : Array.isArray(invData) ? invData : []);
+        } else {
+          console.error('Error fetching inventory:', invRes.reason);
+        }
+
+        if (leadsRes.status === 'fulfilled') {
+          const leadsData = leadsRes.value?.data;
+          setLeads(Array.isArray(leadsData?.leads) ? leadsData.leads : Array.isArray(leadsData) ? leadsData : []);
+        } else {
+          console.error('Error fetching leads:', leadsRes.reason);
+        }
+
+        if (invRes.status === 'rejected' && leadsRes.status === 'rejected') {
+          setError('Failed to load pipeline data');
+          addToast('Failed to load pipeline data', 'error');
+        }
       } catch (err) {
         console.error('Error fetching pipeline data:', err);
+        setError('Failed to load pipeline data');
         addToast('Failed to load pipeline data', 'error');
       } finally {
         setLoading(false);
@@ -40,24 +63,33 @@ const Pipeline = () => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getStageItems = (stageKey) => {
-    if (stageKey === 'leads') {
-      return leads.filter((l) =>
-        !searchQuery || l.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        l.company?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    try {
+      const safeLeads = Array.isArray(leads) ? leads : [];
+      const safeInventory = Array.isArray(inventory) ? inventory : [];
+      const q = (searchQuery || '').toLowerCase();
+
+      if (stageKey === 'leads') {
+        return safeLeads.filter((l) =>
+          !q || l.name?.toLowerCase().includes(q) ||
+          l.company?.toLowerCase().includes(q)
+        );
+      }
+      if (stageKey === 'qualified') {
+        return safeLeads.filter((l) => l.status === 'qualified' || l.status === 'converted');
+      }
+      return safeInventory.filter((item) => {
+        const matchesStage = item.status === stageKey;
+        const matchesSearch = !q ||
+          item.make?.toLowerCase().includes(q) ||
+          item.model?.toLowerCase().includes(q) ||
+          item.serial?.toLowerCase().includes(q) ||
+          String(item.id || '').includes(searchQuery);
+        return matchesStage && matchesSearch;
+      });
+    } catch (err) {
+      console.error('Error filtering pipeline stage:', stageKey, err);
+      return [];
     }
-    if (stageKey === 'qualified') {
-      return leads.filter((l) => l.status === 'qualified' || l.status === 'converted');
-    }
-    return inventory.filter((item) => {
-      const matchesStage = item.status === stageKey;
-      const matchesSearch = !searchQuery ||
-        item.make?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.model?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.serial?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        String(item.id).includes(searchQuery);
-      return matchesStage && matchesSearch;
-    });
   };
 
   const stageColorMap = {
@@ -78,6 +110,27 @@ const Pipeline = () => {
               <div key={i} className="min-w-[260px] h-64 bg-muted rounded-2xl" />
             ))}
           </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error && inventory.length === 0 && leads.length === 0) {
+    return (
+      <Layout>
+        <PageHeader title="Pipeline" description="Track inventory through the sales pipeline" />
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-4">
+            <Package size={28} className="text-red-500" />
+          </div>
+          <p className="text-lg font-semibold text-foreground mb-2">Unable to load pipeline data</p>
+          <p className="text-sm text-muted-foreground mb-6">Please check your connection and try again.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2.5 bg-neon-cyan text-white rounded-xl font-semibold text-sm hover:shadow-glow transition-all"
+          >
+            Retry
+          </button>
         </div>
       </Layout>
     );

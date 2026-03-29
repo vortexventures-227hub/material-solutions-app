@@ -130,8 +130,34 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
           </button>
         </div>
 
+        {/* Publish Action Bar - Always visible at top */}
+        <div className="px-4 lg:px-6 pt-4 pb-2">
+          <button
+            onClick={() => setShowPublishModal(true)}
+            disabled={hasListings || inventory.status === 'sold' || inventory.status === 'archived'}
+            className={`
+              w-full flex items-center justify-center gap-2 p-3.5 rounded-xl text-sm font-bold transition-all duration-200
+              ${hasListings
+                ? 'bg-neon-green/10 text-neon-green border-2 border-neon-green/30 cursor-default'
+                : inventory.status === 'sold' || inventory.status === 'archived'
+                  ? 'bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-50'
+                  : 'bg-gradient-to-r from-neon-cyan to-neon-purple text-white hover:shadow-glow-neon hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] shadow-md shadow-neon-cyan/20'
+              }
+            `}
+          >
+            <Megaphone size={18} />
+            <span>
+              {hasListings
+                ? 'Already Published to Marketplaces'
+                : inventory.status === 'sold'
+                  ? 'Item Sold — Cannot Publish'
+                  : 'Publish to Marketplaces'}
+            </span>
+          </button>
+        </div>
+
         {/* Content */}
-        <div className="p-4 lg:p-6">
+        <div className="p-4 lg:p-6 pt-2">
           {/* Image Gallery */}
           {images.length > 0 && (
             <div className="mb-6">
