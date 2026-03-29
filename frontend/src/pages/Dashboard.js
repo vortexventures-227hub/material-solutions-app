@@ -14,7 +14,6 @@ import { Package, CheckCircle2, DollarSign, Users, TrendingUp, Target, Camera, U
 const Dashboard = () => {
   const [kpis, setKpis] = useState(null);
   const [loading, setLoading] = useState(true);
-  const {  } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
