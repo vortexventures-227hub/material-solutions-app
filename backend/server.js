@@ -162,44 +162,6 @@ const crmWebhookAuth = (req, res, next) => {
 app.use('/api/crm', crmWebhookAuth, crmRoutes);
 
 // ─── One-Time Migration Endpoint (Remove after first use) ──────────────────
-const fs = require('fs');
-const path = require('path');
-const bcrypt = require('bcrypt');
-
-app.post('/api/migrate', async (req, res) => {
-  const migrationKey = req.headers['x-migration-key'];
-  if (migrationKey !== process.env.JWT_SECRET?.slice(0, 32)) {
-    return res.status(403).json({ error: 'Invalid migration key' });
-  }
-
-  try {
-    // Run schema
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
-    await db.query(schema);
-
-    // Create test admin user
-    const testEmail = 'admin@test.com';
-    const testPassword = 'password123';
-    const passwordHash = await bcrypt.hash(testPassword, 12);
-
-    await db.query(`
-      INSERT INTO users (email, password_hash, name, role)
-      VALUES ($1, $2, $3, $4)
-      ON CONFLICT (email) DO NOTHING
-    `, [testEmail, passwordHash, 'Admin', 'admin']);
-
-    res.json({ 
-      status: 'ok', 
-      message: 'Migration completed successfully',
-      testUser: { email: testEmail, password: testPassword }
-    });
-  } catch (error) {
-    console.error('Migration error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // ─── Health Check ───────────────────────────────────────────────────────────
 // Basic ping for Railway healthcheck (no DB required)
 app.get('/ping', (req, res) => {
