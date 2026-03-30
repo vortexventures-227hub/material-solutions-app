@@ -1,218 +1,271 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
+import { X, Globe, Video, Check, ChevronRight, Share2, Eye } from 'lucide-react';
 import api from '../api';
-import { Loader2, CheckCircle, XCircle, ExternalLink, Megaphone, Globe, Share2 } from 'lucide-react';
+import PublishProgress from './PublishProgress';
+import PublishResults from './PublishResults';
 
-const STEPS = [
-  { key: 'content', label: 'Generating SEO content with AI...' },
-  { key: 'facebook', label: 'Publishing to Facebook Marketplace...' },
-  { key: 'website', label: 'Publishing to website...' },
-  { key: 'done', label: 'Complete!' },
+const PLATFORMS = [
+  {
+    id: 'craigslist',
+    name: 'Craigslist',
+    icon: '🏙️',
+    description: 'Local buyers, fast exposure',
+    color: '#F97316',
+    recommended: false,
+  },
+  {
+    id: 'facebook_marketplace',
+    name: 'Facebook Marketplace',
+    icon: <Share2 size={24} className="text-blue-600" />,
+    description: 'Wide local reach',
+    color: '#1877F2',
+    recommended: true,
+  },
+  {
+    id: 'machinerytrader',
+    name: 'Machinery Trader',
+    icon: '🏗️',
+    description: 'Equipment-focused buyers',
+    color: '#1A5F7A',
+    recommended: false,
+  },
+  {
+    id: 'equipfinder',
+    name: 'EquipFinder',
+    icon: '🔍',
+    description: 'Heavy equipment marketplace',
+    color: '#7C3AED',
+    recommended: false,
+  },
+  {
+    id: 'machineryats',
+    name: 'MachineryATS',
+    icon: '🏭',
+    description: 'Industrial equipment buyers',
+    color: '#059669',
+    recommended: false,
+  },
+  {
+    id: 'youtube',
+    name: 'YouTube',
+    icon: <Video size={24} className="text-red-600" />,
+    description: 'Video walkaround listing',
+    color: '#FF0000',
+    recommended: false,
+  },
 ];
 
-const platformIcons = {
-  facebook_marketplace: Share2,
-  website: Globe,
-};
+export default function PublishModal({ isOpen, onClose, inventory, onPublished }) {
+  const [step, setStep] = useState('select'); // select, progress, results
+  const [selected, setSelected] = useState(new Set(['facebook_marketplace', 'craigslist']));
+  const [options] = useState({});
+  const [publishResults, setPublishResults] = useState(null);
+  const [progress, setProgress] = useState({});
+  const [emailStats, setEmailStats] = useState({ sent: 0, queued: 0 });
 
-const PublishModal = ({ isOpen, onClose, inventory, onPublished }) => {
-  const [step, setStep] = useState(0);
-  const [status, setStatus] = useState('idle'); // idle | publishing | success | error
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-
-  const handlePublish = useCallback(async () => {
-    setStatus('publishing');
-    setStep(0);
-    setError(null);
-
-    // Animate through steps
-    const stepTimer = setInterval(() => {
-      setStep((prev) => {
-        if (prev < STEPS.length - 2) return prev + 1;
-        clearInterval(stepTimer);
-        return prev;
-      });
-    }, 1500);
-
-    try {
-      const response = await api.post(`/api/inventory/${inventory.id}/publish`);
-      clearInterval(stepTimer);
-      setStep(STEPS.length - 1);
-      setResult(response.data);
-      setStatus('success');
-      if (onPublished) onPublished(response.data);
-    } catch (err) {
-      clearInterval(stepTimer);
-      const message = err.response?.data?.error || err.message || 'Publishing failed';
-      setError(message);
-      setStatus('error');
-    }
-  }, [inventory?.id, onPublished]);
-
+  // Reset state when modal opens
   useEffect(() => {
-    if (isOpen && status === 'idle') {
-      handlePublish();
+    if (isOpen) {
+      setStep('select');
+      setPublishResults(null);
+      setProgress({});
+      setEmailStats({ sent: 0, queued: 0 });
     }
-  }, [isOpen, status, handlePublish]);
+  }, [isOpen]);
 
-  const handleClose = () => {
-    setStatus('idle');
-    setStep(0);
-    setResult(null);
-    setError(null);
-    onClose();
+  if (!isOpen || !inventory) return null;
+
+  const toggle = (id) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
-  if (!isOpen) return null;
+  const handlePublish = async () => {
+    if (selected.size === 0) return;
+    
+    setStep('progress');
+    const platforms = Array.from(selected);
+    
+    // Initialize progress
+    const initialProgress = {};
+    platforms.forEach(p => initialProgress[p] = { status: 'working' });
+    setProgress(initialProgress);
+
+    try {
+      // Phase 6C API Call
+      const res = await api.post(`/api/publish/${inventory.id}`, {
+        platforms,
+        options
+      });
+
+      // Update progress with results
+      const newProgress = { ...initialProgress };
+      res.data.results.forEach(r => {
+        newProgress[r.platform] = { 
+          status: r.status === 'published' ? 'complete' : 'error',
+          error: r.error 
+        };
+      });
+      setProgress(newProgress);
+      setPublishResults(res.data);
+
+      // Trigger email outreach if requested (mock logic)
+      if (platforms.length > 0) {
+        setEmailStats({ sent: Math.min(platforms.length * 3, 12), queued: 0 });
+      }
+
+      // Short delay for the "working" feel before showing results
+      setTimeout(() => {
+        setStep('results');
+        if (onPublished) onPublished(res.data);
+      }, 1500);
+
+    } catch (err) {
+      console.error('Publishing failed:', err);
+      // Fallback: show error in progress
+      const errorProgress = { ...initialProgress };
+      platforms.forEach(p => errorProgress[p] = { status: 'error', error: err.message });
+      setProgress(errorProgress);
+      setTimeout(() => setStep('results'), 1000);
+    }
+  };
+
+  // ─── Renderers ─────────────────────────────────────────────────────────────
+
+  if (step === 'progress') {
+    return (
+      <PublishProgress 
+        platforms={Array.from(selected)} 
+        progress={progress}
+        emailsSent={emailStats.sent}
+        emailsQueued={emailStats.queued}
+      />
+    );
+  }
+
+  if (step === 'results') {
+    return (
+      <PublishResults 
+        results={publishResults} 
+        unit={inventory} 
+        seoData={publishResults?.seo}
+        onClose={onClose} 
+      />
+    );
+  }
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-60"
-      onClick={handleClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Modal */}
+      <div className="relative bg-vortex-dark w-full sm:max-w-2xl max-h-[90vh] rounded-t-3xl sm:rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-2 border-vortex-yellow/30 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-brand-600 to-blue-600 px-6 py-5 text-white">
-          <div className="flex items-center space-x-3">
-            <Megaphone size={24} />
-            <div>
-              <h3 className="text-lg font-bold">Publish to Marketplaces</h3>
-              <p className="text-sm text-blue-100 mt-0.5">
-                {inventory.year} {inventory.make} {inventory.model}
-              </p>
-            </div>
+        <div className="px-6 py-5 border-b border-vortex-yellow/20 shrink-0">
+          <div>
+            <h2 className="font-display text-2xl text-vortex-yellow tracking-widest uppercase">Publish Listing</h2>
+            <p className="text-gray-400 text-sm mt-0.5">{inventory.year} {inventory.make} {inventory.model}</p>
           </div>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 rounded-xl bg-vortex-gray border border-vortex-yellow/30 flex items-center justify-center text-gray-400 hover:text-vortex-yellow hover:border-vortex-yellow transition-all active:scale-95"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        {/* Progress Steps */}
-        <div className="px-6 py-6">
-          {status === 'publishing' && (
-            <div className="space-y-4">
-              {STEPS.slice(0, -1).map((s, idx) => (
-                <div key={s.key} className="flex items-center space-x-3">
-                  {idx < step ? (
-                    <CheckCircle size={20} className="text-green-500 flex-shrink-0" />
-                  ) : idx === step ? (
-                    <Loader2 size={20} className="text-brand-600 animate-spin flex-shrink-0" />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full border-2 border-gray-200 flex-shrink-0" />
-                  )}
-                  <span className={`text-sm ${idx <= step ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
-                    {s.label}
-                  </span>
+        {/* Platform List */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-3">
+          <p className="text-xs font-display text-gray-500 uppercase tracking-widest mb-2">Select Channels</p>
+
+          {PLATFORMS.map((platform) => {
+            const isSelected = selected.has(platform.id);
+            return (
+              <button
+                key={platform.id}
+                onClick={() => toggle(platform.id)}
+                className={`
+                  w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200 text-left
+                  ${isSelected
+                    ? 'border-vortex-yellow bg-vortex-yellow/10'
+                    : 'border-vortex-gray bg-vortex-black/50 hover:border-vortex-yellow/40'
+                  }
+                `}
+              >
+                {/* Check circle */}
+                <div className={`
+                  w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all
+                  ${isSelected
+                    ? 'border-vortex-yellow bg-vortex-yellow'
+                    : 'border-gray-600'
+                  }
+                `}>
+                  {isSelected && <Check size={14} className="text-vortex-black" />}
                 </div>
-              ))}
-              <div className="mt-4 w-full bg-gray-100 rounded-full h-2">
-                <div
-                  className="bg-brand-600 h-2 rounded-full transition-all duration-700"
-                  style={{ width: `${((step + 1) / (STEPS.length - 1)) * 100}%` }}
-                />
-              </div>
-            </div>
-          )}
 
-          {status === 'success' && result && (
-            <div>
-              <div className="flex items-center space-x-3 mb-5">
-                <CheckCircle size={28} className="text-green-500" />
-                <div>
-                  <p className="text-lg font-bold text-gray-800">Published Successfully!</p>
-                  <p className="text-sm text-gray-500">{result.listings?.length || 0} marketplace listing(s) created</p>
+                {/* Icon */}
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: platform.color + '20' }}>
+                  {typeof platform.icon === 'string'
+                    ? <span className="text-2xl">{platform.icon}</span>
+                    : platform.icon
+                  }
                 </div>
-              </div>
 
-              {/* Generated Title */}
-              {result.content?.title && (
-                <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                  <p className="text-xs text-gray-500 font-medium mb-1">AI-Generated Title</p>
-                  <p className="text-sm font-semibold text-gray-800">{result.content.title}</p>
-                </div>
-              )}
-
-              {/* Listing Links */}
-              <div className="space-y-3">
-                {result.listings?.map((listing) => {
-                  const Icon = platformIcons[listing.platform] || Globe;
-                  return (
-                    <div
-                      key={listing.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Icon size={18} className="text-gray-600" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-800 capitalize">
-                            {listing.platform.replace('_', ' ')}
-                          </p>
-                          <p className={`text-xs ${listing.status === 'active' ? 'text-green-600' : listing.status === 'pending' ? 'text-yellow-600' : 'text-red-600'}`}>
-                            {listing.status}
-                            {listing.note && ` — ${listing.note}`}
-                          </p>
-                        </div>
-                      </div>
-                      {listing.url && (
-                        <a
-                          href={listing.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-brand-600 hover:text-brand-700 p-2"
-                        >
-                          <ExternalLink size={16} />
-                        </a>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Tags */}
-              {result.content?.tags?.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-xs text-gray-500 font-medium mb-2">SEO Tags</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {result.content.tags.map((tag, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full">
-                        {tag}
-                      </span>
-                    ))}
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-display text-white text-base tracking-wide">{platform.name}</p>
+                    {platform.recommended && (
+                      <span className="text-[10px] font-display bg-vortex-yellow/20 text-vortex-yellow border border-vortex-yellow/30 px-1.5 py-0.5 rounded-full">RECOMMENDED</span>
+                    )}
                   </div>
+                  <p className="text-gray-400 text-xs mt-0.5">{platform.description}</p>
                 </div>
-              )}
-            </div>
-          )}
 
-          {status === 'error' && (
-            <div className="text-center py-4">
-              <XCircle size={40} className="text-red-500 mx-auto mb-3" />
-              <p className="text-lg font-bold text-gray-800 mb-2">Publishing Failed</p>
-              <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3">{error}</p>
-            </div>
-          )}
+                <ChevronRight size={16} className={`shrink-0 transition-transform ${isSelected ? 'text-vortex-yellow translate-x-0' : 'text-gray-600'}`} />
+              </button>
+            );
+          })}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-3">
-          {status === 'error' && (
-            <button
-              onClick={handlePublish}
-              className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
-            >
-              Retry
-            </button>
-          )}
+        <div className="p-6 border-t border-vortex-yellow/20 space-y-3 shrink-0">
+          <div className="flex items-center justify-between text-sm mb-1">
+            <span className="text-gray-400 font-display">
+              {selected.size} platform{selected.size !== 1 ? 's' : ''} selected
+            </span>
+            <span className="text-vortex-yellow font-display flex items-center gap-1.5">
+              <Eye size={14} /> Est. {selected.size > 0 ? `${(selected.size * 2).toLocaleString()}+ views` : '—'}
+            </span>
+          </div>
+
           <button
-            onClick={handleClose}
-            className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+            onClick={handlePublish}
+            disabled={selected.size === 0}
+            className={`
+              w-full flex items-center justify-center gap-3 py-4 rounded-xl font-display text-lg tracking-widest
+              transition-all duration-200 border-2
+              ${selected.size === 0
+                ? 'bg-vortex-gray border-vortex-gray text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-vortex-yellow to-amber-400 border-vortex-yellow-dark text-vortex-black hover:from-amber-300 hover:to-vortex-yellow shadow-[0_4px_14px_rgba(253,224,71,0.4)] hover:shadow-[0_6px_20px_rgba(253,224,71,0.55)] hover:-translate-y-0.5 active:scale-[0.98]'
+              }
+            `}
           >
-            {status === 'success' ? 'Done' : status === 'publishing' ? 'Cancel' : 'Close'}
+            <Globe size={20} />
+            PUBLISH NOW
           </button>
+
+          <p className="text-center text-gray-500 text-[10px] uppercase tracking-[0.1em]">
+             AI will generate platform-specific SEO content automatically
+          </p>
         </div>
       </div>
     </div>
   );
-};
-
-export default PublishModal;
+}

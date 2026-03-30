@@ -118,6 +118,9 @@ const marketRoutes = require('./routes/market');
 const crmRoutes = require('./routes/crm');
 const signalRoutes = require('./routes/signals');
 const marketplaceRoutes = require('./routes/marketplace');
+const publishRoutes = require('./routes/publish');
+const emailRoutes = require('./routes/email');
+const analyticsRoutes = require('./routes/analytics');
 
 // ─── Auth Middleware ─────────────────────────────────────────────────────────
 const { verifyToken } = require('./middleware/auth');
@@ -143,7 +146,10 @@ app.use('/api/lens', verifyToken, strictLimiter, lensRoutes);
 app.use('/api/drip', verifyToken, strictLimiter, dripRoutes);
 app.use('/api/sms', verifyToken, strictLimiter, smsRoutes);
 app.use('/api/market', verifyToken, marketRoutes);
-app.use('/api/inventory', verifyToken, marketplaceRoutes); // Marketplace publish routes (nested under /api/inventory/:id/publish)
+app.use('/api/inventory', verifyToken, marketplaceRoutes); // Marketplace publish routes (legacy)
+app.use('/api/publish', verifyToken, publishRoutes);        // Phase 6C Marketplace routes
+app.use('/api/email', verifyToken, emailRoutes);            // Phase 6C Email routes
+app.use('/api/analytics', verifyToken, analyticsRoutes);    // Phase 6C Analytics routes
 app.use('/api/signals', signalRoutes); // Signal webhooks are intentionally public
 
 // ─── CRM Webhook Routes (Signature-Verified, Not JWT) ───────────────────────

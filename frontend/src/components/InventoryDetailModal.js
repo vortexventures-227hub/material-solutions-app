@@ -17,7 +17,7 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
   // Check if item already has marketplace listings
   useEffect(() => {
     if (isOpen && inventory?.id) {
-      api.get(`/api/inventory/${inventory.id}/listings`)
+      api.get(`/api/publish/${inventory.id}`)
         .then((res) => setHasListings(res.data.listings?.length > 0))
         .catch(() => setHasListings(false));
     }
