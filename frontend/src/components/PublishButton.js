@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, Zap, ExternalLink } from 'lucide-react';
+import { Globe, ExternalLink } from 'lucide-react';
 
 /**
  * PublishButton — shown on InventoryDetailModal

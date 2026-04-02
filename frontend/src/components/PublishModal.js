@@ -159,14 +159,14 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[55] flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative bg-vortex-dark w-full sm:max-w-2xl max-h-[90vh] rounded-t-3xl sm:rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-2 border-vortex-yellow/30 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-vortex-yellow/20 shrink-0">
+        <div className="px-6 py-5 border-b border-vortex-yellow/20 shrink-0 flex items-center justify-between">
           <div>
             <h2 className="font-display text-2xl text-vortex-yellow tracking-widest uppercase">Publish Listing</h2>
             <p className="text-gray-400 text-sm mt-0.5">{inventory.year} {inventory.make} {inventory.model}</p>
@@ -174,6 +174,7 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
           <button
             onClick={onClose}
             className="w-10 h-10 rounded-xl bg-vortex-gray border border-vortex-yellow/30 flex items-center justify-center text-gray-400 hover:text-vortex-yellow hover:border-vortex-yellow transition-all active:scale-95"
+            aria-label="Close publish modal"
           >
             <X size={18} />
           </button>

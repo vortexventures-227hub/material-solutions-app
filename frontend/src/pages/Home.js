@@ -158,7 +158,6 @@ const DavidCore = ({ size = 380, className = '' }) => {
               animate={{ y: [0, size * 0.75, 0] }}
               transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
             />
-          </motion.div>
           </div>
         </div>
       </motion.div>
@@ -466,115 +465,147 @@ const Navigation = () => {
 // ═══════════════════════════════════════════════════════════
 const Hero = () => {
   const { scrollY } = useScroll();
-  const bgY = useTransform(scrollY, [0, 600], [0, 150]);
-  const contentY = useTransform(scrollY, [0, 600], [0, -100]);
+  const contentY = useTransform(scrollY, [0, 700], [0, -100]);
+  const videoOpacity = useTransform(scrollY, [0, 600], [1, 0.25]);
+  const davidScale = useTransform(scrollY, [0, 400], [1, 0.88]);
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20" id="hero">
-      {/* Animated background layers */}
-      <motion.div className="absolute inset-0" style={{ y: bgY }}>
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden" id="hero">
+      {/* Video background — full bleed */}
+      <motion.div className="absolute inset-0 z-0" style={{ opacity: videoOpacity }}>
+        <video autoPlay muted loop playsInline className="w-full h-full object-cover" poster="/images/raymond_2172.jpg">
+          <source src="/videos/raymond-reach-demo.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(5,8,16,0.88) 0%, rgba(5,8,16,0.60) 50%, rgba(5,8,16,0.85) 100%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-48" style={{ background: 'linear-gradient(to top, #050810, transparent)' }} />
+      </motion.div>
+
+      {/* David — THE CENTERPIECE */}
+      <motion.div
+        className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+        style={{ y: contentY, scale: davidScale }}
+      >
+        {/* Ambient glow behind David */}
         <motion.div
-          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.09) 0%, rgba(234,88,12,0.03) 40%, transparent 70%)' }}
-          animate={{ scale: [1, 1.15, 1], opacity: [0.85, 1, 0.85] }}
-          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute -bottom-40 left-1/4 w-[500px] h-[500px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.05) 0%, transparent 70%)' }}
-          animate={{ scale: [1, 1.2, 1], opacity: [0.6, 0.9, 0.6] }}
-          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-        />
-        {/* Grid overlay */}
-        <div className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)',
-            backgroundSize: '64px 64px'
-          }}
+          className="absolute w-[600px] h-[600px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.12) 0%, rgba(234,88,12,0.04) 50%, transparent 70%)' }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 5, repeat: Infinity }}
         />
       </motion.div>
 
-      {/* Hero content */}
-      <motion.div 
-        className="relative z-10 max-w-7xl mx-auto px-6 flex flex-col items-center text-center w-full"
-        style={{ y: contentY }}
-      >
-        {/* David dominates the hero */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.3, rotateY: -45 }}
-          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-          transition={{ delay: 0.2, duration: 1.4, type: 'spring', stiffness: 75, damping: 11 }}
-          className="mb-6"
-        >
-          <DavidCore size={340} />
-        </motion.div>
+      {/* Hero content — David-first layout */}
+      <motion.div className="relative z-20 max-w-7xl mx-auto px-6 w-full pt-20" style={{ y: contentY }}>
+        <div className="flex flex-col items-center text-center">
 
-        {/* David greeting */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.9 }}
-          className="max-w-2xl"
-        >
+          {/* Meet David badge */}
           <motion.div
-            className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-full px-5 py-2 mb-8"
-            animate={{ y: [0, -3, 0] }}
-            transition={{ duration: 3.5, repeat: Infinity }}
+            className="inline-flex items-center gap-2.5 bg-amber-400/12 border border-amber-400/25 rounded-full px-5 py-2 mb-10"
+            initial={{ opacity: 0, y: -20, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.7 }}
           >
-            <motion.span 
+            <motion.span
               className="w-2 h-2 rounded-full bg-amber-400"
-              animate={{ scale: [1, 2.2, 1], opacity: [1, 0.3, 1] }}
-              transition={{ duration: 2.2, repeat: Infinity }}
+              animate={{ scale: [1, 2.5, 1], opacity: [1, 0.3, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
             />
-            <span className="text-amber-400 text-sm font-semibold">AI Avatar · 25 Years Experience · Real human expertise</span>
+            <span className="text-amber-400 text-xs font-black uppercase tracking-[0.2em]">Meet Your Forklift Expert</span>
           </motion.div>
 
-          <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.02] tracking-tight mb-6">
-            Your warehouse deserves
-            <br />
-            <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400 bg-clip-text text-transparent">
-              expert guidance.
-            </span>
-          </h1>
+          {/* David — MASSIVE, commanding attention */}
+          <motion.div
+            className="mb-8 pointer-events-auto"
+            initial={{ opacity: 0, scale: 0.4, rotateY: -50 }}
+            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+            transition={{ delay: 0.3, duration: 1.2, type: 'spring', stiffness: 70, damping: 10 }}
+          >
+            <DavidCore size={440} />
+          </motion.div>
 
-          <p className="text-lg md:text-xl text-white/38 max-w-xl mx-auto mb-10 leading-relaxed">
-            I'm David. I've sold 500+ forklifts across the Northeast. Tell me what you're working with — 
-            I'll cut through the noise and point you exactly where you need to go.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <motion.button
-              className="bg-gradient-to-r from-amber-400 to-orange-500 text-black font-black text-base px-10 py-4 rounded-2xl shadow-2xl shadow-amber-500/30 flex items-center justify-center gap-3"
-              whileHover={{ scale: 1.04, boxShadow: '0 30px 60px -15px rgba(245,158,11,0.45)' }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+          {/* David's greeting — loud and proud */}
+          <motion.div
+            className="max-w-2xl"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.8 }}
+          >
+            {/* Headline — David is the subject */}
+            <motion.h1
+              className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.0] tracking-tight mb-5"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
             >
-              Start a Conversation <ArrowRight size={18} />
-            </motion.button>
-            <motion.button
-              className="bg-white/5 border border-white/10 text-white font-semibold text-base px-10 py-4 rounded-2xl backdrop-blur-sm flex items-center justify-center gap-3 hover:bg-white/10 transition-colors"
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => document.getElementById('inventory')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Browse Inventory
-            </motion.button>
-          </div>
+              Hi, I'm{' '}
+              <span className="bg-gradient-to-r from-amber-300 via-orange-400 to-amber-400 bg-clip-text text-transparent">
+                David.
+              </span>
+              <br />
+              <span className="text-white/60">I sell forklifts.</span>
+            </motion.h1>
 
-          <p className="text-white/22 text-sm mt-8">
-            No account needed · Real answers in minutes · Straight talk, no sales pressure
-          </p>
-        </motion.div>
+            {/* David's personal pitch */}
+            <motion.p
+              className="text-base md:text-lg text-white/45 max-w-lg mx-auto leading-relaxed mb-8"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.95 }}
+            >
+              25 years, 500+ units placed. I'll cut through the noise and tell you exactly what you need — no runaround, no mystery fees.
+            </motion.p>
+
+            {/* CTAs — David's call to action */}
+            <motion.div
+              className="flex flex-col sm:flex-row gap-4 justify-center"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.05 }}
+            >
+              <motion.a href="#inventory"
+                className="bg-gradient-to-r from-amber-400 to-orange-500 text-black font-black text-base px-10 py-4 rounded-2xl shadow-2xl shadow-amber-500/35 flex items-center justify-center gap-2.5"
+                whileHover={{ scale: 1.04, boxShadow: '0 30px 60px -12px rgba(245,158,11,0.5)' }}
+                whileTap={{ scale: 0.97 }}>
+                Browse Inventory <ArrowRight size={18} />
+              </motion.a>
+              <motion.a href="#contact"
+                className="bg-white/06 border border-white/12 text-white font-semibold text-base px-10 py-4 rounded-2xl backdrop-blur-sm flex items-center justify-center gap-2.5 hover:bg-white/10 hover:border-white/20 transition-all"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}>
+                Chat with David <MessageSquare size={18} />
+              </motion.a>
+            </motion.div>
+
+            {/* David credentials */}
+            <motion.div
+              className="flex items-center gap-6 mt-10 justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+            >
+              {[
+                { icon: '🏆', text: '500+ Units' },
+                { icon: '⭐', text: '4.9 Rating' },
+                { icon: '🛡️', text: 'OSHA Cert' },
+                { icon: '📍', text: 'NJ Based' },
+              ].map(({ icon, text }) => (
+                <div key={text} className="flex items-center gap-1.5 text-white/30 text-xs font-medium">
+                  <span>{icon}</span><span>{text}</span>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </div>
       </motion.div>
 
       {/* Scroll indicator */}
       <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/18"
-        animate={{ y: [0, 14, 0] }}
-        transition={{ duration: 2.8, repeat: Infinity }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/15 z-20"
+        animate={{ y: [0, 12, 0] }}
+        transition={{ duration: 2.5, repeat: Infinity }}
       >
-        <span className="text-xs font-medium uppercase tracking-widest">Scroll to explore</span>
-        <ChevronDown size={22} />
+        <span className="text-[10px] font-black uppercase tracking-[0.3em]">Scroll</span>
+        <ChevronDown size={20} />
       </motion.div>
     </section>
   );
@@ -663,18 +694,21 @@ const Services = () => {
           ))}
         </div>
       </div>
+    </Section>
+  );
+};
 
 const Inventory = () => {
   const [active, setActive] = useState('All');
   const filters = ['All', 'Electric', 'IC / Propane', 'Reach Truck', 'Order Picker'];
 
   const items = [
-    { id: 1, name: 'Raymond 7500 Reach Truck', year: '2019', hours: '4,200', type: 'Reach Truck', price: '$32,500', status: 'Available', img: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=80', tag: 'Popular' },
-    { id: 2, name: 'Toyota Core IC Cushion', year: '2020', hours: '2,800', type: 'IC / Propane', price: '$28,000', status: 'Available', img: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=600&q=80', tag: null },
-    { id: 3, name: 'Raymond EASI OPC30TT', year: '2012', hours: '8,400', type: 'Order Picker', price: '$9,500', status: 'Available', img: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=80', tag: 'Best Value' },
-    { id: 4, name: 'Hyster W40ZA Electric', year: '2018', hours: '3,100', type: 'Electric', price: '$24,000', status: 'Available', img: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=600&q=80', tag: null },
-    { id: 5, name: 'Crown PC 4500 Chassis', year: '2015', hours: '6,700', type: 'Electric', price: '$18,500', status: 'Available', img: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=80', tag: 'Low Hours' },
-    { id: 6, name: 'Komatsu Electric 3-Wheel', year: '2017', hours: '5,200', type: 'Electric', price: '$21,000', status: 'Just In', img: 'https://images.unsplash.com/photo-1553413077-190dd305871c?w=600&q=80', tag: 'New Arrival' },
+    { id: 1, name: 'Raymond 7500 Reach Truck', year: '2019', hours: '4,200', type: 'Reach Truck', price: '$32,500', status: 'Available', img: '/images/raymond_2178.jpg', tag: 'Popular' },
+    { id: 2, name: 'Toyota Core IC Cushion', year: '2020', hours: '2,800', type: 'IC / Propane', price: '$28,000', status: 'Available', img: '/images/raymond_2166.jpg', tag: null },
+    { id: 3, name: 'Raymond EASI OPC30TT', year: '2012', hours: '8,400', type: 'Order Picker', price: '$9,500', status: 'Available', img: '/images/raymond_2176.jpg', tag: 'Best Value' },
+    { id: 4, name: 'Hyster W40ZA Electric', year: '2018', hours: '3,100', type: 'Electric', price: '$24,000', status: 'Available', img: '/images/raymond_2174.jpg', tag: null },
+    { id: 5, name: 'Crown PC 4500 Chassis', year: '2015', hours: '6,700', type: 'Electric', price: '$18,500', status: 'Available', img: '/images/raymond_2177.jpg', tag: 'Low Hours' },
+    { id: 6, name: 'Komatsu Electric 3-Wheel', year: '2017', hours: '5,200', type: 'Electric', price: '$21,000', status: 'Just In', img: '/images/raymond_2167.jpg', tag: 'New Arrival' },
   ];
 
   const filtered = active === 'All' ? items : items.filter(i => i.type === active);
@@ -794,7 +828,7 @@ const AboutDavid = () => {
 
           <div className="relative">
             <div className="relative rounded-3xl overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1553413077-190dd305871c?w=700&q=80" alt="Warehouse" className="w-full h-80 object-cover" />
+              <img src="/images/raymond_2172.jpg" alt="Warehouse" className="w-full h-80 object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-6 left-6 right-6">
                 <p className="text-white/80 text-lg font-medium italic mb-3">

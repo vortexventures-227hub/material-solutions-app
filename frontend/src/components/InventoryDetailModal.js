@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ListingTemplates from './ListingTemplates';
 import PublishModal from './PublishModal';
+import PublishButton from './PublishButton';
 import api from '../api';
 import { useToast } from '../context/ToastContext';
 import { Loader2, CheckCircle, Clock, AlertCircle, ShoppingCart, Megaphone, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -132,28 +133,23 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
 
         {/* Publish Action Bar - Always visible at top */}
         <div className="px-4 lg:px-6 pt-4 pb-2">
-          <button
-            onClick={() => setShowPublishModal(true)}
-            disabled={hasListings || inventory.status === 'sold' || inventory.status === 'archived'}
-            className={`
-              w-full flex items-center justify-center gap-2 p-3.5 rounded-xl text-sm font-bold transition-all duration-200
-              ${hasListings
-                ? 'bg-neon-green/10 text-neon-green border-2 border-neon-green/30 cursor-default'
-                : inventory.status === 'sold' || inventory.status === 'archived'
-                  ? 'bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-50'
-                  : 'bg-gradient-to-r from-neon-cyan to-neon-purple text-white hover:shadow-glow-neon hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] shadow-md shadow-neon-cyan/20'
-              }
-            `}
-          >
-            <Megaphone size={18} />
-            <span>
-              {hasListings
-                ? 'Already Published to Marketplaces'
-                : inventory.status === 'sold'
-                  ? 'Item Sold — Cannot Publish'
-                  : 'Publish to Marketplaces'}
-            </span>
-          </button>
+          {hasListings ? (
+            <div className="w-full flex items-center justify-center gap-2 p-3.5 rounded-xl text-sm font-bold bg-neon-green/10 text-neon-green border-2 border-neon-green/30 cursor-default">
+              <CheckCircle size={18} />
+              <span>Already Published to Marketplaces</span>
+            </div>
+          ) : inventory.status === 'sold' || inventory.status === 'archived' ? (
+            <div className="w-full flex items-center justify-center gap-2 p-3.5 rounded-xl text-sm font-bold bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-50">
+              <Megaphone size={18} />
+              <span>{inventory.status === 'sold' ? 'Item Sold — Cannot Publish' : 'Archived — Cannot Publish'}</span>
+            </div>
+          ) : (
+            <PublishButton
+              unit={inventory}
+              onClick={() => setShowPublishModal(true)}
+              className="w-full"
+            />
+          )}
         </div>
 
         {/* Content */}
@@ -268,29 +264,20 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
               Quick Actions
             </h3>
 
-            {/* Publish to Marketplaces - Always visible */}
-            <button
-              onClick={() => setShowPublishModal(true)}
-              disabled={hasListings || inventory.status === 'sold' || inventory.status === 'archived'}
-              className={`
-                w-full mb-4 flex items-center justify-center gap-2 p-4 rounded-xl text-sm font-bold transition-all duration-200
-                ${hasListings
-                  ? 'bg-neon-green/10 text-neon-green border-2 border-neon-green/30 cursor-default'
-                  : inventory.status === 'sold' || inventory.status === 'archived'
-                    ? 'bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-50'
-                    : 'bg-gradient-to-r from-neon-cyan to-neon-purple text-white hover:shadow-glow-neon hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] shadow-md shadow-neon-cyan/20'
-                }
-              `}
-            >
-              <Megaphone size={18} />
-              <span>
-                {hasListings
-                  ? 'Already Published to Marketplaces'
-                  : inventory.status === 'sold'
-                    ? 'Item Sold — Cannot Publish'
-                    : 'Publish to Marketplaces'}
-              </span>
-            </button>
+            {/* Publish to Marketplaces - Quick Action */}
+            {!hasListings && inventory.status !== 'sold' && inventory.status !== 'archived' && (
+              <PublishButton
+                unit={inventory}
+                onClick={() => setShowPublishModal(true)}
+                className="w-full mb-4"
+              />
+            )}
+            {hasListings && (
+              <div className="w-full mb-4 flex items-center justify-center gap-2 p-4 rounded-xl text-sm font-bold bg-neon-green/10 text-neon-green border-2 border-neon-green/30 cursor-default">
+                <CheckCircle size={18} />
+                <span>Already Published to Marketplaces</span>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[

@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --bg-light: #FFFFFF;
+  --bg-off-white: #F8F8F8;
+  --bg-light-gray: #F0F0F0;
+  --yellow-primary: #FFD700;
+  --yellow-light: #FFE44D;
+  --yellow-dark: #E6C200;
+  --black: #000000;
+  --white: #FFFFFF;
+  --red-accent: #DC2626;
+  --orange-accent: #EA580C;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--black);
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-light-gray);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--yellow-primary);
+  border-radius: 3px;
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glassmorphism - updated for light theme */
+.glass {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Premium card hover */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.card-hover:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 40px rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+/* Video overlay */
+.video-overlay {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.92) 100%
+  );
+}
+
+/* Glow effect */
+.glow-yellow {
+  box-shadow: 0 0 60px rgba(255, 215, 0, 0.3), 0 0 120px rgba(255, 215, 0, 0.1);
+}
+
+/* Button 3D effect */
+.btn-3d {
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.35), 0 2px 0 #B8860B;
+  transition: all 0.2s ease;
+}
+.btn-3d:hover {
+  box-shadow: 0 12px 32px rgba(255, 215, 0, 0.5), 0 4px 0 #B8860B;
+  transform: translateY(-2px);
+}
+.btn-3d:active {
+  transform: translateY(2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.25), 0 1px 0 #B8860B;
+}
+
+/* Magnetic hover */
+.magnetic-hover {
+  transition: transform 0.2s ease;
+}
+.magnetic-hover:hover {
+  transform: scale(1.03);
+}
+
+/* Dark section for contrast areas */
+.dark-section {
+  background-color: #0a0a0a;
+  color: white;
+}

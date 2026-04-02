@@ -6,7 +6,7 @@ import { Loader2, CheckCircle2, AlertCircle, Mail } from 'lucide-react';
  */
 export default function PublishProgress({ progress, platforms, emailsSent, emailsQueued }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
       <div className="relative bg-vortex-dark w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-2 border-vortex-yellow/30 overflow-hidden p-6">
