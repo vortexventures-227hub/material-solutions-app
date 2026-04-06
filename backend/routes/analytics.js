@@ -9,11 +9,10 @@
 
 const express = require('express');
 const router = express.Router();
-const { getToken } = require('../middleware/auth');
 const db = require('../db');
 
 // ─── GET /api/analytics/overview ───────────────────────────────
-router.get('/overview', getToken, async (req, res, next) => {
+router.get('/overview', async (req, res, next) => {
   try {
     const [
       totalLeads,
@@ -77,7 +76,7 @@ router.get('/overview', getToken, async (req, res, next) => {
 });
 
 // ─── GET /api/analytics/inventory/:id ──────────────────────────
-router.get('/inventory/:id', getToken, async (req, res, next) => {
+router.get('/inventory/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -124,7 +123,7 @@ router.get('/inventory/:id', getToken, async (req, res, next) => {
 });
 
 // ─── GET /api/analytics/platforms ──────────────────────────────
-router.get('/platforms', getToken, async (req, res, next) => {
+router.get('/platforms', async (req, res, next) => {
   try {
     const breakdown = await db.query(`
       SELECT
@@ -149,7 +148,7 @@ router.get('/platforms', getToken, async (req, res, next) => {
 });
 
 // ─── GET /api/analytics/timeline ───────────────────────────────
-router.get('/timeline', getToken, async (req, res, next) => {
+router.get('/timeline', async (req, res, next) => {
   try {
     const days = parseInt(req.query.days) || 30;
     const offset = process.env.NODE_ENV === 'production' ? '' : '';

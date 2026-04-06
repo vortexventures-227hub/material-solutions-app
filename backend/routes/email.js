@@ -11,7 +11,6 @@
 
 const express = require('express');
 const router = express.Router();
-const { getToken } = require('../middleware/auth');
 const { sendEmail } = require('../services/email/sender');
 const { buildSequence, buildEmailForStep } = require('../services/email/sequenceBuilder');
 const { findMatchesForLead, findLeadsForInventory } = require('../services/email/matcher');
@@ -19,7 +18,7 @@ const { getCampaignAnalytics, handleSendGridWebhook, recordOpen, recordClick } =
 const db = require('../db');
 
 // ─── POST /api/email/send ───────────────────────────────────────
-router.post('/send', getToken, async (req, res, next) => {
+router.post('/send', async (req, res, next) => {
   try {
     const { leadId, inventoryId, subject, body, template } = req.body;
     if (!leadId || (!body && !template)) {
@@ -51,7 +50,7 @@ router.post('/send', getToken, async (req, res, next) => {
 });
 
 // ─── POST /api/email/match ──────────────────────────────────────
-router.post('/match', getToken, async (req, res, next) => {
+router.post('/match', async (req, res, next) => {
   try {
     const { leadId } = req.body;
     if (!leadId) return res.status(400).json({ error: 'leadId required' });
@@ -64,7 +63,7 @@ router.post('/match', getToken, async (req, res, next) => {
 });
 
 // ─── POST /api/email/trigger-sequence ────────────────────────────
-router.post('/trigger-sequence', getToken, async (req, res, next) => {
+router.post('/trigger-sequence', async (req, res, next) => {
   try {
     const { leadId, inventoryId, sequenceType } = req.body;
     if (!leadId || !inventoryId) {
@@ -127,7 +126,7 @@ router.post('/trigger-sequence', getToken, async (req, res, next) => {
 });
 
 // ─── GET /api/email/analytics/:id ──────────────────────────────
-router.get('/analytics/:id', getToken, async (req, res, next) => {
+router.get('/analytics/:id', async (req, res, next) => {
   try {
     const analytics = await getCampaignAnalytics(req.params.id);
     const campaignRes = await db.query(
