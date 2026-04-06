@@ -8,7 +8,6 @@
 
 const express = require('express');
 const router = express.Router();
-const { getToken } = require('../middleware/auth');
 const { generateProductSchema } = require('../services/seo/schemaGenerator');
 const { generateMeta, generateSlug } = require('../services/seo/metaGenerator');
 const { generateFaq } = require('../services/seo/faqGenerator');
@@ -28,7 +27,7 @@ const PLATFORM_HANDLERS = {
  * POST /api/publish/:inventoryId
  * Body: { platforms: string[], options: object }
  */
-router.post('/:inventoryId', getToken, async (req, res, next) => {
+router.post('/:inventoryId', async (req, res, next) => {
   try {
     const { inventoryId } = req.params;
     const { platforms = [], options = {} } = req.body;
@@ -128,7 +127,7 @@ router.post('/:inventoryId', getToken, async (req, res, next) => {
  * GET /api/publish/:inventoryId
  * Get all listing statuses for an inventory item
  */
-router.get('/:inventoryId', getToken, async (req, res, next) => {
+router.get('/:inventoryId', async (req, res, next) => {
   try {
     const { inventoryId } = req.params;
 
@@ -154,7 +153,7 @@ router.get('/:inventoryId', getToken, async (req, res, next) => {
 /**
  * POST /api/publish/:inventoryId/:platform/unpublish
  */
-router.post('/:inventoryId/:platform/unpublish', getToken, async (req, res, next) => {
+router.post('/:inventoryId/:platform/unpublish', async (req, res, next) => {
   try {
     const { inventoryId, platform } = req.params;
 

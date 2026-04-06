@@ -22,18 +22,21 @@ router.post('/', async (req, res, next) => {
     const {
       make, model, year, serial, hours, capacity_lbs, mast_type,
       lift_height_inches, power_type, battery_info, attachments,
-      condition_notes, images, purchase_price, additional_context
+      condition_notes, condition_score, images, purchase_price,
+      listing_price, floor_price, ceiling_price, status, additional_context
     } = validatedData;
     const result = await db.query(
       `INSERT INTO inventory (
         make, model, year, serial, hours, capacity_lbs, mast_type,
         lift_height_inches, power_type, battery_info, attachments,
-        condition_notes, images, purchase_price, additional_context
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        condition_notes, condition_score, images, purchase_price,
+        listing_price, floor_price, ceiling_price, status, additional_context
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
       RETURNING *`,
       [make, model, year, serial, hours, capacity_lbs, mast_type,
        lift_height_inches, power_type, battery_info, JSON.stringify(attachments || []),
-       condition_notes, JSON.stringify(images || []), purchase_price, additional_context]
+       condition_notes, condition_score, JSON.stringify(images || []), purchase_price,
+       listing_price, floor_price, ceiling_price, status, additional_context]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
