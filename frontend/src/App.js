@@ -21,6 +21,7 @@ const David = lazy(() => import('./pages/David'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Forklifts = lazy(() => import('./pages/Forklifts'));
 const Home = lazy(() => import('./pages/Home'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -120,6 +121,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Resources />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

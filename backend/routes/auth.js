@@ -235,4 +235,55 @@ router.get('/me', verifyToken, async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/auth/change-password - Change authenticated user's password
+ */
+router.post('/change-password', verifyToken, async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 12) {
+      return res.status(400).json({ error: 'New password must be at least 12 characters' });
+    }
+
+    const result = await db.query(
+      'SELECT id, password_hash FROM users WHERE id = $1',
+      [req.user.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+    const validPassword = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const newPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    await db.query(
+      'UPDATE users SET password_hash = $1 WHERE id = $2',
+      [newPasswordHash, user.id]
+    );
+
+    // Invalidate all refresh tokens so user must re-login
+    await db.query(
+      'DELETE FROM refresh_tokens WHERE user_id = $1',
+      [user.id]
+    );
+
+    res.clearCookie('refreshToken');
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    next(error);
+  }
+});
+
 module.exports = router;

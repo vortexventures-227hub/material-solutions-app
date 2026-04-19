@@ -180,7 +180,10 @@ const Navigation = () => {
                         {user?.role}
                       </span>
                     </div>
-                    <button className="w-full text-left px-4 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2.5 transition-colors rounded-lg mx-0">
+                    <button
+                      onClick={() => { navigate('/settings'); setShowUserMenu(false); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2.5 transition-colors rounded-lg mx-0"
+                    >
                       <Settings size={15} />
                       <span>Account Settings</span>
                     </button>
@@ -319,7 +322,10 @@ const Navigation = () => {
                 <div className="my-4 border-t border-border/50 pt-4" />
                 <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-3">Support & Account</p>
 
-                <button className="w-full flex items-center gap-3 p-3 text-muted-foreground hover:bg-muted hover:text-foreground rounded-xl transition-colors">
+                <button
+                  onClick={() => { navigate('/settings'); setIsMobileMenuOpen(false); }}
+                  className="w-full flex items-center gap-3 p-3 text-muted-foreground hover:bg-muted hover:text-foreground rounded-xl transition-colors"
+                >
                   <Settings size={18} />
                   <span className="text-sm font-medium">Account Settings</span>
                 </button>
