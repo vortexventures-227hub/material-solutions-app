@@ -3,43 +3,105 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const { verifyToken } = require('../middleware/auth');
+
+// 5 attempts per 10 min per IP — brute-force guard on password changes
+const changePasswordLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip,
+  handler: (req, res) => {
+    console.warn(`[RateLimit] change-password limit hit from IP ${req.ip}`);
+    res.status(429).json({
+      error: 'Too many password change attempts. Try again in 10 minutes.',
+    });
+  },
+});
 
 const SALT_ROUNDS = 12;
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
 
+function requireAdminRegistrationAuth(req, res) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ error: 'Authentication required to create users' });
+    return false;
+  }
+
+  try {
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.role !== 'admin') {
+      res.status(403).json({ error: 'Admin role required to create users' });
+      return false;
+    }
+
+    req.user = decoded;
+    return true;
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      res.status(401).json({ error: 'Token expired' });
+      return false;
+    }
+
+    res.status(401).json({ error: 'Invalid token' });
+    return false;
+  }
+}
+
 /**
- * POST /api/auth/register - Create new user (admin only in production)
+ * POST /api/auth/register - Create new user
+ * Production default: authenticated admin only.
+ * Optional bootstrap: set ALLOW_UNAUTHENTICATED_BOOTSTRAP_REGISTER=true and
+ * ADMIN_BOOTSTRAP_TOKEN to allow the very first user to be created without JWT.
  */
 router.post('/register', async (req, res, next) => {
   const { email, password, name, role } = req.body;
-  
+
   try {
-    // Validate input
+    const userCountResult = await db.query('SELECT COUNT(*)::int AS count FROM users');
+    const userCount = userCountResult.rows[0]?.count || 0;
+    const bootstrapAllowed = process.env.ALLOW_UNAUTHENTICATED_BOOTSTRAP_REGISTER === 'true';
+    const bootstrapToken = process.env.ADMIN_BOOTSTRAP_TOKEN;
+    const presentedBootstrapToken = req.headers['x-bootstrap-token'];
+    const isBootstrapRequest =
+      bootstrapAllowed &&
+      userCount === 0 &&
+      bootstrapToken &&
+      presentedBootstrapToken === bootstrapToken;
+
+    if (!isBootstrapRequest && !requireAdminRegistrationAuth(req, res)) {
+      return;
+    }
+
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, password, and name are required' });
     }
-    
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+
+    if (password.length < 12) {
+      return res.status(400).json({ error: 'Password must be at least 12 characters' });
     }
-    
-    // Hash password
+
+    const normalizedRole = isBootstrapRequest ? 'admin' : (role || 'staff');
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    
-    // Create user
+
     const result = await db.query(
       `INSERT INTO users (email, password_hash, name, role)
        VALUES ($1, $2, $3, $4)
        RETURNING id, email, name, role, created_at`,
-      [email.toLowerCase(), passwordHash, name, role || 'staff']
+      [email.toLowerCase(), passwordHash, name, normalizedRole]
     );
-    
+
     res.status(201).json({ user: result.rows[0] });
   } catch (error) {
-    if (error.code === '23505') { // Unique violation
+    if (error.code === '23505') {
       return res.status(409).json({ error: 'Email already registered' });
     }
     console.error('Error creating user:', error);
@@ -237,8 +299,9 @@ router.get('/me', verifyToken, async (req, res, next) => {
 
 /**
  * POST /api/auth/change-password - Change authenticated user's password
+ * Rate-limited: 5 attempts per 10 min per IP
  */
-router.post('/change-password', verifyToken, async (req, res, next) => {
+router.post('/change-password', changePasswordLimiter, verifyToken, async (req, res, next) => {
   const { currentPassword, newPassword } = req.body;
 
   try {
