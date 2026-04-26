@@ -99,6 +99,44 @@ test('publish POST returns 404 for valid missing UUID before SEO/listing side ef
   });
 });
 
+test('publish POST degrades instead of crashing when optional SEO schema drift is present', async () => {
+  const calls = [];
+  const app = buildApp(async (sql) => {
+    calls.push(sql);
+    if (/SELECT \* FROM inventory WHERE id/.test(sql)) {
+      return {
+        rows: [{
+          id: 'ddeb41d4-5261-4851-9324-e2f09ea8f807',
+          year: 2018,
+          make: 'Toyota',
+          model: '8FGCU25',
+          photos: [],
+          status: 'listed',
+        }],
+      };
+    }
+    if (/INSERT INTO inventory_seo/.test(sql)) {
+      const err = new Error('column "title" does not exist');
+      err.code = '42703';
+      throw err;
+    }
+    if (/UPDATE inventory SET status/.test(sql)) return { rows: [] };
+    throw new Error(`Unexpected query: ${sql}`);
+  });
+
+  await withServer(app, async (server) => {
+    const res = await request(server, 'POST', '/api/publish/ddeb41d4-5261-4851-9324-e2f09ea8f807', {
+      platforms: [],
+      options: {},
+      skipEmail: true,
+    });
+
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.results, []);
+    assert.equal(calls.filter((sql) => /INSERT INTO inventory_listings/.test(sql)).length, 0);
+  });
+});
+
 test('publish POST reports platform listing schema drift without crashing or calling external publisher', async () => {
   const calls = [];
   const app = buildApp(async (sql) => {
