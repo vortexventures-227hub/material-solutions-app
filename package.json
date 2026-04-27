@@ -1,0 +1,14 @@
+{
+  "name": "material-solutions-app-railway-entry",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Railway root entrypoint for the Material Solutions FSM backend.",
+  "scripts": {
+    "start": "node backend/server.js",
+    "test": "npm --prefix backend test",
+    "railway:build": "npm ci --prefix backend --omit=dev"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
