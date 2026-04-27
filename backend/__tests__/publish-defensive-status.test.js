@@ -99,7 +99,7 @@ test('publish POST returns 404 for valid missing UUID before SEO/listing side ef
   });
 });
 
-test('publish POST degrades instead of crashing when optional SEO schema drift is present', async () => {
+test('publish POST falls back to migration 006 SEO columns when legacy SEO columns drift', async () => {
   const calls = [];
   const app = buildApp(async (sql) => {
     calls.push(sql);
@@ -115,11 +115,12 @@ test('publish POST degrades instead of crashing when optional SEO schema drift i
         }],
       };
     }
-    if (/INSERT INTO inventory_seo/.test(sql)) {
+    if (/INSERT INTO inventory_seo/.test(sql) && /\btitle\b/.test(sql)) {
       const err = new Error('column "title" does not exist');
       err.code = '42703';
       throw err;
     }
+    if (/INSERT INTO inventory_seo/.test(sql) && /\bmeta_title\b/.test(sql)) return { rows: [] };
     if (/UPDATE inventory SET status/.test(sql)) return { rows: [] };
     throw new Error(`Unexpected query: ${sql}`);
   });
@@ -133,6 +134,7 @@ test('publish POST degrades instead of crashing when optional SEO schema drift i
 
     assert.equal(res.status, 200);
     assert.deepEqual(res.body.results, []);
+    assert.ok(calls.some((sql) => /INSERT INTO inventory_seo/.test(sql) && /\bmeta_title\b/.test(sql)));
     assert.equal(calls.filter((sql) => /INSERT INTO inventory_listings/.test(sql)).length, 0);
   });
 });

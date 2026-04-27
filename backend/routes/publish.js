@@ -39,6 +39,64 @@ async function optionalPublishQuery(label, fn, fallbackRows = []) {
   }
 }
 
+async function saveSeoRecord(inventoryId, unit, meta, slug, faqData) {
+  const schemaJson = JSON.stringify(generateProductSchema(unit));
+  const faqJson = JSON.stringify(faqData.schema);
+  const legacyValues = [
+    inventoryId,
+    meta.title,
+    meta.description,
+    meta.og.ogTitle,
+    meta.og.ogDescription,
+    unit.photos?.[0] || null,
+    schemaJson,
+    faqJson,
+    slug,
+    meta.canonical,
+  ];
+
+  try {
+    await db.query(
+      `INSERT INTO inventory_seo (inventory_id, title, meta_description, og_title, og_description, og_image_url, schema_product, faq, slug, canonical_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       ON CONFLICT (inventory_id) DO UPDATE SET
+         title = EXCLUDED.title, meta_description = EXCLUDED.meta_description,
+         og_title = EXCLUDED.og_title, og_description = EXCLUDED.og_description,
+         og_image_url = EXCLUDED.og_image_url, schema_product = EXCLUDED.schema_product,
+         faq = EXCLUDED.faq, slug = EXCLUDED.slug, canonical_url = EXCLUDED.canonical_url,
+         updated_at = NOW()`,
+      legacyValues
+    );
+    return;
+  } catch (err) {
+    if (!isOptionalPublishSchemaError(err)) throw err;
+  }
+
+  const migration006Values = [
+    inventoryId,
+    meta.title,
+    meta.description,
+    meta.og.ogTitle,
+    meta.og.ogDescription,
+    schemaJson,
+    faqJson,
+    meta.keywords ? meta.keywords.split(',').map((kw) => kw.trim()).filter(Boolean) : [],
+    JSON.stringify({ primary: meta.og.ogImageAlt || null }),
+  ];
+
+  await optionalPublishQuery('inventory_seo', () => db.query(
+    `INSERT INTO inventory_seo (inventory_id, meta_title, meta_description, og_title, og_description, schema_json, faq_json, keywords, alt_texts)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     ON CONFLICT (inventory_id) DO UPDATE SET
+       meta_title = EXCLUDED.meta_title, meta_description = EXCLUDED.meta_description,
+       og_title = EXCLUDED.og_title, og_description = EXCLUDED.og_description,
+       schema_json = EXCLUDED.schema_json, faq_json = EXCLUDED.faq_json,
+       keywords = EXCLUDED.keywords, alt_texts = EXCLUDED.alt_texts,
+       updated_at = NOW()`,
+    migration006Values
+  ));
+}
+
 // Platform publish handlers (mock — Cipher integrates real APIs)
 const PLATFORM_HANDLERS = {
   craigslist: publishToCraigslist,
@@ -71,28 +129,7 @@ router.post('/:inventoryId', async (req, res, next) => {
 
     // Save optional SEO record. Phase 6C publish tables are deploy-hardening
     // surfaces; schema drift must not turn safe no-op publish probes into 500s.
-    await optionalPublishQuery('inventory_seo', () => db.query(
-      `INSERT INTO inventory_seo (inventory_id, title, meta_description, og_title, og_description, og_image_url, schema_product, faq, slug, canonical_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       ON CONFLICT (inventory_id) DO UPDATE SET
-         title = EXCLUDED.title, meta_description = EXCLUDED.meta_description,
-         og_title = EXCLUDED.og_title, og_description = EXCLUDED.og_description,
-         og_image_url = EXCLUDED.og_image_url, schema_product = EXCLUDED.schema_product,
-         faq = EXCLUDED.faq, slug = EXCLUDED.slug, canonical_url = EXCLUDED.canonical_url,
-         updated_at = NOW()`,
-      [
-        inventoryId,
-        meta.title,
-        meta.description,
-        meta.og.ogTitle,
-        meta.og.ogDescription,
-        unit.photos?.[0] || null,
-        JSON.stringify(generateProductSchema(unit)),
-        JSON.stringify(faqData.schema),
-        slug,
-        meta.canonical,
-      ]
-    ));
+    await saveSeoRecord(inventoryId, unit, meta, slug, faqData);
 
     // Update inventory status
     if (!unit.status || unit.status === 'intake') {
