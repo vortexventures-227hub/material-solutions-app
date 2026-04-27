@@ -84,6 +84,24 @@ async function saveSeoRecord(inventoryId, unit, meta, slug, faqData) {
     JSON.stringify({ primary: meta.og.ogImageAlt || null }),
   ];
 
+  try {
+    await db.query(
+      `INSERT INTO inventory_seo (inventory_id, meta_title, meta_description, og_title, og_description, schema_json, faq_json, keywords, alt_texts, og_image_url, slug, canonical_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       ON CONFLICT (inventory_id) DO UPDATE SET
+         meta_title = EXCLUDED.meta_title, meta_description = EXCLUDED.meta_description,
+         og_title = EXCLUDED.og_title, og_description = EXCLUDED.og_description,
+         schema_json = EXCLUDED.schema_json, faq_json = EXCLUDED.faq_json,
+         keywords = EXCLUDED.keywords, alt_texts = EXCLUDED.alt_texts,
+         og_image_url = EXCLUDED.og_image_url, slug = EXCLUDED.slug,
+         canonical_url = EXCLUDED.canonical_url, updated_at = NOW()`,
+      [...migration006Values, meta.og.ogImage || unit.photos?.[0] || null, slug, meta.canonical]
+    );
+    return;
+  } catch (err) {
+    if (!isOptionalPublishSchemaError(err)) throw err;
+  }
+
   await optionalPublishQuery('inventory_seo', () => db.query(
     `INSERT INTO inventory_seo (inventory_id, meta_title, meta_description, og_title, og_description, schema_json, faq_json, keywords, alt_texts)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)

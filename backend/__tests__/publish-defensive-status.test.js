@@ -101,8 +101,10 @@ test('publish POST returns 404 for valid missing UUID before SEO/listing side ef
 
 test('publish POST falls back to migration 006 SEO columns when legacy SEO columns drift', async () => {
   const calls = [];
-  const app = buildApp(async (sql) => {
+  const valuesBySql = [];
+  const app = buildApp(async (sql, values = []) => {
     calls.push(sql);
+    valuesBySql.push({ sql, values });
     if (/SELECT \* FROM inventory WHERE id/.test(sql)) {
       return {
         rows: [{
@@ -110,7 +112,7 @@ test('publish POST falls back to migration 006 SEO columns when legacy SEO colum
           year: 2018,
           make: 'Toyota',
           model: '8FGCU25',
-          photos: [],
+          photos: ['https://cdn.example.com/forklift.jpg'],
           status: 'listed',
         }],
       };
@@ -134,7 +136,17 @@ test('publish POST falls back to migration 006 SEO columns when legacy SEO colum
 
     assert.equal(res.status, 200);
     assert.deepEqual(res.body.results, []);
-    assert.ok(calls.some((sql) => /INSERT INTO inventory_seo/.test(sql) && /\bmeta_title\b/.test(sql)));
+    const migrationSeoCall = valuesBySql.find(({ sql }) => (
+      /INSERT INTO inventory_seo/.test(sql)
+      && /\bmeta_title\b/.test(sql)
+      && /\bog_image_url\b/.test(sql)
+      && /\bslug\b/.test(sql)
+      && /\bcanonical_url\b/.test(sql)
+    ));
+    assert.ok(migrationSeoCall, 'migration-006 SEO fallback should preserve image, slug, and canonical fields when additive columns exist');
+    assert.ok(migrationSeoCall.values.includes('https://cdn.example.com/forklift.jpg'));
+    assert.ok(migrationSeoCall.values.includes('2018-toyota-8fgcu25-ddeb41d4'));
+    assert.ok(migrationSeoCall.values.includes('https://app.materialsolutionsnj.com/inventory/ddeb41d4-5261-4851-9324-e2f09ea8f807'));
     assert.equal(calls.filter((sql) => /INSERT INTO inventory_listings/.test(sql)).length, 0);
   });
 });
