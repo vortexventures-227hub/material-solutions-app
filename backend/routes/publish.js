@@ -271,17 +271,36 @@ router.post('/:inventoryId/:platform/unpublish', async (req, res, next) => {
     const { inventoryId, platform } = req.params;
     if (rejectInvalidInventoryId(res, inventoryId)) return;
 
-    const listing = await db.query(
+    const listingAttempt = await optionalPublishQuery('inventory_listings', () => db.query(
       `SELECT * FROM inventory_listings WHERE inventory_id = $1 AND platform = $2`,
       [inventoryId, platform]
-    );
-    if (!listing.rows.length) return res.status(404).json({ error: 'Listing not found' });
+    ));
+    if (listingAttempt.warning) {
+      return res.json({
+        status: 'unavailable',
+        platform,
+        inventoryId,
+        error: listingAttempt.warning,
+        degraded: true,
+      });
+    }
+    if (!listingAttempt.result.rows.length) return res.status(404).json({ error: 'Listing not found' });
 
-    // Call platform-specific unpublish (mock)
-    await db.query(
+    // Call platform-specific unpublish (mock). Optional Phase 6C listing schema
+    // drift should not turn rollback/status probes into 500s.
+    const updateAttempt = await optionalPublishQuery('inventory_listings', () => db.query(
       `UPDATE inventory_listings SET status = 'unpublished', updated_at = NOW() WHERE inventory_id = $1 AND platform = $2`,
       [inventoryId, platform]
-    );
+    ));
+    if (updateAttempt.warning) {
+      return res.json({
+        status: 'unavailable',
+        platform,
+        inventoryId,
+        error: updateAttempt.warning,
+        degraded: true,
+      });
+    }
 
     res.json({ status: 'unpublished', platform, inventoryId });
   } catch (err) {

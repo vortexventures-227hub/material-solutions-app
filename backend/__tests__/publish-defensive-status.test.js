@@ -278,6 +278,29 @@ test('publish POST reports listing check-constraint drift without crashing or ca
   });
 });
 
+test('publish unpublish degrades when optional listing table is absent', async () => {
+  const calls = [];
+  const app = buildApp(async (sql) => {
+    calls.push(sql);
+    if (/SELECT \* FROM inventory_listings WHERE inventory_id/.test(sql)) {
+      const err = new Error('relation "inventory_listings" does not exist');
+      err.code = '42P01';
+      throw err;
+    }
+    throw new Error(`Unexpected query: ${sql}`);
+  });
+
+  await withServer(app, async (server) => {
+    const res = await request(server, 'POST', '/api/publish/ddeb41d4-5261-4851-9324-e2f09ea8f807/craigslist/unpublish');
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.status, 'unavailable');
+    assert.equal(res.body.error, 'inventory_listings unavailable');
+    assert.equal(res.body.degraded, true);
+    assert.equal(calls.filter((sql) => /UPDATE inventory_listings/.test(sql)).length, 0);
+  });
+});
+
 test('publish GET degrades to 200 with warnings when optional Phase 6C tables are absent', async () => {
   const app = buildApp(async (sql) => {
     if (/inventory_listings/.test(sql)) {
