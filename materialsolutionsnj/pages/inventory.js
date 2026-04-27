@@ -3,193 +3,110 @@ import { useState, useRef } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import DavidAvatar from '../components/DavidAvatar'
 
-const INVENTORY = [
-  {
-    id: 1,
-    name: 'Raymond 7500',
-    category: 'Electric Reach Truck',
-    capacity: '4,500 lbs',
-    fuel: 'Electric',
-    hours: '1,200',
-    price: '$24,500',
-    status: 'In Stock',
-    image: 'raymond_2166.jpg',
-    featured: true,
-    description: 'High-performance reach truck ideal for high-density warehousing. Features advanced AC drive system and ergonomic operator compartment.'
-  },
-  {
-    id: 2,
-    name: 'Raymond 5500',
-    category: 'Electric Counterbalance',
-    capacity: '5,000 lbs',
-    fuel: 'Electric',
-    hours: '890',
-    price: '$21,900',
-    status: 'In Stock',
-    image: 'raymond_2167.jpg',
-    featured: false,
-    description: 'Versatile electric counterbalance forklift perfect for indoor/outdoor use. Low emissions, quiet operation.'
-  },
-  {
-    id: 3,
-    name: 'Toyota 8FGU25',
-    category: 'Pneumatic Tire',
-    capacity: '5,000 lbs',
-    fuel: 'LP Gas',
-    hours: '2,100',
-    price: '$18,500',
-    status: 'Just Arrived',
-    image: 'raymond_2169.jpg',
-    featured: true,
-    description: 'Rugged pneumatic tire forklift built for outdoor surfaces. Reliable Toyota engine with excellent fuel economy.'
-  },
-  {
-    id: 4,
-    name: 'Crown PC 4500',
-    category: 'Electric Pallet Jack',
-    capacity: '6,000 lbs',
-    fuel: 'Electric',
-    hours: '450',
-    price: '$8,900',
-    status: 'In Stock',
-    image: 'raymond_2170.jpg',
-    featured: false,
-    description: 'Heavy-duty electric pallet jack with exceptional maneuverability. Perfect for loading docks and warehouses.'
-  },
-  {
-    id: 5,
-    name: 'Raymond 7300',
-    category: 'Deep Reach Truck',
-    capacity: '3,500 lbs',
-    fuel: 'Electric',
-    hours: '1,800',
-    price: '$19,500',
-    status: 'In Stock',
-    image: 'raymond_2172.jpg',
-    featured: false,
-    description: 'Deep reach truck for extra deep racking applications. Extends into racks up to 54 inches.'
-  },
-  {
-    id: 6,
-    name: 'Toyota 8FGU32',
-    category: 'Pneumatic Tire',
-    capacity: '6,500 lbs',
-    fuel: 'LP Gas',
-    hours: '1,500',
-    price: '$22,000',
-    status: 'Hot Deal',
-    image: 'raymond_2173.jpg',
-    featured: true,
-    description: 'High-capacity pneumatic tire forklift. Built tough for outdoor yards, construction sites, and lumber yards.'
-  },
-  {
-    id: 7,
-    name: 'Raymond 2160',
-    category: 'Electric Pallet Jack',
-    capacity: '4,500 lbs',
-    fuel: 'Electric',
-    hours: '200',
-    price: '$6,500',
-    status: 'New Arrival',
-    image: 'raymond_2174.jpg',
-    featured: false,
-    description: 'Like-new electric pallet jack. Very low hours, recently serviced and ready to work.'
-  },
-  {
-    id: 8,
-    name: 'Crown SP 3500',
-    category: 'Stand-up Counterbalance',
-    capacity: '3,500 lbs',
-    fuel: 'Electric',
-    hours: '1,100',
-    price: '$16,800',
-    status: 'In Stock',
-    image: 'raymond_2176.jpg',
-    featured: false,
-    description: 'Stand-up rider forklift perfect for tight spaces. Excellent visibility and operator comfort.'
-  },
-  {
-    id: 9,
-    name: 'Raymond 7500',
-    category: 'High Performance Reach',
-    capacity: '4,000 lbs',
-    fuel: 'Electric',
-    hours: '750',
-    price: '$27,500',
-    status: 'Certified Pre-Owned',
-    image: 'raymond_2177.jpg',
-    featured: true,
-    description: 'Premium certified pre-owned reach truck. Full inspection, new batteries, and 6-month warranty included.'
-  },
-  {
-    id: 10,
-    name: 'Toyota 8FGU18',
-    category: 'Electric Counterbalance',
-    capacity: '3,500 lbs',
-    fuel: 'Electric',
-    hours: '650',
-    price: '$15,900',
-    status: 'In Stock',
-    image: 'raymond_2178.jpg',
-    featured: false,
-    description: 'Compact electric counterbalance forklift. Great for warehouses with weight restrictions.'
-  },
-  {
-    id: 11,
-    name: 'Hyster H50FT',
-    category: 'Pneumatic Tire',
-    capacity: '5,000 lbs',
-    fuel: 'Diesel',
-    hours: '3,200',
-    price: '$16,500',
-    status: 'In Stock',
-    image: 'raymond_2169.jpg',
-    featured: false,
-    description: 'Heavy-duty diesel forklift built for the toughest jobs. Excellent lifting capacity and durability.'
-  },
-  {
-    id: 12,
-    name: 'Raymond 7200',
-    category: 'Electric Pallet Jack',
-    capacity: '4,500 lbs',
-    fuel: 'Electric',
-    hours: '1,400',
-    price: '$7,200',
-    status: 'In Stock',
-    image: 'raymond_2170.jpg',
-    featured: false,
-    description: 'Reliable walkie pallet jack for high-volume picking operations. Simple, dependable, low maintenance.'
+const PLACEHOLDER_IMAGE = '/images/placeholder-forklift.jpg'
+
+function normalizeFsmRow(row) {
+  const name = [row.year, row.make, row.model].filter(Boolean).join(' ')
+
+  let category = 'Forklift'
+  const model = (row.model || '').toLowerCase()
+  const mast = (row.mast_type || '').toLowerCase()
+  if (model.includes('5600') || model.includes('560') || model.includes('pc30')) {
+    category = 'Order Picker'
+  } else if (model.includes('752') || model.includes('970') || model.includes('960')) {
+    category = 'Electric Reach Truck'
+  } else if (model.includes('bendi') || model.includes('b40')) {
+    category = 'Articulating Forklift'
+  } else if (mast) {
+    const powerLabel = row.power_type ? capitalize(row.power_type) : 'Electric'
+    category = `${powerLabel} ${capitalize(mast)} Forklift`
   }
-]
 
-const CATEGORIES = ['All', 'Electric', 'LP Gas', 'Diesel', 'Pneumatic', 'Pallet Jack', 'Reach Truck']
-const SORT_OPTIONS = ['Featured', 'Price: Low to High', 'Price: High to Low', 'Hours: Low to High']
+  const rawImages = Array.isArray(row.images) ? row.images : []
+  const firstImage = rawImages.find(img => img && typeof img === 'string' && img.trim() !== '')
+  const imageUrl = firstImage || PLACEHOLDER_IMAGE
 
-export default function Inventory() {
+  const priceNum = parseFloat(row.listing_price || 0)
+  const priceStr = priceNum > 0 ? `$${priceNum.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : 'Call for Price'
+
+  const statusMap = {
+    listed: 'In Stock',
+    sold: 'Sold',
+    pending: 'Pending Sale',
+    draft: 'Coming Soon',
+  }
+  const displayStatus = statusMap[row.status] || 'In Stock'
+
+  const hoursStr = row.hours != null ? Number(row.hours).toLocaleString('en-US') : 'N/A'
+  const capacityStr = row.capacity_lbs ? `${Number(row.capacity_lbs).toLocaleString('en-US')} lbs` : ''
+
+  const description = [row.condition_notes, row.additional_context]
+    .filter(Boolean)
+    .join(' ')
+    .trim() || `${name}. ${capacityStr ? `Capacity: ${capacityStr}.` : ''} ${hoursStr !== 'N/A' ? `Hours: ${hoursStr}.` : ''}`.trim()
+
+  return {
+    id: row.id,
+    name,
+    category,
+    capacity: capacityStr,
+    fuel: capitalize(row.power_type || 'electric'),
+    hours: hoursStr,
+    price: priceStr,
+    status: displayStatus,
+    imageUrl,
+    featured: false,
+    description,
+    location: row.additional_context?.match(/\b([A-Z]{2})\b/)?.[1] || null,
+  }
+}
+
+function capitalize(str) {
+  if (!str) return ''
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+}
+
+const CATEGORIES = ['All', 'Electric', 'Order Picker', 'Reach Truck', 'Articulating']
+const SORT_OPTIONS = ['Default', 'Price: Low to High', 'Price: High to Low', 'Hours: Low to High']
+
+export default function Inventory({ inventory, fetchError }) {
   const [activeCategory, setActiveCategory] = useState('All')
-  const [sortBy, setSortBy] = useState('Featured')
+  const [sortBy, setSortBy] = useState('Default')
   const [selectedItem, setSelectedItem] = useState(null)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-50px' })
 
-  let filtered = INVENTORY.filter(item => {
+  let filtered = inventory.filter(item => {
     if (activeCategory === 'All') return true
     return item.category.toLowerCase().includes(activeCategory.toLowerCase()) ||
            item.fuel.toLowerCase() === activeCategory.toLowerCase()
   })
 
   if (sortBy === 'Price: Low to High') {
-    filtered = [...filtered].sort((a, b) => parseInt(a.price.replace(/[$,]/g, '')) - parseInt(b.price.replace(/[$,]/g, '')))
+    filtered = [...filtered].sort((a, b) => {
+      const aVal = parseFloat(a.price.replace(/[$,]/g, '')) || 0
+      const bVal = parseFloat(b.price.replace(/[$,]/g, '')) || 0
+      return aVal - bVal
+    })
   } else if (sortBy === 'Price: High to Low') {
-    filtered = [...filtered].sort((a, b) => parseInt(b.price.replace(/[$,]/g, '')) - parseInt(a.price.replace(/[$,]/g, '')))
+    filtered = [...filtered].sort((a, b) => {
+      const aVal = parseFloat(a.price.replace(/[$,]/g, '')) || 0
+      const bVal = parseFloat(b.price.replace(/[$,]/g, '')) || 0
+      return bVal - aVal
+    })
+  } else if (sortBy === 'Hours: Low to High') {
+    filtered = [...filtered].sort((a, b) => {
+      const aVal = parseInt(a.hours.replace(/,/g, '')) || 0
+      const bVal = parseInt(b.hours.replace(/,/g, '')) || 0
+      return aVal - bVal
+    })
   }
 
   const statusColors = {
     'In Stock': { bg: 'rgba(34, 197, 94, 0.15)', text: '#22C55E', border: 'rgba(34, 197, 94, 0.3)' },
-    'Just Arrived': { bg: 'rgba(255, 215, 0, 0.15)', text: '#B8860B', border: 'rgba(255, 215, 0, 0.3)' },
-    'Hot Deal': { bg: 'rgba(234, 88, 12, 0.15)', text: '#EA580C', border: 'rgba(234, 88, 12, 0.3)' },
-    'New Arrival': { bg: 'rgba(220, 38, 38, 0.15)', text: '#DC2626', border: 'rgba(220, 38, 38, 0.3)' },
-    'Certified Pre-Owned': { bg: 'rgba(255, 165, 0, 0.15)', text: '#CC8400', border: 'rgba(255, 165, 0, 0.3)' }
+    'Coming Soon': { bg: 'rgba(255, 215, 0, 0.15)', text: '#B8860B', border: 'rgba(255, 215, 0, 0.3)' },
+    'Pending Sale': { bg: 'rgba(234, 88, 12, 0.15)', text: '#EA580C', border: 'rgba(234, 88, 12, 0.3)' },
+    'Sold': { bg: 'rgba(156, 163, 175, 0.15)', text: '#6B7280', border: 'rgba(156, 163, 175, 0.3)' },
   }
 
   return (
@@ -215,7 +132,7 @@ export default function Inventory() {
                 color: '#B8860B'
               }}
             >
-              {INVENTORY.length} UNITS AVAILABLE
+              {inventory.length} UNITS AVAILABLE
             </span>
             <h1 className="text-4xl md:text-6xl font-black text-black mb-4">
               Equipment <span style={{ color: '#B8860B' }}>Inventory</span>
@@ -225,95 +142,113 @@ export default function Inventory() {
             </p>
           </motion.div>
 
-          {/* Filters */}
-          <motion.div
-            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            {/* Category tabs */}
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer ${
-                    activeCategory === cat ? 'text-black' : 'text-gray-600 hover:text-black'
-                  }`}
-                  style={{
-                    background: activeCategory === cat
-                      ? 'linear-gradient(135deg, #FFD700, #FFA500)'
-                      : 'rgba(0, 0, 0, 0.05)',
-                    border: activeCategory === cat ? 'none' : '1px solid rgba(0, 0, 0, 0.1)'
-                  }}
-                >
-                  {cat}
-                </button>
-              ))}
+          {fetchError && (
+            <div className="text-center py-8 mb-8 rounded-xl" style={{ background: 'rgba(255, 215, 0, 0.08)', border: '1px solid rgba(255, 215, 0, 0.2)' }}>
+              <p className="text-gray-500 text-sm">We&apos;re updating our inventory. Please check back shortly or <a href="/contact" className="text-yellow-600 underline">contact us</a> for current availability.</p>
             </div>
+          )}
 
-            {/* Sort */}
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-black text-sm focus:outline-none focus:border-yellow-500"
+          {/* Filters */}
+          {inventory.length > 0 && (
+            <motion.div
+              className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
             >
-              {SORT_OPTIONS.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-          </motion.div>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer ${
+                      activeCategory === cat ? 'text-black' : 'text-gray-600 hover:text-black'
+                    }`}
+                    style={{
+                      background: activeCategory === cat
+                        ? 'linear-gradient(135deg, #FFD700, #FFA500)'
+                        : 'rgba(0, 0, 0, 0.05)',
+                      border: activeCategory === cat ? 'none' : '1px solid rgba(0, 0, 0, 0.1)'
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-black text-sm focus:outline-none focus:border-yellow-500"
+              >
+                {SORT_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </motion.div>
+          )}
 
           {/* Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" ref={ref}>
-            {filtered.map((item, index) => {
-              const status = statusColors[item.status] || statusColors['In Stock']
-              return (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: index * 0.05 }}
-                  className="relative rounded-xl overflow-hidden cursor-pointer group"
-                  style={{
-                    background: '#FFFFFF',
-                    border: '1px solid rgba(0, 0, 0, 0.08)',
-                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
-                  }}
-                  onClick={() => setSelectedItem(item)}
-                  whileHover={{ y: -4, boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)' }}
-                >
-                  {item.featured && (
-                    <div className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded text-xs font-bold text-black" style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)' }}>
-                      ⭐
+          {inventory.length === 0 && !fetchError ? (
+            <div className="text-center py-24">
+              <p className="text-gray-400 text-lg">We&apos;re updating our inventory — check back soon.</p>
+              <p className="text-gray-400 text-sm mt-2">Have a unit in mind? <a href="/contact" className="text-yellow-600 underline">Contact us</a></p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" ref={ref}>
+              {filtered.map((item, index) => {
+                const status = statusColors[item.status] || statusColors['In Stock']
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ delay: index * 0.05 }}
+                    className="relative rounded-xl overflow-hidden cursor-pointer group"
+                    style={{
+                      background: '#FFFFFF',
+                      border: '1px solid rgba(0, 0, 0, 0.08)',
+                      boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
+                    }}
+                    onClick={() => setSelectedItem(item)}
+                    whileHover={{ y: -4, boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)' }}
+                  >
+                    {item.featured && (
+                      <div className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded text-xs font-bold text-black" style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)' }}>
+                        ⭐
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 z-10 px-2 py-0.5 rounded text-xs font-bold" style={{ background: status.bg, color: status.text, border: `1px solid ${status.border}` }}>
+                      {item.status}
                     </div>
-                  )}
-                  <div className="absolute top-2 right-2 z-10 px-2 py-0.5 rounded text-xs font-bold" style={{ background: status.bg, color: status.text, border: `1px solid ${status.border}` }}>
-                    {item.status}
-                  </div>
 
-                  <div className="h-36 overflow-hidden">
-                    <img src={`/images/${item.image}`} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  </div>
+                    <div className="h-36 overflow-hidden">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }}
+                      />
+                    </div>
 
-                  <div className="p-4">
-                    <h3 className="font-bold text-black text-sm mb-1">{item.name}</h3>
-                    <p className="text-gray-500 text-xs mb-2">{item.category}</p>
-                    <div className="flex gap-2 text-xs text-gray-400 mb-3">
-                      <span>{item.fuel}</span>
-                      <span>•</span>
-                      <span>{item.hours} hrs</span>
+                    <div className="p-4">
+                      <h3 className="font-bold text-black text-sm mb-1">{item.name}</h3>
+                      <p className="text-gray-500 text-xs mb-2">{item.category}</p>
+                      <div className="flex gap-2 text-xs text-gray-400 mb-3">
+                        <span>{item.fuel}</span>
+                        <span>•</span>
+                        <span>{item.hours} hrs</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-yellow-600">{item.price}</span>
+                        <span className="text-xs text-gray-500">{item.capacity}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-black text-yellow-600">{item.price}</span>
-                      <span className="text-xs text-gray-500">{item.capacity}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              )
-            })}
-          </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -345,7 +280,12 @@ export default function Inventory() {
               </button>
 
               <div className="h-56 overflow-hidden">
-                <img src={`/images/${selectedItem.image}`} alt={selectedItem.name} className="w-full h-full object-cover" />
+                <img
+                  src={selectedItem.imageUrl}
+                  alt={selectedItem.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE }}
+                />
               </div>
 
               <div className="p-6">
@@ -365,7 +305,7 @@ export default function Inventory() {
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   <div className="text-center p-3 rounded-lg" style={{ background: 'rgba(255, 215, 0, 0.1)' }}>
                     <div className="text-yellow-600 font-bold">{selectedItem.fuel}</div>
-                    <div className="text-gray-400 text-xs">Fuel Type</div>
+                    <div className="text-gray-400 text-xs">Power Type</div>
                   </div>
                   <div className="text-center p-3 rounded-lg" style={{ background: 'rgba(255, 215, 0, 0.1)' }}>
                     <div className="text-yellow-600 font-bold">{selectedItem.hours}</div>
@@ -400,4 +340,39 @@ export default function Inventory() {
       </AnimatePresence>
     </>
   )
+}
+
+export async function getServerSideProps() {
+  const FSM_BASE = process.env.FSM_API_BASE || 'https://vortex-forklift-api-production.up.railway.app'
+  const FSM_JWT = process.env.FSM_SERVICE_JWT
+
+  if (!FSM_JWT) {
+    console.error('[inventory] FSM_SERVICE_JWT env var not set — returning empty inventory')
+    return { props: { inventory: [], fetchError: true } }
+  }
+
+  try {
+    const res = await fetch(`${FSM_BASE}/api/inventory?status=listed`, {
+      headers: { Authorization: `Bearer ${FSM_JWT}` },
+      // no caching — fresh truth on every render
+    })
+
+    if (!res.ok) {
+      console.error(`[inventory] FSM returned ${res.status}`)
+      return { props: { inventory: [], fetchError: true } }
+    }
+
+    const json = await res.json()
+    const rows = Array.isArray(json.data) ? json.data : []
+
+    // Exclude test/seed rows (serial prefixed TEST- are placeholder entries, not real stock)
+    const realRows = rows.filter(row => !String(row.serial || '').toUpperCase().startsWith('TEST-'))
+
+    const inventory = realRows.map(normalizeFsmRow)
+
+    return { props: { inventory, fetchError: false } }
+  } catch (err) {
+    console.error('[inventory] FSM fetch failed:', err.message)
+    return { props: { inventory: [], fetchError: true } }
+  }
 }
