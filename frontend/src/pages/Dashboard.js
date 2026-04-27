@@ -52,50 +52,61 @@ const Dashboard = () => {
     );
   }
 
+  const inventoryKpis = kpis?.inventory || {};
+  const leadKpis = kpis?.leads || {};
+  const totalInventory = inventoryKpis.total || 0;
+  const listedUnits = inventoryKpis.listed || 0;
+  const soldRevenue30d = inventoryKpis.revenue_30d || 0;
+  const totalLeads = leadKpis.total || 0;
+  const hotLeads = leadKpis.hot || 0;
+  const conversionRate = leadKpis.conversion_rate || 0;
+  const recentListings = kpis?.recentListings || [];
+  const hotLeadRows = kpis?.hotLeads || [];
+
   const kpiCards = [
     {
       label: 'Total Inventory',
-      value: kpis?.totalInventory || 0,
+      value: totalInventory,
       icon: <Package size={20} />,
       iconBg: 'bg-blue-50 dark:bg-blue-950/30 text-blue-500',
-      change: '+2 this week',
+      change: `${inventoryKpis.sold || 0} sold`,
       type: 'positive'
     },
     {
       label: 'Listed Units',
-      value: kpis?.listedUnits || 0,
+      value: listedUnits,
       icon: <CheckCircle2 size={20} />,
       iconBg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500',
-      change: `${kpis?.listedUnits || 0} available`,
+      change: `${listedUnits} available`,
       type: 'neutral'
     },
     {
-      label: 'Total Revenue',
-      value: `$${(kpis?.totalRevenue || 0).toLocaleString()}`,
+      label: '30-Day Revenue',
+      value: `$${soldRevenue30d.toLocaleString()}`,
       icon: <DollarSign size={20} />,
       iconBg: 'bg-green-50 dark:bg-green-950/30 text-green-500',
-      change: '+12% vs last month',
+      change: 'Sold units only',
       type: 'positive'
     },
     {
       label: 'Active Leads',
-      value: kpis?.totalLeads || 0,
+      value: totalLeads,
       icon: <Users size={20} />,
       iconBg: 'bg-violet-50 dark:bg-violet-950/30 text-violet-500',
-      change: `${kpis?.hotLeads || 0} hot`,
+      change: `${hotLeads} hot`,
       type: 'positive'
     },
     {
-      label: 'Avg Deal Size',
-      value: kpis?.avgSalePrice ? `$${Math.round(kpis.avgSalePrice).toLocaleString()}` : '$0',
+      label: 'Lead Score',
+      value: leadKpis.avg_score || 0,
       icon: <TrendingUp size={20} />,
       iconBg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-500',
-      change: '+8% vs avg',
+      change: 'Average score',
       type: 'positive'
     },
     {
       label: 'Conversion Rate',
-      value: kpis?.conversionRate ? `${kpis.conversionRate}%` : '0%',
+      value: `${conversionRate}%`,
       icon: <Target size={20} />,
       iconBg: 'bg-rose-50 dark:bg-rose-950/30 text-rose-500',
       change: 'Industry avg: 2.5%',
@@ -156,18 +167,24 @@ const Dashboard = () => {
             </Button>
           </CardHeader>
           <CardContent className="space-y-1 pt-0">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition-colors -mx-1">
-                <div className="w-11 h-11 bg-muted rounded-xl flex items-center justify-center">
-                  <Truck size={18} className="text-muted-foreground" />
+            {recentListings.length > 0 ? (
+              recentListings.map((item) => (
+                <div key={item.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition-colors -mx-1">
+                  <div className="w-11 h-11 bg-muted rounded-xl flex items-center justify-center">
+                    <Truck size={18} className="text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate text-foreground">{item.year} {item.make} {item.model}</p>
+                    <p className="text-xs text-muted-foreground">{item.status || 'listed'}</p>
+                  </div>
+                  <span className="text-sm font-semibold text-emerald-500">
+                    {item.listing_price ? `$${Number(item.listing_price).toLocaleString()}` : 'Call'}
+                  </span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate text-foreground">2018 Raymond Reach Truck</p>
-                  <p className="text-xs text-muted-foreground">Listed 2 hours ago</p>
-                </div>
-                <span className="text-sm font-semibold text-emerald-500">$28,500</span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground p-3">No recent listings yet.</p>
+            )}
           </CardContent>
         </Card>
 
@@ -179,21 +196,25 @@ const Dashboard = () => {
             </Button>
           </CardHeader>
           <CardContent className="space-y-1 pt-0">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition-colors -mx-1">
-                <div className="w-10 h-10 bg-gradient-to-br from-neon-cyan to-neon-purple text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-sm shadow-neon-cyan/20">
-                  JD
+            {hotLeadRows.length > 0 ? (
+              hotLeadRows.map((lead) => (
+                <div key={lead.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition-colors -mx-1">
+                  <div className="w-10 h-10 bg-gradient-to-br from-neon-cyan to-neon-purple text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-sm shadow-neon-cyan/20">
+                    {(lead.name || '?').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate text-foreground">{lead.name}</p>
+                    <p className="text-xs text-muted-foreground">{lead.company || 'No company'}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold px-2.5 py-1 bg-red-50 dark:bg-red-950/30 text-red-500 rounded-lg">Hot</span>
+                    <span className="text-xs font-bold text-muted-foreground tabular-nums">{lead.score || 0}</span>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate text-foreground">John Doe</p>
-                  <p className="text-xs text-muted-foreground">ABC Logistics</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold px-2.5 py-1 bg-red-50 dark:bg-red-950/30 text-red-500 rounded-lg">Hot</span>
-                  <span className="text-xs font-bold text-muted-foreground tabular-nums">85</span>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground p-3">No hot leads yet.</p>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -16,10 +16,23 @@ const FROM_EMAIL = process.env.COMPANY_EMAIL || 'sales@materialsolutions.com';
 const FROM_NAME = 'Material Solutions';
 const TRACKING_DOMAIN = process.env.EMAIL_TRACKING_DOMAIN || ' materialsolutions.com';
 
+function customerEmailEnabled() {
+  return String(process.env.FSM_CUSTOMER_EMAIL_ENABLED || '').toLowerCase() === 'true';
+}
+
 /**
  * Send a single email
  */
 async function sendEmail({ to, subject, html, text, from, fromName, replyTo, campaignId, leadId, scheduledAt }) {
+  if (!customerEmailEnabled()) {
+    console.warn('[Email Sender] Customer email disabled by FSM_CUSTOMER_EMAIL_ENABLED guardrail.');
+    return {
+      success: false,
+      skipped: true,
+      reason: 'Customer email disabled by guardrail env',
+    };
+  }
+
   // If scheduled for later, we would store in a queue — for now send immediately
   const msg = {
     to,

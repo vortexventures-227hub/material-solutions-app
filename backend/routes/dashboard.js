@@ -30,6 +30,22 @@ router.get('/kpis', async (req, res, next) => {
     const conversionRate = leadsResult.rows[0].total > 0
       ? ((leadsResult.rows[0].converted / leadsResult.rows[0].total) * 100).toFixed(1)
       : 0;
+
+    const recentListings = await db.query(
+      `SELECT id, make, model, year, listing_price, status, created_at, updated_at
+       FROM inventory
+       WHERE status IN ('listed', 'reserved', 'pending', 'sold')
+       ORDER BY COALESCE(updated_at, created_at) DESC
+       LIMIT 3`
+    );
+
+    const hotLeads = await db.query(
+      `SELECT id, name, company, score, status, created_at
+       FROM leads
+       WHERE status = 'hot' OR score >= 80
+       ORDER BY score DESC, created_at DESC
+       LIMIT 3`
+    );
     
     res.json({
       inventory: {
@@ -46,6 +62,8 @@ router.get('/kpis', async (req, res, next) => {
         avg_score: parseInt(leadsResult.rows[0].avg_score || 0),
         conversion_rate: parseFloat(conversionRate)
       },
+      recentListings: recentListings.rows,
+      hotLeads: hotLeads.rows,
       timestamp: new Date().toISOString()
     });
   } catch (error) {

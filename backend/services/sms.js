@@ -9,6 +9,10 @@ const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER; // Your Twilio numb
 // E.164 phone number format validation
 const E164_REGEX = /^\+[1-9]\d{6,14}$/;
 
+function smsEnabled() {
+  return String(process.env.FSM_SMS_ENABLED || '').toLowerCase() === 'true';
+}
+
 // Redact phone number for logging (show last 4 digits only)
 function redactPhone(phone) {
   if (!phone || phone.length < 5) return '***';
@@ -21,6 +25,11 @@ function redactPhone(phone) {
  * @param {string} message - SMS message body (max 160 characters recommended)
  */
 async function sendSMS(to, message) {
+  if (!smsEnabled()) {
+    console.warn('SMS disabled by FSM_SMS_ENABLED guardrail. SMS not sent.');
+    return { success: false, skipped: true, message: 'SMS disabled by guardrail env' };
+  }
+
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
     console.warn('Twilio credentials not configured. SMS not sent.');
     return { success: false, message: 'Twilio not configured' };
@@ -72,7 +81,7 @@ async function sendNewLeadSMS(lead) {
                   `Interest: ${lead.interest?.join(', ') || 'Not specified'}\n` +
                   `Check dashboard for details.`;
 
-  await sendSMS(companyPhone, message);
+  return sendSMS(companyPhone, message);
 }
 
 /**
@@ -86,7 +95,7 @@ async function sendFollowUpSMS(lead) {
 
   const message = `Hi ${lead.name}, it's Bill from Material Solutions. Just checking in - are you still looking for forklifts? Reply or call me at ${process.env.COMPANY_PHONE || '(555) 123-4567'}.`;
 
-  await sendSMS(lead.phone, message);
+  return sendSMS(lead.phone, message);
 }
 
 /**
@@ -97,7 +106,7 @@ async function sendCustomSMS(lead, customMessage) {
     throw new Error('Lead has no phone number');
   }
 
-  await sendSMS(lead.phone, customMessage);
+  return sendSMS(lead.phone, customMessage);
 }
 
 /**
@@ -123,7 +132,7 @@ async function sendAppointmentReminderSMS(lead, appointmentDate) {
 
   const message = `Reminder: You have a call scheduled with Material Solutions on ${dateStr} at ${timeStr}. Looking forward to it! - Bill`;
 
-  await sendSMS(lead.phone, message);
+  return sendSMS(lead.phone, message);
 }
 
 /**
@@ -137,7 +146,7 @@ async function sendQuoteReadySMS(lead) {
 
   const message = `Hi ${lead.name}, your custom forklift quote is ready! Check your email or call me at ${process.env.COMPANY_PHONE || '(555) 123-4567'} to discuss. - Bill, Material Solutions`;
 
-  await sendSMS(lead.phone, message);
+  return sendSMS(lead.phone, message);
 }
 
 module.exports = {

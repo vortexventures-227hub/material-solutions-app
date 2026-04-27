@@ -361,11 +361,18 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
         onClose={() => setShowPublishModal(false)}
         inventory={inventory}
         onPublished={(data) => {
-          setHasListings(true);
+          const results = data?.results || [];
+          const succeeded = results.filter((result) => result.status === 'published').length;
+          setHasListings(succeeded > 0);
           if (onUpdate && inventory.status === 'intake') {
             onUpdate({ ...inventory, status: 'listed' });
           }
-          addToast(`Published to ${data.listings?.length || 0} marketplace(s)!`, 'success');
+          addToast(
+            succeeded > 0
+              ? `Prepared ${succeeded} marketplace listing${succeeded === 1 ? '' : 's'}.`
+              : 'No marketplace listings were prepared.',
+            succeeded > 0 ? 'success' : 'error'
+          );
         }}
       />
     </div>
