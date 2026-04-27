@@ -140,6 +140,12 @@ router.post('/:inventoryId', async (req, res, next) => {
     if (!invRes.rows.length) return res.status(404).json({ error: 'Inventory not found' });
     const unit = invRes.rows[0];
 
+    // Empty-platform publish is the safe no-op/dry-run probe path. Do not touch
+    // optional Phase 6C tables or mutate inventory state for this acceptance gate.
+    if (!Array.isArray(platforms) || platforms.length === 0) {
+      return res.json({ inventoryId, unit: `${unit.year} ${unit.make} ${unit.model}`, results: [] });
+    }
+
     // Generate SEO data
     const meta = generateMeta(unit);
     const slug = generateSlug(unit);

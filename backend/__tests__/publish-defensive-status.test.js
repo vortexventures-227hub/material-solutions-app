@@ -99,6 +99,39 @@ test('publish POST returns 404 for valid missing UUID before SEO/listing side ef
   });
 });
 
+test('publish POST with empty platforms is a no-op after inventory lookup', async () => {
+  const calls = [];
+  const app = buildApp(async (sql) => {
+    calls.push(sql);
+    if (/SELECT \* FROM inventory WHERE id/.test(sql)) {
+      return {
+        rows: [{
+          id: 'ddeb41d4-5261-4851-9324-e2f09ea8f807',
+          year: 2018,
+          make: 'Toyota',
+          model: '8FGCU25',
+          photos: [],
+          status: 'listed',
+        }],
+      };
+    }
+    throw new Error(`No optional Phase 6C tables should be accessed for empty platforms array: ${sql}`);
+  });
+
+  await withServer(app, async (server) => {
+    const res = await request(server, 'POST', '/api/publish/ddeb41d4-5261-4851-9324-e2f09ea8f807', {
+      platforms: [],
+      options: {},
+      skipEmail: true,
+    });
+
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.results, []);
+    assert.equal(calls.length, 1);
+    assert.equal(calls.filter((sql) => /inventory_listings|inventory_seo|marketplace_analytics/.test(sql)).length, 0);
+  });
+});
+
 test('publish POST falls back to migration 006 SEO columns when legacy SEO columns drift', async () => {
   const calls = [];
   const valuesBySql = [];
@@ -129,13 +162,14 @@ test('publish POST falls back to migration 006 SEO columns when legacy SEO colum
 
   await withServer(app, async (server) => {
     const res = await request(server, 'POST', '/api/publish/ddeb41d4-5261-4851-9324-e2f09ea8f807', {
-      platforms: [],
+      platforms: ['unknown_platform'],
       options: {},
       skipEmail: true,
     });
 
     assert.equal(res.status, 200);
-    assert.deepEqual(res.body.results, []);
+    assert.equal(res.body.results[0].status, 'error');
+    assert.equal(res.body.results[0].error, 'Unknown platform');
     const migrationSeoCall = valuesBySql.find(({ sql }) => (
       /INSERT INTO inventory_seo/.test(sql)
       && /\bmeta_title\b/.test(sql)
