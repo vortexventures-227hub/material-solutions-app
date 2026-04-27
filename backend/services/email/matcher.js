@@ -3,7 +3,7 @@
  * Scores and matches leads to inventory units based on interest, budget, and intent
  */
 
-const db = require('../db');
+const db = require('../../db');
 
 /**
  * Find matching inventory for a lead

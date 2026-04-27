@@ -2,7 +2,7 @@
  * Email Tracking — open/click webhook handler
  */
 
-const db = require('../db');
+const db = require('../../db');
 
 /**
  * Record an email open event (1x1 pixel)

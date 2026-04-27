@@ -4,7 +4,7 @@
 
 const sgMail = require('@sendgrid/mail');
 const crypto = require('crypto');
-const db = require('../db');
+const db = require('../../db');
 
 // Initialize SendGrid
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
