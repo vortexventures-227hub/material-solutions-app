@@ -26,7 +26,7 @@ function rejectInvalidInventoryId(res, inventoryId) {
 }
 
 function isOptionalPublishSchemaError(err) {
-  return err && ['42P01', '42703'].includes(err.code);
+  return err && ['42P01', '42703', '23514'].includes(err.code);
 }
 
 async function optionalPublishQuery(label, fn, fallbackRows = []) {
