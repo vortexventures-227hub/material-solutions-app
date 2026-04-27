@@ -28,7 +28,15 @@ router.post('/send', async (req, res, next) => {
     }
 
     const lead = result.rows[0];
-    await sendCustomSMS(lead, message);
+    const smsResult = await sendCustomSMS(lead, message);
+    if (smsResult?.skipped || smsResult?.success === false) {
+      return res.json({
+        success: false,
+        skipped: !!smsResult.skipped,
+        message: smsResult.message || 'SMS not sent',
+        leadId
+      });
+    }
     
     // Log interaction
     const interactions = lead.interactions || [];
@@ -68,7 +76,15 @@ router.post('/follow-up/:leadId', async (req, res, next) => {
     }
 
     const lead = result.rows[0];
-    await sendFollowUpSMS(lead);
+    const smsResult = await sendFollowUpSMS(lead);
+    if (smsResult?.skipped || smsResult?.success === false) {
+      return res.json({
+        success: false,
+        skipped: !!smsResult.skipped,
+        message: smsResult.message || 'SMS not sent',
+        leadId
+      });
+    }
     
     // Log interaction
     const interactions = lead.interactions || [];
@@ -108,7 +124,15 @@ router.post('/quote-ready/:leadId', async (req, res, next) => {
     }
 
     const lead = result.rows[0];
-    await sendQuoteReadySMS(lead);
+    const smsResult = await sendQuoteReadySMS(lead);
+    if (smsResult?.skipped || smsResult?.success === false) {
+      return res.json({
+        success: false,
+        skipped: !!smsResult.skipped,
+        message: smsResult.message || 'SMS not sent',
+        leadId
+      });
+    }
     
     // Log interaction
     const interactions = lead.interactions || [];
@@ -153,7 +177,15 @@ router.post('/appointment-reminder', async (req, res, next) => {
     }
 
     const lead = result.rows[0];
-    await sendAppointmentReminderSMS(lead, appointmentDate);
+    const smsResult = await sendAppointmentReminderSMS(lead, appointmentDate);
+    if (smsResult?.skipped || smsResult?.success === false) {
+      return res.json({
+        success: false,
+        skipped: !!smsResult.skipped,
+        message: smsResult.message || 'SMS not sent',
+        leadId
+      });
+    }
     
     // Log interaction
     const interactions = lead.interactions || [];

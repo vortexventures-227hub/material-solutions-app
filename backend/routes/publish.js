@@ -207,6 +207,7 @@ router.post('/:inventoryId', async (req, res, next) => {
           status: 'published',
           listingId: publishResult.listingId || publishResult.id,
           url: publishResult.url,
+          mock: publishResult.mock === true,
         });
       } catch (err) {
         const failureAttempt = await optionalPublishQuery('inventory_listings', () => db.query(

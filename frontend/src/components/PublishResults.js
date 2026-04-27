@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExternalLink, Check, AlertTriangle, Mail, ChevronRight } from 'lucide-react';
+import { ExternalLink, Check, AlertTriangle, ShieldCheck, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 
 /**
@@ -24,7 +24,7 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                 <Check size={24} className="text-green-400" />
               </div>
               <div>
-                <h2 className="font-display text-2xl text-vortex-yellow tracking-widest uppercase">Distribution Complete</h2>
+                <h2 className="font-display text-2xl text-vortex-yellow tracking-widest uppercase">Distribution Recorded</h2>
                 <p className="text-gray-400 text-xs mt-0.5">{unit.year} {unit.make} {unit.model}</p>
               </div>
             </div>
@@ -69,12 +69,12 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                     <div>
                       <p className="font-display text-white text-sm tracking-wide capitalize">{result.platform?.replace('_', ' ')}</p>
                       <p className={`text-[10px] font-bold uppercase tracking-widest mt-0.5 ${result.status === 'published' ? 'text-green-500/80' : 'text-red-500'}`}>
-                        {result.status === 'published' ? 'Live Now' : 'Failed'}
+                        {result.status === 'published' ? (result.mock ? 'Template Ready' : 'Live Now') : 'Failed'}
                       </p>
                     </div>
                   </div>
                   
-                  {result.status === 'published' && result.url ? (
+                  {result.status === 'published' && result.url && !result.mock ? (
                     <a 
                       href={result.url} 
                       target="_blank" 
@@ -83,6 +83,8 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                     >
                       <ExternalLink size={14} />
                     </a>
+                  ) : result.status === 'published' && result.mock ? (
+                    <span className="text-[10px] text-vortex-yellow/70 font-mono pr-2">Manual post required</span>
                   ) : result.status === 'error' ? (
                     <span className="text-[10px] text-red-400/60 font-mono italic pr-2">{result.error || 'API Error'}</span>
                   ) : null}
@@ -95,29 +97,29 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display text-xs text-gray-500 uppercase tracking-[0.2em]">Email Campaign</h3>
-              <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-widest border border-blue-500/20">Active</span>
+              <span className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-[10px] font-bold uppercase tracking-widest border border-green-500/20">Guarded</span>
             </div>
             <div className="bg-vortex-black/50 rounded-2xl border border-vortex-yellow/10 p-5">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
-                  <Mail size={20} />
+                <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400">
+                  <ShieldCheck size={20} />
                 </div>
                 <div>
-                  <p className="text-white text-sm font-bold tracking-wide">MATCHED LEADS NOTIFIED</p>
-                  <p className="text-gray-400 text-xs mt-0.5">3-step sequence triggered for matching leads</p>
+                  <p className="text-white text-sm font-bold tracking-wide">NO EMAILS SENT BY PUBLISH BUTTON</p>
+                  <p className="text-gray-400 text-xs mt-0.5">Listing publish records do not trigger customer outreach.</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4 border-t border-vortex-yellow/5 pt-4 mt-2">
                 <div className="text-center border-r border-vortex-yellow/5">
-                  <p className="text-xl font-display text-vortex-yellow">12</p>
+                  <p className="text-xl font-display text-vortex-yellow">0</p>
                   <p className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Matched</p>
                 </div>
                 <div className="text-center border-r border-vortex-yellow/5">
-                  <p className="text-xl font-display text-white">8</p>
+                  <p className="text-xl font-display text-white">0</p>
                   <p className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Sent</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-display text-gray-400">4</p>
+                  <p className="text-xl font-display text-gray-400">0</p>
                   <p className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">Queued</p>
                 </div>
               </div>
@@ -143,7 +145,7 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                 ))}
               </div>
               <p className="text-[11px] text-gray-400 mt-4 leading-relaxed italic">
-                Platform-specific descriptions and keywords have been generated using Gemini-1.5-Pro for maximum search visibility.
+                Platform-specific descriptions, metadata, and posting records are prepared for review before any guarded external outreach.
               </p>
             </div>
           </section>

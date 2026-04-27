@@ -12,8 +12,25 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+function isEnabled(flag) {
+  return String(process.env[flag] || '').toLowerCase() === 'true';
+}
+
+function disabledResult(channel, scope) {
+  console.warn(`[${channel}] ${scope} disabled by guardrail env; no message sent.`);
+  return {
+    success: false,
+    skipped: true,
+    reason: `${scope} disabled by guardrail env`,
+  };
+}
+
 // Send new lead notification to company
 const sendNewLeadNotification = async (lead) => {
+  if (!isEnabled('FSM_INTERNAL_EMAIL_ENABLED')) {
+    return disabledResult('Email', 'Internal lead notification');
+  }
+
   // Escape all user-supplied values to prevent HTML injection (XSS)
   const safeName = escapeHtml(lead.name);
   const safeEmail = escapeHtml(lead.email);
@@ -58,6 +75,10 @@ const sendNewLeadNotification = async (lead) => {
 
 // Send welcome email to new lead
 const sendWelcomeEmail = async (lead) => {
+  if (!isEnabled('FSM_CUSTOMER_EMAIL_ENABLED')) {
+    return disabledResult('Email', 'Customer welcome email');
+  }
+
   // Escape user-supplied values to prevent HTML injection
   const safeName = escapeHtml(lead.name);
   const safeEmail = lead.email; // Used for 'to' field, not HTML content
@@ -116,6 +137,10 @@ const testEmailConfig = async () => {
 
 // Generic send email function for drip campaigns
 const sendEmail = async ({ to, subject, html }) => {
+  if (!isEnabled('FSM_CUSTOMER_EMAIL_ENABLED')) {
+    return disabledResult('Email', 'Customer email');
+  }
+
   const mailOptions = {
     from: `"Material Solutions" <${process.env.EMAIL_USER}>`,
     to,

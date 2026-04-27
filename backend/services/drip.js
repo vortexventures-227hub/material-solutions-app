@@ -340,11 +340,20 @@ async function processDripEmails() {
       const htmlContent = templateFunc(email);
 
       // Send email
-      await sendEmail({
+      const sendResult = await sendEmail({
         to: email.email,
         subject: email.subject,
         html: htmlContent
       });
+
+      if (sendResult?.skipped) {
+        await db.query(
+          'UPDATE drip_emails SET status = $1, error = $2 WHERE id = $3',
+          ['cancelled', sendResult.reason || 'Email skipped by outbound guardrail', email.id]
+        );
+        console.warn(`Drip email skipped by guardrail: ${email.subject} (lead_id: ${email.lead_id})`);
+        continue;
+      }
 
       // Mark as sent
       await db.query(

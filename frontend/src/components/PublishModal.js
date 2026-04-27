@@ -61,7 +61,6 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
   const [options] = useState({});
   const [publishResults, setPublishResults] = useState(null);
   const [progress, setProgress] = useState({});
-  const [emailStats, setEmailStats] = useState({ sent: 0, queued: 0 });
 
   // Reset state when modal opens
   useEffect(() => {
@@ -69,7 +68,6 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
       setStep('select');
       setPublishResults(null);
       setProgress({});
-      setEmailStats({ sent: 0, queued: 0 });
     }
   }, [isOpen]);
 
@@ -113,11 +111,6 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
       setProgress(newProgress);
       setPublishResults(res.data);
 
-      // Trigger email outreach if requested (mock logic)
-      if (platforms.length > 0) {
-        setEmailStats({ sent: Math.min(platforms.length * 3, 12), queued: 0 });
-      }
-
       // Short delay for the "working" feel before showing results
       setTimeout(() => {
         setStep('results');
@@ -141,8 +134,8 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
       <PublishProgress 
         platforms={Array.from(selected)} 
         progress={progress}
-        emailsSent={emailStats.sent}
-        emailsQueued={emailStats.queued}
+        emailsSent={0}
+        emailsQueued={0}
       />
     );
   }
