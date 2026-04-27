@@ -127,14 +127,19 @@ router.post('/:inventoryId', async (req, res, next) => {
 
       try {
         const publishResult = await handler(unit, options[platform] || {});
-        // Update listing with result
-        await db.query(
+        // Update listing with result. Treat older optional listing schemas as a
+        // degraded platform result instead of turning safe publish probes into 500s.
+        const updateAttempt = await optionalPublishQuery('inventory_listings', () => db.query(
           `UPDATE inventory_listings SET
              platform_listing_id = $2, platform_url = $3,
              status = 'published', published_at = NOW(), updated_at = NOW()
            WHERE id = $1`,
           [listingId, publishResult.listingId || publishResult.id, publishResult.url]
-        );
+        ));
+        if (updateAttempt.warning) {
+          results.push({ platform, status: 'error', error: updateAttempt.warning });
+          continue;
+        }
 
         results.push({
           platform,
@@ -143,11 +148,11 @@ router.post('/:inventoryId', async (req, res, next) => {
           url: publishResult.url,
         });
       } catch (err) {
-        await db.query(
+        const failureAttempt = await optionalPublishQuery('inventory_listings', () => db.query(
           `UPDATE inventory_listings SET status = 'failed', sync_error = $2, updated_at = NOW() WHERE id = $1`,
           [listingId, err.message]
-        );
-        results.push({ platform, status: 'error', error: err.message });
+        ));
+        results.push({ platform, status: 'error', error: failureAttempt.warning || err.message });
       }
     }
 
