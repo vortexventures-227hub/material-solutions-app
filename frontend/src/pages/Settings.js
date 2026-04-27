@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Layout, PageHeader, Card, CardHeader, CardTitle, CardContent } from '../components/Layout';
-import { Loader2, Lock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Lock, CheckCircle, AlertCircle, Mail } from 'lucide-react';
 import api from '../api';
 
 function getPasswordStrength(password) {
@@ -20,36 +20,42 @@ function getPasswordStrength(password) {
 }
 
 export default function Settings() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [emailPassword, setEmailPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [confirmEmail, setConfirmEmail] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   const strength = getPasswordStrength(newPassword);
 
-  const handleSubmit = async (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setPasswordError('');
 
     if (newPassword !== confirmPassword) {
-      setError('New passwords do not match');
+      setPasswordError('New passwords do not match');
       return;
     }
 
     if (newPassword.length < 12) {
-      setError('New password must be at least 12 characters');
+      setPasswordError('New password must be at least 12 characters');
       return;
     }
 
-    setLoading(true);
+    setPasswordLoading(true);
     try {
       await api.post('/api/auth/change-password', { currentPassword, newPassword });
-      setSuccess(true);
+      setPasswordSuccess(true);
       // Give user time to read the success message, then logout
       setTimeout(async () => {
         await logout();
@@ -57,9 +63,48 @@ export default function Settings() {
       }, 3000);
     } catch (err) {
       const msg = err.response?.data?.error || 'Something went wrong. Please try again.';
-      setError(msg);
+      setPasswordError(msg);
     } finally {
-      setLoading(false);
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    setEmailError('');
+
+    const normalizedEmail = newEmail.trim().toLowerCase();
+    const normalizedConfirm = confirmEmail.trim().toLowerCase();
+
+    if (normalizedEmail !== normalizedConfirm) {
+      setEmailError('Email addresses do not match');
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setEmailError('Enter a valid email address');
+      return;
+    }
+
+    if (normalizedEmail === user?.email?.toLowerCase()) {
+      setEmailError('New email must be different from your current email');
+      return;
+    }
+
+    setEmailLoading(true);
+    try {
+      await api.post('/api/auth/change-email', { currentPassword: emailPassword, newEmail: normalizedEmail });
+      setEmailSuccess(true);
+      // Tokens are invalidated server-side; re-login with the new email.
+      setTimeout(async () => {
+        await logout();
+        navigate('/login');
+      }, 3000);
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Something went wrong. Please try again.';
+      setEmailError(msg);
+    } finally {
+      setEmailLoading(false);
     }
   };
 
@@ -67,7 +112,118 @@ export default function Settings() {
     <Layout>
       <PageHeader title="Account Settings" description="Manage your account security" />
 
-      <div className="max-w-lg">
+      <div className="max-w-lg space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Mail size={16} className="text-neon-cyan" />
+              Change Email Address
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {emailSuccess ? (
+              <div className="flex flex-col items-center gap-3 py-6 text-center animate-in fade-in">
+                <CheckCircle size={40} className="text-neon-cyan" />
+                <p className="font-semibold text-foreground">Email changed successfully</p>
+                <p className="text-sm text-muted-foreground">
+                  You'll be logged out. Please sign in with the new email address.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleEmailSubmit} className="space-y-5">
+                {emailError && (
+                  <div className="flex items-start gap-2.5 rounded-xl bg-red-500/10 border border-red-500/20 p-3.5 animate-in fade-in">
+                    <AlertCircle size={15} className="text-red-400 mt-0.5 shrink-0" />
+                    <p className="text-xs text-red-400 font-medium">{emailError}</p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    Current Email
+                  </label>
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="w-full h-11 px-4 bg-muted/60 border border-border rounded-xl text-sm text-muted-foreground cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    New Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    className="w-full h-11 px-4 bg-muted border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-neon-cyan/40 focus:border-neon-cyan/50 transition-all placeholder:text-muted-foreground/50"
+                    placeholder="Enter new login email"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    Confirm New Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={confirmEmail}
+                    onChange={(e) => setConfirmEmail(e.target.value)}
+                    className={`w-full h-11 px-4 bg-muted border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-neon-cyan/40 transition-all placeholder:text-muted-foreground/50 ${
+                      confirmEmail && confirmEmail.trim().toLowerCase() !== newEmail.trim().toLowerCase()
+                        ? 'border-red-500/50 focus:border-red-500/50'
+                        : 'border-border focus:border-neon-cyan/50'
+                    }`}
+                    placeholder="Confirm new login email"
+                  />
+                  {confirmEmail && confirmEmail.trim().toLowerCase() !== newEmail.trim().toLowerCase() && (
+                    <p className="text-xs text-red-400 mt-1">Email addresses do not match</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    value={emailPassword}
+                    onChange={(e) => setEmailPassword(e.target.value)}
+                    className="w-full h-11 px-4 bg-muted border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-neon-cyan/40 focus:border-neon-cyan/50 transition-all placeholder:text-muted-foreground/50"
+                    placeholder="Confirm current password"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={emailLoading || (confirmEmail !== '' && confirmEmail.trim().toLowerCase() !== newEmail.trim().toLowerCase())}
+                  className="w-full h-11 flex items-center justify-center gap-2 bg-gradient-to-r from-neon-cyan to-neon-purple text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-neon-cyan/20 hover:shadow-lg hover:shadow-neon-cyan/30"
+                >
+                  {emailLoading ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Mail size={15} />
+                      Update Email
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -76,7 +232,7 @@ export default function Settings() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {success ? (
+            {passwordSuccess ? (
               <div className="flex flex-col items-center gap-3 py-6 text-center animate-in fade-in">
                 <CheckCircle size={40} className="text-neon-cyan" />
                 <p className="font-semibold text-foreground">Password changed successfully</p>
@@ -85,11 +241,11 @@ export default function Settings() {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {error && (
+              <form onSubmit={handlePasswordSubmit} className="space-y-5">
+                {passwordError && (
                   <div className="flex items-start gap-2.5 rounded-xl bg-red-500/10 border border-red-500/20 p-3.5 animate-in fade-in">
                     <AlertCircle size={15} className="text-red-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-red-400 font-medium">{error}</p>
+                    <p className="text-xs text-red-400 font-medium">{passwordError}</p>
                   </div>
                 )}
 
@@ -158,10 +314,10 @@ export default function Settings() {
 
                 <button
                   type="submit"
-                  disabled={loading || (confirmPassword !== '' && confirmPassword !== newPassword)}
+                  disabled={passwordLoading || (confirmPassword !== '' && confirmPassword !== newPassword)}
                   className="w-full h-11 flex items-center justify-center gap-2 bg-gradient-to-r from-neon-cyan to-neon-purple text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-neon-cyan/20 hover:shadow-lg hover:shadow-neon-cyan/30"
                 >
-                  {loading ? (
+                  {passwordLoading ? (
                     <>
                       <Loader2 size={15} className="animate-spin" />
                       Updating...
