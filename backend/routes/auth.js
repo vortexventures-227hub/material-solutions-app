@@ -22,6 +22,20 @@ const changePasswordLimiter = rateLimit({
   },
 });
 
+const changeEmailLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip,
+  handler: (req, res) => {
+    console.warn(`[RateLimit] change-email limit hit from IP ${req.ip}`);
+    res.status(429).json({
+      error: 'Too many email change attempts. Try again in 10 minutes.',
+    });
+  },
+});
+
 const SALT_ROUNDS = 12;
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
@@ -345,6 +359,70 @@ router.post('/change-password', changePasswordLimiter, verifyToken, async (req, 
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
     console.error('Error changing password:', error);
+    next(error);
+  }
+});
+
+/**
+ * POST /api/auth/change-email - Change authenticated user's login email
+ * Rate-limited: 5 attempts per 10 min per IP
+ */
+router.post('/change-email', changeEmailLimiter, verifyToken, async (req, res, next) => {
+  const { currentPassword, newEmail } = req.body;
+
+  try {
+    if (!currentPassword || !newEmail) {
+      return res.status(400).json({ error: 'Current password and new email are required' });
+    }
+
+    const normalizedEmail = String(newEmail).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({ error: 'Enter a valid email address' });
+    }
+
+    const result = await db.query(
+      'SELECT id, email, password_hash FROM users WHERE id = $1',
+      [req.user.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = result.rows[0];
+    const validPassword = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    if (user.email === normalizedEmail) {
+      return res.status(400).json({ error: 'New email must be different from your current email' });
+    }
+
+    const existing = await db.query(
+      'SELECT id FROM users WHERE email = $1 AND id <> $2',
+      [normalizedEmail, user.id]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+
+    await db.query(
+      'UPDATE users SET email = $1 WHERE id = $2',
+      [normalizedEmail, user.id]
+    );
+
+    // Invalidate refresh tokens so the new email is used on the next login.
+    await db.query(
+      'DELETE FROM refresh_tokens WHERE user_id = $1',
+      [user.id]
+    );
+
+    res.clearCookie('refreshToken');
+    res.json({ message: 'Email changed successfully', email: normalizedEmail });
+  } catch (error) {
+    console.error('Error changing email:', error);
     next(error);
   }
 });

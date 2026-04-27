@@ -36,6 +36,19 @@ function ProtectedRoute({ children }) {
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
+  const appShellRoutes = [
+    '/dashboard',
+    '/intake',
+    '/inventory',
+    '/pipeline',
+    '/leads',
+    '/analytics',
+    '/david',
+    '/services',
+    '/resources',
+    '/settings',
+  ];
+  const shouldShowNavigation = isAuthenticated && appShellRoutes.includes(location.pathname);
 
   // Track SPA navigation
   useEffect(() => {
@@ -45,7 +58,7 @@ function AppRoutes() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SkipLink />
-      {isAuthenticated && <Navigation />}
+      {shouldShowNavigation && <Navigation />}
       <Suspense fallback={<SkeletonPage />}>
         <main id="main-content" tabIndex={-1}>
           <Routes>

@@ -59,7 +59,7 @@ const Navigation = () => {
   }, [location.pathname]);
 
   const primaryNavItems = [
-    { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+    { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     { path: '/intake', label: 'Intake', icon: <PlusCircle size={20} /> },
     { path: '/inventory', label: 'Inventory', icon: <Truck size={20} /> },
     { path: '/pipeline', label: 'Pipeline', icon: <GitBranch size={20} /> },
@@ -81,7 +81,7 @@ const Navigation = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo - Vortex Ventures Branding */}
-            <Link to="/" className="flex items-center space-x-3 group">
+            <Link to="/dashboard" className="flex items-center space-x-3 group">
               <div className="w-11 h-11 bg-gradient-to-br from-neon-cyan to-neon-purple rounded-lg flex items-center justify-center shadow-md shadow-neon-cyan/20 group-hover:shadow-lg group-hover:shadow-neon-cyan/40 transition-all duration-300">
                 <span className="text-white text-base font-bold tracking-tight">MS</span>
               </div>
@@ -205,7 +205,7 @@ const Navigation = () => {
       {/* Mobile Top Bar */}
       <nav className="lg:hidden bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-40">
         <div className="px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to="/dashboard" className="flex items-center gap-2.5">
             <div className="w-10 h-10 bg-gradient-to-br from-neon-cyan to-neon-purple rounded-lg flex items-center justify-center shadow-md shadow-neon-cyan/20">
               <span className="text-white text-sm font-bold">MS</span>
             </div>
