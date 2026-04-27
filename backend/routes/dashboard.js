@@ -32,10 +32,10 @@ router.get('/kpis', async (req, res, next) => {
       : 0;
 
     const recentListings = await db.query(
-      `SELECT id, make, model, year, listing_price, status, created_at, updated_at
+      `SELECT id, make, model, year, listing_price, status, created_at
        FROM inventory
        WHERE status IN ('listed', 'reserved', 'pending', 'sold')
-       ORDER BY COALESCE(updated_at, created_at) DESC
+       ORDER BY created_at DESC
        LIMIT 3`
     );
 
