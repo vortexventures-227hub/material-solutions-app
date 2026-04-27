@@ -11,6 +11,20 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+function isOptionalAnalyticsSchemaError(err) {
+  return err && ['42P01', '42703', '23514'].includes(err.code);
+}
+
+async function optionalAnalyticsQuery(label, fn, fallbackRows = []) {
+  try {
+    return { result: await fn(), warning: null };
+  } catch (err) {
+    if (!isOptionalAnalyticsSchemaError(err)) throw err;
+    console.warn(`Analytics optional surface ${label} unavailable: ${err.message}`);
+    return { result: { rows: fallbackRows }, warning: `${label} unavailable` };
+  }
+}
+
 // ─── GET /api/analytics/overview ───────────────────────────────
 router.get('/overview', async (req, res, next) => {
   try {
@@ -23,22 +37,22 @@ router.get('/overview', async (req, res, next) => {
     ] = await Promise.all([
       db.query(`SELECT COUNT(*) as total FROM leads`),
       db.query(`SELECT COUNT(*) as total FROM inventory WHERE status != 'sold'`),
-      db.query(`
+      optionalAnalyticsQuery('email_recipients', () => db.query(`
         SELECT
           COUNT(*) FILTER (WHERE status = 'sent') as emails_sent,
           COUNT(*) FILTER (WHERE status = 'opened') as emails_opened,
           COUNT(*) FILTER (WHERE status = 'clicked') as emails_clicked,
           COUNT(*) FILTER (WHERE status = 'bounced') as emails_bounced
         FROM email_recipients
-      `),
-      db.query(`
+      `), [{ emails_sent: 0, emails_opened: 0, emails_clicked: 0, emails_bounced: 0 }]),
+      optionalAnalyticsQuery('inventory_listings', () => db.query(`
         SELECT platform, COUNT(*) as total,
                COUNT(*) FILTER (WHERE status = 'published') as active,
                COUNT(*) FILTER (WHERE status = 'failed') as failed
         FROM inventory_listings
         GROUP BY platform
-      `),
-      db.query(`
+      `)),
+      optionalAnalyticsQuery('email_sequences', () => db.query(`
         SELECT
           l.name, l.email, l.status as lead_status, l.score,
           es.inventory_id, es.current_step, es.sequence_status,
@@ -50,13 +64,14 @@ router.get('/overview', async (req, res, next) => {
         WHERE es.sequence_status IN ('active', 'completed')
         ORDER BY es.last_sent_at DESC NULLS LAST
         LIMIT 20
-      `),
+      `)),
     ]);
 
-    const e = emailStats.rows[0] || {};
+    const e = emailStats.result.rows[0] || {};
     const sent = parseInt(e.emails_sent) || 0;
     const opened = parseInt(e.emails_opened) || 0;
     const clicked = parseInt(e.emails_clicked) || 0;
+    const warnings = [emailStats.warning, listingStats.warning, recentActivity.warning].filter(Boolean);
 
     res.json({
       kpis: {
@@ -65,10 +80,12 @@ router.get('/overview', async (req, res, next) => {
         emailsSent: sent,
         emailOpenRate: sent > 0 ? ((opened / sent) * 100).toFixed(1) : '0.0',
         emailClickRate: sent > 0 ? ((clicked / sent) * 100).toFixed(1) : '0.0',
-        activeListings: listingStats.rows.reduce((s, r) => s + parseInt(r.active), 0),
+        activeListings: listingStats.result.rows.reduce((s, r) => s + parseInt(r.active || 0), 0),
       },
-      platformBreakdown: listingStats.rows,
-      recentEmailActivity: recentActivity.rows,
+      platformBreakdown: listingStats.result.rows,
+      recentEmailActivity: recentActivity.result.rows,
+      degraded: warnings.length > 0,
+      warnings,
     });
   } catch (err) {
     next(err);
@@ -81,29 +98,30 @@ router.get('/inventory/:id', async (req, res, next) => {
     const { id } = req.params;
 
     const [unit, listings, analytics, emailSeqs] = await Promise.all([
-      db.query(`SELECT id, make, model, year, asking_price, status, photos FROM inventory WHERE id = $1`, [id]),
-      db.query(`SELECT * FROM inventory_listings WHERE inventory_id = $1`, [id]),
-      db.query(
+      db.query(`SELECT id, make, model, year, listing_price, status, images FROM inventory WHERE id = $1`, [id]),
+      optionalAnalyticsQuery('inventory_listings', () => db.query(`SELECT * FROM inventory_listings WHERE inventory_id = $1`, [id])),
+      optionalAnalyticsQuery('marketplace_analytics', () => db.query(
         `SELECT platform, date, views, inquiries, shares, leads_generated, roi
          FROM marketplace_analytics
          WHERE inventory_id = $1
          ORDER BY date DESC
          LIMIT 90`,
         [id]
-      ),
-      db.query(
+      )),
+      optionalAnalyticsQuery('email_sequences', () => db.query(
         `SELECT es.*, l.name as lead_name, l.email as lead_email, l.status as lead_status
          FROM email_sequences es
          JOIN leads l ON l.id = es.lead_id
          WHERE es.inventory_id = $1
          ORDER BY es.started_at DESC`,
         [id]
-      ),
+      )),
     ]);
 
     if (!unit.rows.length) return res.status(404).json({ error: 'Inventory not found' });
 
-    const totals = analytics.rows.reduce((acc, row) => ({
+    const warnings = [listings.warning, analytics.warning, emailSeqs.warning].filter(Boolean);
+    const totals = analytics.result.rows.reduce((acc, row) => ({
       views: acc.views + parseInt(row.views || 0),
       inquiries: acc.inquiries + parseInt(row.inquiries || 0),
       shares: acc.shares + parseInt(row.shares || 0),
@@ -112,10 +130,12 @@ router.get('/inventory/:id', async (req, res, next) => {
 
     res.json({
       unit: unit.rows[0],
-      listings: listings.rows,
+      listings: listings.result.rows,
       totals,
-      timeline: analytics.rows.reverse(), // Oldest first for charts
-      emailSequences: emailSeqs.rows,
+      timeline: analytics.result.rows.reverse(), // Oldest first for charts
+      emailSequences: emailSeqs.result.rows,
+      degraded: warnings.length > 0,
+      warnings,
     });
   } catch (err) {
     next(err);
@@ -125,7 +145,7 @@ router.get('/inventory/:id', async (req, res, next) => {
 // ─── GET /api/analytics/platforms ──────────────────────────────
 router.get('/platforms', async (req, res, next) => {
   try {
-    const breakdown = await db.query(`
+    const breakdown = await optionalAnalyticsQuery('platform analytics', () => db.query(`
       SELECT
         il.platform,
         COUNT(*) as total_publishes,
@@ -139,9 +159,13 @@ router.get('/platforms', async (req, res, next) => {
       LEFT JOIN marketplace_analytics ma ON ma.inventory_id = il.inventory_id AND ma.platform = il.platform
       GROUP BY il.platform
       ORDER BY SUM(ma.views) DESC NULLS LAST
-    `);
+    `));
 
-    res.json({ platforms: breakdown.rows });
+    res.json({
+      platforms: breakdown.result.rows,
+      degraded: !!breakdown.warning,
+      warnings: breakdown.warning ? [breakdown.warning] : [],
+    });
   } catch (err) {
     next(err);
   }
@@ -153,7 +177,7 @@ router.get('/timeline', async (req, res, next) => {
     const days = parseInt(req.query.days) || 30;
     const offset = process.env.NODE_ENV === 'production' ? '' : '';
 
-    const timeline = await db.query(`
+    const timeline = await optionalAnalyticsQuery('marketplace_analytics', () => db.query(`
       SELECT
         DATE(ma.date) as date,
         SUM(ma.views) as views,
@@ -164,9 +188,13 @@ router.get('/timeline', async (req, res, next) => {
       WHERE ma.date >= NOW() - INTERVAL '${parseInt(days)} days'
       GROUP BY DATE(ma.date)
       ORDER BY date ASC
-    `);
+    `));
 
-    res.json({ timeline: timeline.rows });
+    res.json({
+      timeline: timeline.result.rows,
+      degraded: !!timeline.warning,
+      warnings: timeline.warning ? [timeline.warning] : [],
+    });
   } catch (err) {
     next(err);
   }
