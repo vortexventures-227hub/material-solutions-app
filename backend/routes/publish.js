@@ -40,16 +40,23 @@ function parseArrayField(value) {
   }
 }
 
+function isBuyerPublicMediaUrl(url) {
+  return typeof url === 'string'
+    && (/^https?:\/\//i.test(url) || /^\/(images|videos|assets|inventory)\//i.test(url));
+}
+
 function normalizeUnitForMarketing(unit) {
   const images = parseArrayField(unit.images);
   const photos = parseArrayField(unit.photos);
   const media = photos.length ? photos : images;
+  const publicMedia = media.filter(isBuyerPublicMediaUrl);
 
   return {
     ...unit,
     asking_price: unit.asking_price || unit.listing_price || null,
-    photos: media,
-    images: media,
+    photos: publicMedia,
+    images: publicMedia,
+    raw_media_paths: media,
     condition: unit.condition || (unit.condition_score ? `condition score ${unit.condition_score}/10` : 'used'),
   };
 }
@@ -67,7 +74,7 @@ function buildMarketingAssets(unit) {
     description: Boolean(meta.description),
     price: Boolean(normalizedUnit.asking_price),
     specs: Boolean(normalizedUnit.make && normalizedUnit.model),
-    mediaUrl: mediaUrls.length > 0,
+    mediaUrl: mediaUrls.some(isBuyerPublicMediaUrl),
     seoMeta: Boolean(meta.title && meta.description && meta.canonical),
     aeoAnswerBlock: Array.isArray(faqData.schema) && faqData.schema.length > 0,
     schemaJsonLd: Boolean(schemaProduct && schemaProduct['@context'] === 'https://schema.org'),
@@ -102,6 +109,8 @@ function buildMarketingAssets(unit) {
       media: {
         primaryUrl: mediaUrls[0] || null,
         urls: mediaUrls,
+        rawPaths: normalizedUnit.raw_media_paths || [],
+        publicUrlReady: mediaUrls.some(isBuyerPublicMediaUrl),
       },
       seo: {
         title: meta.title,

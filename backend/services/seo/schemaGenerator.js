@@ -10,9 +10,12 @@ function getPrice(unit) {
 }
 
 function getImages(unit) {
-  if (Array.isArray(unit.photos) && unit.photos.length) return unit.photos;
-  if (Array.isArray(unit.images) && unit.images.length) return unit.images;
-  return [];
+  const urls = Array.isArray(unit.photos) && unit.photos.length ? unit.photos : unit.images;
+  if (!Array.isArray(urls)) return [];
+  return urls.filter((url) => (
+    typeof url === 'string'
+    && (/^https?:\/\//i.test(url) || /^\/(images|videos|assets|inventory)\//i.test(url))
+  ));
 }
 
 /**
@@ -71,35 +74,6 @@ function buildOffersSchema(unit, price) {
       name: SEO_CONFIG.companyName,
       url: SEO_CONFIG.baseUrl,
     },
-    shippingDetails: {
-      '@type': 'OfferShippingDetails',
-      shippingRate: {
-        '@type': 'MonetaryAmount',
-        value: '0',
-        currency: 'USD',
-      },
-      shippingDestination: {
-        '@type': 'DefinedRegion',
-        addressCountry: 'US',
-      },
-      deliveryTime: {
-        '@type': 'ShippingDeliveryTime',
-        handlingTime: {
-          '@type': 'QuantitativeValue',
-          minValue: '1',
-          maxValue: '3',
-          unitCode: 'DAY',
-        },
-      },
-    },
-    hasMerchantReturnPolicy: {
-      '@type': 'MerchantReturnPolicy',
-      applicableCountry: 'US',
-      returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
-      merchantReturnDays: 14,
-      returnMethod: 'https://schema.org/ReturnByMail',
-      returnFees: 'https://schema.org/FreeReturn',
-    },
   };
 }
 
@@ -131,7 +105,10 @@ function buildDescription(unit) {
 
   if (unit.hours) parts.push(`${parseInt(unit.hours).toLocaleString()} hours`);
   if (unit.capacity_lbs) parts.push(`${parseInt(unit.capacity_lbs).toLocaleString()} lb capacity`);
-  if (unit.mast_type) parts.push(`${unit.mast_type} mast`);
+  if (unit.mast_type) {
+    const mast = String(unit.mast_type);
+    parts.push(/\bmast\b/i.test(mast) ? mast : `${mast} mast`);
+  }
   if (unit.power_type) parts.push(`${capitalize(unit.power_type)} powered`);
   if (unit.condition) parts.push(`${unit.condition} condition`);
 
