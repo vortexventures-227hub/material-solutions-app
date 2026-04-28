@@ -227,7 +227,7 @@ test('publish POST reports platform listing schema drift without crashing or cal
   });
 });
 
-test('publish POST reports platform update schema drift without crashing', async () => {
+test('publish POST returns not_implemented for facebook_marketplace and degrades gracefully on UPDATE drift', async () => {
   const calls = [];
   const app = buildApp(async (sql) => {
     calls.push(sql);
@@ -264,9 +264,10 @@ test('publish POST reports platform update schema drift without crashing', async
     assert.equal(res.status, 200);
     assert.equal(res.body.results.length, 1);
     assert.equal(res.body.results[0].platform, 'facebook_marketplace');
-    assert.equal(res.body.results[0].status, 'error');
-    assert.match(res.body.results[0].error, /inventory_listings unavailable/);
-    assert.ok(calls.some((sql) => /UPDATE inventory_listings SET\s+platform_listing_id/.test(sql)));
+    assert.equal(res.body.results[0].status, 'not_implemented');
+    assert.equal(res.body.results[0].manualPasteRequired, true);
+    assert.equal(res.body.results[0].url, null);
+    assert.ok(calls.some((sql) => /UPDATE inventory_listings SET status/.test(sql)));
   });
 });
 
@@ -332,6 +333,43 @@ test('publish unpublish degrades when optional listing table is absent', async (
     assert.equal(res.body.error, 'inventory_listings unavailable');
     assert.equal(res.body.degraded, true);
     assert.equal(calls.filter((sql) => /UPDATE inventory_listings/.test(sql)).length, 0);
+  });
+});
+
+test('publish POST returns not_implemented and manualPasteRequired:true for facebook_marketplace', async () => {
+  const app = buildApp(async (sql) => {
+    if (/SELECT \* FROM inventory WHERE id/.test(sql)) {
+      return {
+        rows: [{
+          id: 'ddeb41d4-5261-4851-9324-e2f09ea8f807',
+          year: 2018,
+          make: 'Toyota',
+          model: '8FGCU25',
+          photos: [],
+          status: 'listed',
+        }],
+      };
+    }
+    if (/INSERT INTO inventory_seo/.test(sql)) return { rows: [] };
+    if (/UPDATE inventory SET status/.test(sql)) return { rows: [] };
+    if (/INSERT INTO inventory_listings/.test(sql)) return { rows: [{ id: 'listing-1' }] };
+    if (/UPDATE inventory_listings/.test(sql)) return { rows: [] };
+    throw new Error(`Unexpected query: ${sql}`);
+  });
+
+  await withServer(app, async (server) => {
+    const res = await request(server, 'POST', '/api/publish/ddeb41d4-5261-4851-9324-e2f09ea8f807', {
+      platforms: ['facebook_marketplace'],
+      options: {},
+    });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.results.length, 1);
+    const result = res.body.results[0];
+    assert.equal(result.platform, 'facebook_marketplace');
+    assert.equal(result.status, 'not_implemented');
+    assert.equal(result.manualPasteRequired, true);
+    assert.equal(result.url, null);
   });
 });
 

@@ -188,6 +188,22 @@ router.post('/:inventoryId', async (req, res, next) => {
 
       try {
         const publishResult = await handler(unit, options[platform] || {});
+
+        if (publishResult.status === 'not_implemented') {
+          await optionalPublishQuery('inventory_listings', () => db.query(
+            `UPDATE inventory_listings SET status = 'manual_required', updated_at = NOW() WHERE id = $1`,
+            [listingId]
+          ));
+          results.push({
+            platform,
+            status: 'not_implemented',
+            url: null,
+            error: publishResult.error,
+            manualPasteRequired: true,
+          });
+          continue;
+        }
+
         // Update listing with result. Treat older optional listing schemas as a
         // degraded platform result instead of turning safe publish probes into 500s.
         const updateAttempt = await optionalPublishQuery('inventory_listings', () => db.query(
@@ -315,40 +331,78 @@ router.post('/:inventoryId/:platform/unpublish', async (req, res, next) => {
   }
 });
 
-// ─── Platform Publishers (stubs — Cipher wires real APIs) ────────────────────
+// ─── Platform Publishers (not yet implemented — manual posting required) ────────
 
 async function publishToCraigslist(unit, options) {
-  // Cipher implements: Craigslist API or scrape
-  const city = options.city || 'baltimore';
-  const id = `cl_${unit.id}_${Date.now()}`;
-  return { id, url: `https://${city}.craigslist.org/equip/${id}.html`, mock: true };
+  return {
+    status: 'not_implemented',
+    dbStatus: 'manual_required',
+    externalId: null,
+    url: null,
+    error: 'Craigslist publish is not yet wired. The generated content is paste-ready — copy it from the preview and post manually at craigslist.org.',
+    manualPasteRequired: true,
+    mock: false,
+  };
 }
 
 async function publishToFacebook(unit, options) {
-  // Cipher implements: Facebook Marketplace API
-  const id = `fb_${unit.id}_${Date.now()}`;
-  return { id, url: `https://facebook.com/marketplace/item/${id}`, mock: true };
+  return {
+    status: 'not_implemented',
+    dbStatus: 'manual_required',
+    externalId: null,
+    url: null,
+    error: 'Facebook Marketplace publish is not yet wired. The generated content is paste-ready — copy it from the preview and post manually at facebook.com/marketplace.',
+    manualPasteRequired: true,
+    mock: false,
+  };
 }
 
 async function publishToMachineryTrader(unit, options) {
-  const id = `mt_${unit.id}_${Date.now()}`;
-  return { id, url: `https://machinerytrader.com/listings/${id}`, mock: true };
+  return {
+    status: 'not_implemented',
+    dbStatus: 'manual_required',
+    externalId: null,
+    url: null,
+    error: 'MachineryTrader publish is not yet wired. Post manually at machinerytrader.com using the generated listing content.',
+    manualPasteRequired: true,
+    mock: false,
+  };
 }
 
 async function publishToEquipFinder(unit, options) {
-  const id = `ef_${unit.id}_${Date.now()}`;
-  return { id, url: `https://equipfinder.com/listing/${id}`, mock: true };
+  return {
+    status: 'not_implemented',
+    dbStatus: 'manual_required',
+    externalId: null,
+    url: null,
+    error: 'EquipFinder publish is not yet wired. Post manually at equipfinder.com using the generated listing content.',
+    manualPasteRequired: true,
+    mock: false,
+  };
 }
 
 async function publishToMachineryATS(unit, options) {
-  const id = `ma_${unit.id}_${Date.now()}`;
-  return { id, url: `https://machineryats.com/listing/${id}`, mock: true };
+  return {
+    status: 'not_implemented',
+    dbStatus: 'manual_required',
+    externalId: null,
+    url: null,
+    error: 'MachineryATS publish is not yet wired. Post manually at machineryats.com using the generated listing content.',
+    manualPasteRequired: true,
+    mock: false,
+  };
 }
 
 async function publishToYouTube(unit, options) {
-  // Cipher implements: YouTube Data API v3
-  const id = `yt_${unit.id}_${Date.now()}`;
-  return { id, url: `https://youtube.com/watch?v=${id}`, mock: true };
+  return {
+    status: 'not_implemented',
+    dbStatus: 'manual_required',
+    externalId: null,
+    url: null,
+    error: 'YouTube publish is not yet wired. Upload the generated video content manually at youtube.com/upload.',
+    manualPasteRequired: true,
+    mock: false,
+  };
 }
 
 module.exports = router;
