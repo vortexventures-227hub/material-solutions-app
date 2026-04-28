@@ -111,7 +111,13 @@ router.patch('/:id', async (req, res, next) => {
       return res.status(400).json({ error: 'No valid fields to update' });
     }
     
-    const values = fields.map(f => validatedData[f]);
+    const values = fields.map((field) => {
+      const value = validatedData[field];
+      if (field === 'images' || field === 'attachments') {
+        return JSON.stringify(value || []);
+      }
+      return value;
+    });
     const setClause = fields.map((field, i) => `"${field}" = $${i + 2}`).join(', ');
     
     const result = await db.query(
