@@ -29,6 +29,102 @@ function isOptionalPublishSchemaError(err) {
   return err && ['42P01', '42703', '23514'].includes(err.code);
 }
 
+function parseArrayField(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== 'string' || value.trim() === '') return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_err) {
+    return [];
+  }
+}
+
+function normalizeUnitForMarketing(unit) {
+  const images = parseArrayField(unit.images);
+  const photos = parseArrayField(unit.photos);
+  const media = photos.length ? photos : images;
+
+  return {
+    ...unit,
+    asking_price: unit.asking_price || unit.listing_price || null,
+    photos: media,
+    images: media,
+    condition: unit.condition || (unit.condition_score ? `condition score ${unit.condition_score}/10` : 'used'),
+  };
+}
+
+function buildMarketingAssets(unit) {
+  const normalizedUnit = normalizeUnitForMarketing(unit);
+  const meta = generateMeta(normalizedUnit);
+  const slug = generateSlug(normalizedUnit);
+  const faqData = generateFaq(normalizedUnit);
+  const schemaProduct = generateProductSchema(normalizedUnit);
+  const mediaUrls = normalizedUnit.photos || [];
+
+  const requiredFields = {
+    title: Boolean(meta.title),
+    description: Boolean(meta.description),
+    price: Boolean(normalizedUnit.asking_price),
+    specs: Boolean(normalizedUnit.make && normalizedUnit.model),
+    mediaUrl: mediaUrls.length > 0,
+    seoMeta: Boolean(meta.title && meta.description && meta.canonical),
+    aeoAnswerBlock: Array.isArray(faqData.schema) && faqData.schema.length > 0,
+    schemaJsonLd: Boolean(schemaProduct && schemaProduct['@context'] === 'https://schema.org'),
+  };
+
+  return {
+    normalizedUnit,
+    meta,
+    slug,
+    faqData,
+    schemaProduct,
+    payload: {
+      inventoryId: normalizedUnit.id,
+      title: meta.title,
+      description: meta.description,
+      price: normalizedUnit.asking_price ? Number(normalizedUnit.asking_price) : null,
+      specs: {
+        make: normalizedUnit.make,
+        model: normalizedUnit.model,
+        year: normalizedUnit.year,
+        serial: normalizedUnit.serial,
+        hours: normalizedUnit.hours,
+        capacityLbs: normalizedUnit.capacity_lbs,
+        mastType: normalizedUnit.mast_type,
+        liftHeightInches: normalizedUnit.lift_height_inches,
+        powerType: normalizedUnit.power_type,
+        batteryInfo: normalizedUnit.battery_info,
+        condition: normalizedUnit.condition,
+        conditionScore: normalizedUnit.condition_score,
+        conditionNotes: normalizedUnit.condition_notes,
+      },
+      media: {
+        primaryUrl: mediaUrls[0] || null,
+        urls: mediaUrls,
+      },
+      seo: {
+        title: meta.title,
+        metaDescription: meta.description,
+        keywords: meta.keywords,
+        canonical: meta.canonical,
+        slug,
+        openGraph: meta.og,
+      },
+      aeo: {
+        faq: faqData.schema,
+        html: faqData.html,
+      },
+      schema: {
+        product: schemaProduct,
+        jsonLd: schemaProduct,
+      },
+      requiredFields,
+      complete: Object.values(requiredFields).every(Boolean),
+    },
+  };
+}
+
 async function optionalPublishQuery(label, fn, fallbackRows = []) {
   try {
     return { result: await fn(), warning: null };
@@ -40,7 +136,7 @@ async function optionalPublishQuery(label, fn, fallbackRows = []) {
 }
 
 async function saveSeoRecord(inventoryId, unit, meta, slug, faqData) {
-  const schemaJson = JSON.stringify(generateProductSchema(unit));
+  const schemaJson = JSON.stringify(generateProductSchema(normalizeUnitForMarketing(unit)));
   const faqJson = JSON.stringify(faqData.schema);
   const legacyValues = [
     inventoryId,
@@ -48,7 +144,7 @@ async function saveSeoRecord(inventoryId, unit, meta, slug, faqData) {
     meta.description,
     meta.og.ogTitle,
     meta.og.ogDescription,
-    unit.photos?.[0] || null,
+    normalizeUnitForMarketing(unit).photos?.[0] || null,
     schemaJson,
     faqJson,
     slug,
@@ -95,8 +191,8 @@ async function saveSeoRecord(inventoryId, unit, meta, slug, faqData) {
          keywords = EXCLUDED.keywords, alt_texts = EXCLUDED.alt_texts,
          og_image_url = EXCLUDED.og_image_url, slug = EXCLUDED.slug,
          canonical_url = EXCLUDED.canonical_url, updated_at = NOW()`,
-      [...migration006Values, meta.og.ogImage || unit.photos?.[0] || null, slug, meta.canonical]
-    );
+    [...migration006Values, meta.og.ogImage || normalizeUnitForMarketing(unit).photos?.[0] || null, slug, meta.canonical]
+  );
     return;
   } catch (err) {
     if (!isOptionalPublishSchemaError(err)) throw err;
@@ -143,6 +239,27 @@ router.get('/platforms', (_req, res) => {
 });
 
 /**
+ * GET /api/publish/:inventoryId/payload
+ * Read-only preview of the generated marketing payload. This powers the MVP
+ * proof for SEO/AEO/schema readiness without writing SEO rows, listing rows,
+ * sending email, or invoking any external platform publisher.
+ */
+router.get('/:inventoryId/payload', async (req, res, next) => {
+  try {
+    const { inventoryId } = req.params;
+    if (rejectInvalidInventoryId(res, inventoryId)) return;
+
+    const invRes = await db.query(`SELECT * FROM inventory WHERE id = $1`, [inventoryId]);
+    if (!invRes.rows.length) return res.status(404).json({ error: 'Inventory not found' });
+
+    const { payload } = buildMarketingAssets(invRes.rows[0]);
+    res.json(payload);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * POST /api/publish/:inventoryId
  * Body: { platforms: string[], options: object }
  */
@@ -155,7 +272,7 @@ router.post('/:inventoryId', async (req, res, next) => {
     // Fetch inventory
     const invRes = await db.query(`SELECT * FROM inventory WHERE id = $1`, [inventoryId]);
     if (!invRes.rows.length) return res.status(404).json({ error: 'Inventory not found' });
-    const unit = invRes.rows[0];
+    const unit = normalizeUnitForMarketing(invRes.rows[0]);
 
     // Empty-platform publish is the safe no-op/dry-run probe path. Do not touch
     // optional Phase 6C tables or mutate inventory state for this acceptance gate.
@@ -164,9 +281,7 @@ router.post('/:inventoryId', async (req, res, next) => {
     }
 
     // Generate SEO data
-    const meta = generateMeta(unit);
-    const slug = generateSlug(unit);
-    const faqData = generateFaq(unit);
+    const { meta, slug, faqData, payload: marketingPayload } = buildMarketingAssets(unit);
 
     // Save optional SEO record. Phase 6C publish tables are deploy-hardening
     // surfaces; schema drift must not turn safe no-op publish probes into 500s.
@@ -251,7 +366,7 @@ router.post('/:inventoryId', async (req, res, next) => {
       }
     }
 
-    res.json({ inventoryId, unit: `${unit.year} ${unit.make} ${unit.model}`, results });
+    res.json({ inventoryId, unit: `${unit.year} ${unit.make} ${unit.model}`, results, seo: marketingPayload });
   } catch (err) {
     next(err);
   }
