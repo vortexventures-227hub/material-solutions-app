@@ -13,7 +13,8 @@ const MAX_DESCRIPTION = 160;
  */
 function generateMeta(unit) {
   const base = `${unit.year || ''} ${unit.make || ''} ${unit.model || ''}`.trim();
-  const price = unit.asking_price ? ` — $${parseFloat(unit.asking_price).toLocaleString()}` : '';
+  const priceValue = unit.asking_price || unit.listing_price;
+  const price = priceValue ? ` — $${parseFloat(priceValue).toLocaleString()}` : '';
   const condition = unit.condition ? ` [${unit.condition}]` : '';
 
   const title = buildTitle(base + condition + price);
@@ -59,11 +60,12 @@ function buildDescription(unit) {
   if (unit.capacity_lbs) parts.push(`${parseInt(unit.capacity_lbs).toLocaleString()} lb lift capacity`);
   if (unit.mast_type) parts.push(`${unit.mast_type} mast`);
   if (unit.power_type) parts.push(`${unit.power_type} powered`);
-  if (unit.asking_price) parts.push(`$${parseFloat(unit.asking_price).toLocaleString()}`);
+  const priceValue = unit.asking_price || unit.listing_price;
+  if (priceValue) parts.push(`$${parseFloat(priceValue).toLocaleString()}`);
 
   const joined = parts.slice(0, 6).join(', ');
 
-  const suffix = ` — Material Solutions | Mid-Atlantic | +1 (800) 555-0199`;
+  const suffix = ` — ${SEO_CONFIG.companyName} | NJ | ${SEO_CONFIG.phone}`;
   const available = `Available for sale. ${joined}`;
 
   if (available.length + suffix.length <= MAX_DESCRIPTION) {
@@ -77,7 +79,7 @@ function buildDescription(unit) {
  * Build Open Graph tags
  */
 function buildOgTags(unit, title) {
-  const image = unit.photos?.[0] || SEO_CONFIG.defaultImage;
+  const image = unit.photos?.[0] || unit.images?.[0] || SEO_CONFIG.defaultImage;
   const description = buildDescription(unit);
   const url = `${SEO_CONFIG.baseUrl}/inventory/${unit.id}`;
 
@@ -97,7 +99,7 @@ function buildOgTags(unit, title) {
     twitterImage: image,
     twitterSite: '@MaterialSolutions',
     // Product-specific
-    productPriceAmount: unit.asking_price ? parseFloat(unit.asking_price).toFixed(2) : '0.00',
+    productPriceAmount: unit.asking_price || unit.listing_price ? parseFloat(unit.asking_price || unit.listing_price).toFixed(2) : '0.00',
     productPriceCurrency: 'USD',
     productAvailability: unit.status === 'listed' || unit.status === 'reserved' ? 'instock' : 'oos',
     productCondition: mapCondition(unit.condition),

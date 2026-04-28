@@ -5,11 +5,21 @@
 
 const SEO_CONFIG = require('./seoConfig');
 
+function getPrice(unit) {
+  return parseFloat(unit.asking_price || unit.listing_price || 0);
+}
+
+function getImages(unit) {
+  if (Array.isArray(unit.photos) && unit.photos.length) return unit.photos;
+  if (Array.isArray(unit.images) && unit.images.length) return unit.images;
+  return [];
+}
+
 /**
  * Build complete JSON-LD Product schema for an inventory unit
  */
 function generateProductSchema(unit) {
-  const price = parseFloat(unit.asking_price || 0);
+  const price = getPrice(unit);
   const year = parseInt(unit.year) || null;
   const hours = parseInt(unit.hours) || null;
   const capacity = parseInt(unit.capacity_lbs || 0);
@@ -19,7 +29,7 @@ function generateProductSchema(unit) {
     '@type': 'Product',
     name: `${year ? `${year} ` : ''}${unit.make} ${unit.model}`,
     description: buildDescription(unit),
-    image: unit.photos?.[0] || null,
+    image: getImages(unit)[0] || null,
     url: `${SEO_CONFIG.baseUrl}/inventory/${unit.id}`,
     sku: unit.serial || unit.id,
     productID: unit.id,
@@ -58,7 +68,7 @@ function buildOffersSchema(unit, price) {
     itemCondition: unit.condition ? mapCondition(unit.condition) : 'https://schema.org/NewCondition',
     seller: {
       '@type': 'Organization',
-      name: 'Material Solutions',
+      name: SEO_CONFIG.companyName,
       url: SEO_CONFIG.baseUrl,
     },
     shippingDetails: {
@@ -125,7 +135,7 @@ function buildDescription(unit) {
   if (unit.power_type) parts.push(`${capitalize(unit.power_type)} powered`);
   if (unit.condition) parts.push(`${unit.condition} condition`);
 
-  return `${parts.slice(0, 5).join(', ')}. ${unit.condition_notes || ''} For sale by Material Solutions — call +1 (800) 555-0199.`;
+  return `${parts.slice(0, 5).join(', ')}. ${unit.condition_notes || ''} For sale by ${SEO_CONFIG.companyName} — call ${SEO_CONFIG.phone}.`;
 }
 
 /**
@@ -185,7 +195,7 @@ function generateFaqSchema(unit) {
       name: `How much is a ${year} ${make} ${model} forklift worth?`,
       acceptedAnswer: {
         '@type': 'Answer',
-        text: `A ${year} ${make} ${model} in ${unit.condition || 'good'} condition with ${unit.hours ? `${parseInt(unit.hours).toLocaleString()} hours` : 'unknown hours'} is priced at $${parseFloat(unit.asking_price || 0).toLocaleString()} USD. Prices vary based on condition, hours, and location.`,
+        text: `A ${year} ${make} ${model} in ${unit.condition || 'good'} condition with ${unit.hours ? `${parseInt(unit.hours).toLocaleString()} hours` : 'unknown hours'} is priced at $${getPrice(unit).toLocaleString()} USD. Prices vary based on condition, hours, and location.`,
       },
     },
     {
@@ -211,7 +221,7 @@ function generateFaqSchema(unit) {
       name: `Does Material Solutions offer delivery for forklifts?`,
       acceptedAnswer: {
         '@type': 'Answer',
-        text: `Yes. Material Solutions offers delivery throughout the Mid-Atlantic region. Contact us at +1 (800) 555-0199 or email sales@materialsolutions.com for a delivery quote.`,
+        text: `Yes. ${SEO_CONFIG.companyName} offers delivery in New Jersey, Eastern Pennsylvania, and the NYC metro area. Contact us at ${SEO_CONFIG.phone} or email ${SEO_CONFIG.email} for a delivery quote.`,
       },
     },
     {
@@ -219,7 +229,7 @@ function generateFaqSchema(unit) {
       name: `Can I finance a forklift purchase?`,
       acceptedAnswer: {
         '@type': 'Answer',
-        text: `Yes — Material Solutions works with multiple equipment financing partners. Call +1 (800) 555-0199 to discuss financing options for this ${year} ${make} ${model}.`,
+        text: `Yes — ${SEO_CONFIG.companyName} works with equipment financing partners. Call ${SEO_CONFIG.phone} to discuss financing options for this ${year} ${make} ${model}.`,
       },
     },
   ];

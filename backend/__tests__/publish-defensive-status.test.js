@@ -180,7 +180,7 @@ test('publish POST falls back to migration 006 SEO columns when legacy SEO colum
     assert.ok(migrationSeoCall, 'migration-006 SEO fallback should preserve image, slug, and canonical fields when additive columns exist');
     assert.ok(migrationSeoCall.values.includes('https://cdn.example.com/forklift.jpg'));
     assert.ok(migrationSeoCall.values.includes('2018-toyota-8fgcu25-ddeb41d4'));
-    assert.ok(migrationSeoCall.values.includes('https://app.materialsolutionsnj.com/inventory/ddeb41d4-5261-4851-9324-e2f09ea8f807'));
+    assert.ok(migrationSeoCall.values.includes('https://www.materialsolutionsnj.com/inventory/ddeb41d4-5261-4851-9324-e2f09ea8f807'));
     assert.equal(calls.filter((sql) => /INSERT INTO inventory_listings/.test(sql)).length, 0);
   });
 });
@@ -398,6 +398,60 @@ test('publish GET /platforms returns platform payload and is not treated as inve
         'youtube',
       ]
     );
+  });
+});
+
+test('publish GET payload returns read-only SEO/AEO/schema marketing proof', async () => {
+  const calls = [];
+  const app = buildApp(async (sql) => {
+    calls.push(sql);
+    if (/SELECT \* FROM inventory WHERE id/.test(sql)) {
+      return {
+        rows: [{
+          id: 'ddeb41d4-5261-4851-9324-e2f09ea8f807',
+          year: 2018,
+          make: 'Raymond',
+          model: '752R45TT',
+          hours: 2300,
+          capacity_lbs: 4500,
+          mast_type: 'Triple',
+          power_type: 'electric',
+          listing_price: '29500.00',
+          images: ['https://cdn.example.com/raymond.jpg'],
+          status: 'listed',
+          condition_notes: 'Battery and charger included.',
+        }],
+      };
+    }
+    throw new Error(`Payload preview should only read inventory: ${sql}`);
+  });
+
+  await withServer(app, async (server) => {
+    const res = await request(server, 'GET', '/api/publish/ddeb41d4-5261-4851-9324-e2f09ea8f807/payload');
+
+    assert.equal(res.status, 200);
+    assert.equal(calls.length, 1);
+    assert.equal(res.body.complete, true);
+    assert.equal(res.body.price, 29500);
+    assert.equal(res.body.media.primaryUrl, 'https://cdn.example.com/raymond.jpg');
+    assert.ok(res.body.title);
+    assert.ok(res.body.description);
+    assert.ok(res.body.seo.metaDescription);
+    assert.ok(res.body.seo.openGraph.ogImage);
+    assert.ok(Array.isArray(res.body.aeo.faq));
+    assert.ok(res.body.aeo.faq.length > 0);
+    assert.equal(res.body.schema.jsonLd['@context'], 'https://schema.org');
+    assert.equal(res.body.schema.jsonLd['@type'], 'Product');
+    assert.deepEqual(res.body.requiredFields, {
+      title: true,
+      description: true,
+      price: true,
+      specs: true,
+      mediaUrl: true,
+      seoMeta: true,
+      aeoAnswerBlock: true,
+      schemaJsonLd: true,
+    });
   });
 });
 

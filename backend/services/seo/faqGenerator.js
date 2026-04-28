@@ -4,6 +4,7 @@
  */
 
 const { generateFaqSchema } = require('./schemaGenerator');
+const SEO_CONFIG = require('./seoConfig');
 
 /**
  * Generate FAQ schema + rendered HTML
@@ -38,12 +39,13 @@ function generateFaqQuestions(unit) {
   const year = unit.year || '';
   const make = unit.make || '';
   const model = unit.model || '';
-  const price = unit.asking_price ? `$${parseFloat(unit.asking_price).toLocaleString()}` : 'Contact for pricing';
+  const priceValue = unit.asking_price || unit.listing_price;
+  const price = priceValue ? `$${parseFloat(priceValue).toLocaleString()}` : 'Contact for pricing';
 
   return [
     {
       q: `What is the price of a ${year} ${make} ${model} forklift?`,
-      a: `The ${year} ${make} ${model} is listed at ${price}. Prices vary based on condition, hours, and accessories. Call +1 (800) 555-0199 for a quote.`,
+      a: `The ${year} ${make} ${model} is listed at ${price}. Prices vary based on condition, hours, and accessories. Call ${SEO_CONFIG.phone} for a quote.`,
     },
     {
       q: `What is the lifting capacity of the ${make} ${model}?`,
@@ -63,11 +65,11 @@ function generateFaqQuestions(unit) {
     },
     {
       q: `Does Material Solutions deliver forklifts?`,
-      a: `Yes — we deliver throughout the Mid-Atlantic region (MD, VA, DC, PA, DE). Call +1 (800) 555-0199 for a delivery quote.`,
+      a: `Yes — we deliver in New Jersey, Eastern Pennsylvania, and the NYC metro area. Call ${SEO_CONFIG.phone} for a delivery quote.`,
     },
     {
       q: `Can I finance a forklift purchase?`,
-      a: `Yes — Material Solutions works with equipment financing partners. We offer competitive rates for qualified buyers. Call +1 (800) 555-0199 to apply.`,
+      a: `Yes — ${SEO_CONFIG.companyName} works with equipment financing partners. We offer competitive rates for qualified buyers. Call ${SEO_CONFIG.phone} to apply.`,
     },
     {
       q: `What is the lift height on this forklift?`,
