@@ -58,7 +58,10 @@ function buildDescription(unit) {
   if (unit.condition) parts.push(`${unit.condition} condition`);
   if (unit.hours) parts.push(`${parseInt(unit.hours).toLocaleString()} hours`);
   if (unit.capacity_lbs) parts.push(`${parseInt(unit.capacity_lbs).toLocaleString()} lb lift capacity`);
-  if (unit.mast_type) parts.push(`${unit.mast_type} mast`);
+  if (unit.mast_type) {
+    const mast = String(unit.mast_type);
+    parts.push(/\bmast\b/i.test(mast) ? mast : `${mast} mast`);
+  }
   if (unit.power_type) parts.push(`${unit.power_type} powered`);
   const priceValue = unit.asking_price || unit.listing_price;
   if (priceValue) parts.push(`$${parseFloat(priceValue).toLocaleString()}`);
