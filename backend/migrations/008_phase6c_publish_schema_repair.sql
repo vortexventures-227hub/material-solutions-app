@@ -62,6 +62,9 @@ BEGIN
   END LOOP;
 END $$;
 
+-- Production may already contain legacy rows with historical status values.
+-- NOT VALID preserves those rows while enforcing the repaired check for new
+-- or updated rows.
 ALTER TABLE inventory_listings
   ADD CONSTRAINT inventory_listings_status_check
   CHECK (status IN (
@@ -75,7 +78,7 @@ ALTER TABLE inventory_listings
     'expired',
     'deleted',
     'unpublished'
-  ));
+  )) NOT VALID;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_inventory_listings_inventory_platform
   ON inventory_listings(inventory_id, platform);
