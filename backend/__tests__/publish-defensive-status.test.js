@@ -373,6 +373,34 @@ test('publish POST returns not_implemented and manualPasteRequired:true for face
   });
 });
 
+test('publish GET /platforms returns platform payload and is not treated as inventory id', async () => {
+  let dbCalls = 0;
+  const app = buildApp(async () => {
+    dbCalls += 1;
+    throw new Error('DB should not be called for platform catalog route');
+  });
+
+  await withServer(app, async (server) => {
+    const res = await request(server, 'GET', '/api/publish/platforms');
+
+    assert.equal(res.status, 200);
+    assert.equal(dbCalls, 0);
+    assert.ok(Array.isArray(res.body.platforms));
+    assert.ok(res.body.platforms.length > 0);
+    assert.deepEqual(
+      res.body.platforms.map((platform) => platform.key),
+      [
+        'craigslist',
+        'facebook_marketplace',
+        'machinerytrader',
+        'equipfinder',
+        'machineryats',
+        'youtube',
+      ]
+    );
+  });
+});
+
 test('publish GET degrades to 200 with warnings when optional Phase 6C tables are absent', async () => {
   const app = buildApp(async (sql) => {
     if (/inventory_listings/.test(sql)) {

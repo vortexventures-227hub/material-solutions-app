@@ -125,6 +125,23 @@ const PLATFORM_HANDLERS = {
   youtube: publishToYouTube,
 };
 
+const PLATFORM_CATALOG = [
+  { key: 'craigslist', available: false, status: 'manual_required' },
+  { key: 'facebook_marketplace', available: false, status: 'manual_required' },
+  { key: 'machinerytrader', available: false, status: 'manual_required' },
+  { key: 'equipfinder', available: false, status: 'manual_required' },
+  { key: 'machineryats', available: false, status: 'manual_required' },
+  { key: 'youtube', available: false, status: 'manual_required' },
+];
+
+/**
+ * GET /api/publish/platforms
+ * Return supported publish platforms without treating `platforms` as an inventory id.
+ */
+router.get('/platforms', (_req, res) => {
+  res.json({ platforms: PLATFORM_CATALOG });
+});
+
 /**
  * POST /api/publish/:inventoryId
  * Body: { platforms: string[], options: object }
