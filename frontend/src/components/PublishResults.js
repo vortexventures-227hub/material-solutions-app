@@ -9,7 +9,9 @@ import { Button } from './ui/button';
 export default function PublishResults({ results, unit, seoData, onClose }) {
   const total = results?.results?.length || 0;
   const succeeded = results?.results?.filter(r => r.status === 'published').length || 0;
+  const manual = results?.results?.filter(r => r.manualPasteRequired || r.status === 'not_implemented').length || 0;
   const failed = results?.results?.filter(r => r.status === 'error').length || 0;
+  const isFullyLive = total > 0 && succeeded === total;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
@@ -20,11 +22,15 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
         <div className="px-6 py-5 border-b border-vortex-yellow/20 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-green-500/20 border-2 border-green-500 flex items-center justify-center">
-                <Check size={24} className="text-green-400" />
+              <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center ${
+                isFullyLive ? 'bg-green-500/20 border-green-500' : 'bg-vortex-yellow/15 border-vortex-yellow/60'
+              }`}>
+                {isFullyLive ? <Check size={24} className="text-green-400" /> : <AlertTriangle size={24} className="text-vortex-yellow" />}
               </div>
               <div>
-                <h2 className="font-display text-2xl text-vortex-yellow tracking-widest uppercase">Distribution Recorded</h2>
+                <h2 className="font-display text-2xl text-vortex-yellow tracking-widest uppercase">
+                  {isFullyLive ? 'Distribution Recorded' : 'Distribution Staged'}
+                </h2>
                 <p className="text-gray-400 text-xs mt-0.5">{unit.year} {unit.make} {unit.model}</p>
               </div>
             </div>
@@ -38,6 +44,12 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
             <div className="mt-4 flex items-center gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs">
               <AlertTriangle size={16} className="shrink-0" />
               <span>{failed} channel{failed > 1 ? 's' : ''} encountered errors. Details listed below.</span>
+            </div>
+          )}
+          {manual > 0 && (
+            <div className="mt-4 flex items-center gap-3 p-3 bg-vortex-yellow/10 border border-vortex-yellow/30 rounded-xl text-vortex-yellow text-xs">
+              <AlertTriangle size={16} className="shrink-0" />
+              <span>{manual} channel{manual > 1 ? 's are' : ' is'} staged for guarded browser posting. No external marketplace submit happened yet.</span>
             </div>
           )}
         </div>
@@ -56,21 +68,40 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                     flex items-center justify-between p-4 rounded-xl border-2 transition-all
                     ${result.status === 'published' 
                       ? 'border-green-500/20 bg-vortex-black/40 hover:border-green-500/40' 
-                      : 'border-red-500/20 bg-red-500/5'
+                      : result.manualPasteRequired || result.status === 'not_implemented'
+                        ? 'border-vortex-yellow/30 bg-vortex-yellow/5'
+                        : 'border-red-500/20 bg-red-500/5'
                     }
                   `}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      result.status === 'published' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'
+                      result.status === 'published'
+                        ? 'bg-green-500/10 text-green-400'
+                        : result.manualPasteRequired || result.status === 'not_implemented'
+                          ? 'bg-vortex-yellow/10 text-vortex-yellow'
+                          : 'bg-red-500/10 text-red-400'
                     }`}>
                       {result.status === 'published' ? <Check size={16} /> : <AlertTriangle size={14} />}
                     </div>
                     <div>
                       <p className="font-display text-white text-sm tracking-wide capitalize">{result.platform?.replace('_', ' ')}</p>
-                      <p className={`text-[10px] font-bold uppercase tracking-widest mt-0.5 ${result.status === 'published' ? 'text-green-500/80' : 'text-red-500'}`}>
-                        {result.status === 'published' ? (result.mock ? 'Template Ready' : 'Live Now') : 'Failed'}
+                      <p className={`text-[10px] font-bold uppercase tracking-widest mt-0.5 ${
+                        result.status === 'published'
+                          ? 'text-green-500/80'
+                          : result.manualPasteRequired || result.status === 'not_implemented'
+                            ? 'text-vortex-yellow'
+                            : 'text-red-500'
+                      }`}>
+                        {result.status === 'published'
+                          ? (result.mock ? 'Template Ready' : 'Live Now')
+                          : result.manualPasteRequired || result.status === 'not_implemented'
+                            ? (result.localPublisher?.status === 'dry_run_ready' ? 'Local Bridge Ready' : 'Manual Required')
+                            : 'Failed'}
                       </p>
+                      {result.localPublisher?.receiptId && (
+                        <p className="text-[10px] text-gray-500 font-mono mt-1">Receipt: {result.localPublisher.receiptId}</p>
+                      )}
                     </div>
                   </div>
                   
@@ -85,6 +116,8 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                     </a>
                   ) : result.status === 'published' && result.mock ? (
                     <span className="text-[10px] text-vortex-yellow/70 font-mono pr-2">Manual post required</span>
+                  ) : result.manualPasteRequired || result.status === 'not_implemented' ? (
+                    <span className="text-[10px] text-vortex-yellow/80 font-mono pr-2">No live submit</span>
                   ) : result.status === 'error' ? (
                     <span className="text-[10px] text-red-400/60 font-mono italic pr-2">{result.error || 'API Error'}</span>
                   ) : null}

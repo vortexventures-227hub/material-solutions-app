@@ -373,6 +373,49 @@ test('publish POST returns not_implemented and manualPasteRequired:true for face
   });
 });
 
+test('publish POST attaches a dry-run local publisher receipt for craigslist', async () => {
+  const app = buildApp(async (sql) => {
+    if (/SELECT \* FROM inventory WHERE id/.test(sql)) {
+      return {
+        rows: [{
+          id: 'ddeb41d4-5261-4851-9324-e2f09ea8f807',
+          year: 2018,
+          make: 'Raymond',
+          model: '752R45TT',
+          asking_price: 29500,
+          capacity_lbs: 4500,
+          lift_height_inches: 300,
+          power_type: 'electric',
+          photos: JSON.stringify(['https://cdn.example.com/raymond-752r45tt.jpg']),
+          status: 'listed',
+        }],
+      };
+    }
+    if (/INSERT INTO inventory_seo/.test(sql)) return { rows: [] };
+    if (/UPDATE inventory SET status/.test(sql)) return { rows: [] };
+    if (/INSERT INTO inventory_listings/.test(sql)) return { rows: [{ id: 'listing-1' }] };
+    if (/UPDATE inventory_listings/.test(sql)) return { rows: [] };
+    throw new Error(`Unexpected query: ${sql}`);
+  });
+
+  await withServer(app, async (server) => {
+    const res = await request(server, 'POST', '/api/publish/ddeb41d4-5261-4851-9324-e2f09ea8f807', {
+      platforms: ['craigslist'],
+      options: { craigslist: { region: 'southjersey' } },
+    });
+
+    assert.equal(res.status, 200);
+    const result = res.body.results[0];
+    assert.equal(result.platform, 'craigslist');
+    assert.equal(result.status, 'not_implemented');
+    assert.equal(result.manualPasteRequired, true);
+    assert.equal(result.localPublisher.status, 'dry_run_ready');
+    assert.equal(result.localPublisher.mutationPerformed, false);
+    assert.equal(result.localPublisher.target.region, 'southjersey');
+    assert.match(result.localPublisher.draft.fields.body, /Raymond/);
+  });
+});
+
 test('publish GET /platforms returns platform payload and is not treated as inventory id', async () => {
   let dbCalls = 0;
   const app = buildApp(async () => {
