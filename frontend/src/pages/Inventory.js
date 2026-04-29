@@ -10,12 +10,14 @@ import { ProductSchema } from '../components/SEO';
 import { Layout, PageHeader, Grid } from '../components/Layout';
 import { Card, CardContent, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { SlidersHorizontal, Clock, Weight, Plus, Truck } from 'lucide-react';
+import { Input } from '../components/ui/input';
+import { SlidersHorizontal, Clock, Weight, Plus, Truck, Search } from 'lucide-react';
 
 const Inventory = () => {
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1, hasNext: false, hasPrev: false });
   const [selectedItem, setSelectedItem] = useState(null);
@@ -39,6 +41,7 @@ const Inventory = () => {
       try {
         const params = new URLSearchParams({ page, limit: 25 });
         if (filter) params.set('status', filter);
+        if (search.trim()) params.set('q', search.trim());
         const response = await api.get(`/api/inventory?${params}`);
         const { data, total, totalPages, hasNext, hasPrev } = response.data;
         setInventory(data);
@@ -52,11 +55,11 @@ const Inventory = () => {
     };
 
     fetchInventory();
-  }, [filter, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filter, search, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setPage(1);
-  }, [filter]);
+  }, [filter, search]);
 
   const handleItemClick = (item) => {
     setSelectedItem(item);
@@ -71,6 +74,11 @@ const Inventory = () => {
   const handleUpdate = (updatedItem) => {
     setInventory(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
     setSelectedItem(updatedItem);
+  };
+
+  const handleDelete = (deletedId) => {
+    setInventory(prev => prev.filter(item => item.id !== deletedId));
+    closeModal();
   };
 
   const getStatusColor = (status) => {
@@ -103,6 +111,17 @@ const Inventory = () => {
           </Button>
 
           <div className="hidden sm:flex items-center gap-2">
+            <div className="relative w-64">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search make, model, serial..."
+                className="h-[44px] pl-9 rounded-xl"
+                aria-label="Search inventory"
+              />
+            </div>
             <label htmlFor="inventory-filter" className="text-sm font-medium text-muted-foreground">Filter:</label>
             <select
               id="inventory-filter"
@@ -123,6 +142,20 @@ const Inventory = () => {
         </div>
       </PageHeader>
 
+      <div className="sm:hidden mb-4">
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search make, model, serial..."
+            className="h-[44px] pl-9 rounded-xl"
+            aria-label="Search inventory"
+          />
+        </div>
+      </div>
+
       {loading ? (
         <Grid cols={3}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -141,6 +174,9 @@ const Inventory = () => {
       ) : (
         <Grid cols={3}>
           {inventory.map((item) => (
+            (() => {
+              const primaryImage = Array.isArray(item.images) && item.images.length > 0 ? item.images[0] : null;
+              return (
             <Card
               key={item.id}
               onClick={() => handleItemClick(item)}
@@ -161,7 +197,16 @@ const Inventory = () => {
                 ]}
               />
               <div className="h-48 bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center relative">
-                <Truck size={48} className="text-muted-foreground/40 group-hover:scale-110 transition-transform duration-300" />
+                {primaryImage ? (
+                  <img
+                    src={primaryImage}
+                    alt={`${item.year || ''} ${item.make || ''} ${item.model || ''}`.trim()}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                ) : (
+                  <Truck size={48} className="text-muted-foreground/40 group-hover:scale-110 transition-transform duration-300" />
+                )}
                 <div className="absolute top-3 right-3">
                   <span className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-wider ${getStatusColor(item.status)}`}>
                     {item.status}
@@ -190,6 +235,8 @@ const Inventory = () => {
                 )}
               </CardContent>
             </Card>
+              );
+            })()
           ))}
         </Grid>
       )}
@@ -221,6 +268,7 @@ const Inventory = () => {
         onClose={closeModal}
         inventory={selectedItem}
         onUpdate={handleUpdate}
+        onDelete={handleDelete}
       />
 
       <FilterBottomSheet

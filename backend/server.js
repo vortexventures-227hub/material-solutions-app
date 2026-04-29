@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
+const path = require('path');
 
 // Load environment variables
 dotenv.config();
@@ -103,6 +104,14 @@ app.use(globalLimiter);
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Authenticated inventory media uploads are stored locally and served from a
+// stable public path so admin previews and manual marketplace payloads can use
+// real asset URLs instead of browser-only filenames.
+app.use('/uploads/inventory', express.static(
+  process.env.FSM_INVENTORY_MEDIA_ROOT ||
+  path.join(__dirname, 'uploads', 'inventory')
+));
 
 // ─── Import Routes ───────────────────────────────────────────────────────────
 const authRoutes = require('./routes/auth');

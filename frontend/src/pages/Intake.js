@@ -31,6 +31,31 @@ const Intake = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const { addToast } = useToast();
 
+  const toOptionalNumber = (value) => {
+    if (value === '' || value === null || value === undefined) return undefined;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  };
+
+  const pruneEmptyFields = (payload) =>
+    Object.fromEntries(
+      Object.entries(payload).filter(([, value]) => value !== '' && value !== undefined && value !== null)
+    );
+
+  const fileToUploadPayload = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        resolve({
+          filename: file.name,
+          content_type: file.type || 'image/jpeg',
+          data_url: reader.result,
+        });
+      };
+      reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+    });
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -102,14 +127,25 @@ const Intake = () => {
 
     setSubmitting(true);
     try {
-      const payload = {
+      const payload = pruneEmptyFields({
         ...formData,
-        images: photos.map(p => p.name)
-      };
+        year: toOptionalNumber(formData.year),
+        hours: toOptionalNumber(formData.hours),
+        capacity_lbs: toOptionalNumber(formData.capacity_lbs),
+        lift_height_inches: toOptionalNumber(formData.lift_height_inches),
+        purchase_price: toOptionalNumber(formData.purchase_price),
+        images: [],
+      });
 
       const response = await api.post('/api/inventory', payload);
 
       if (response.status === 201) {
+        const createdId = response.data?.id;
+        if (createdId && photos.length > 0) {
+          const files = await Promise.all(photos.map(fileToUploadPayload));
+          await api.post(`/api/inventory/${createdId}/media`, { files });
+        }
+
         setSuccess('Inventory added successfully!');
         addToast('Equipment added to inventory!', 'success');
         setFormData({
