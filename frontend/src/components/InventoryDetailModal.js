@@ -5,11 +5,13 @@ import PublishModal from './PublishModal';
 import PublishButton from './PublishButton';
 import api from '../api';
 import { useToast } from '../context/ToastContext';
-import { Loader2, CheckCircle, Clock, AlertCircle, ShoppingCart, Megaphone, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, CheckCircle, Clock, AlertCircle, ShoppingCart, Megaphone, X, ChevronLeft, ChevronRight, Archive, Trash2, Edit3, Save } from 'lucide-react';
 
-const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
+const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate, onDelete }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({});
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [marketplaceStatus, setMarketplaceStatus] = useState({ hasLiveListings: false, hasStagedListings: false });
   const { addToast } = useToast();
@@ -31,6 +33,46 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
     }
   }, [isOpen, inventory?.id]);
 
+  useEffect(() => {
+    if (!inventory) return;
+
+    setCurrentImageIndex(0);
+    setIsEditing(false);
+    setEditForm({
+      make: inventory.make || '',
+      model: inventory.model || '',
+      year: inventory.year || '',
+      serial: inventory.serial || inventory.serial_number || '',
+      hours: inventory.hours || '',
+      capacity_lbs: inventory.capacity_lbs || '',
+      mast_type: inventory.mast_type || '',
+      lift_height_inches: inventory.lift_height_inches || '',
+      power_type: inventory.power_type || '',
+      battery_info: inventory.battery_info || '',
+      condition_score: inventory.condition_score || '',
+      condition_notes: inventory.condition_notes || '',
+      purchase_price: inventory.purchase_price || '',
+      listing_price: inventory.listing_price || '',
+      floor_price: inventory.floor_price || '',
+      status: inventory.status || 'intake',
+    });
+  }, [inventory]);
+
+  const toOptionalNumber = (value) => {
+    if (value === '' || value === null || value === undefined) return undefined;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  };
+
+  const pruneEmptyFields = (payload) =>
+    Object.fromEntries(
+      Object.entries(payload).filter(([, value]) => value !== '' && value !== undefined && value !== null)
+    );
+
+  const handleEditChange = (event) => {
+    setEditForm(prev => ({ ...prev, [event.target.name]: event.target.value }));
+  };
+
   const updateStatus = async (newStatus) => {
     if (isUpdating || inventory.status === newStatus) return;
 
@@ -48,6 +90,58 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
     } catch (err) {
       console.error('Error updating status:', err);
       addToast('Failed to update status', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const saveDetails = async () => {
+    if (isUpdating || !inventory?.id) return;
+
+    setIsUpdating(true);
+    try {
+      const payload = pruneEmptyFields({
+        ...editForm,
+        year: toOptionalNumber(editForm.year),
+        hours: toOptionalNumber(editForm.hours),
+        capacity_lbs: toOptionalNumber(editForm.capacity_lbs),
+        lift_height_inches: toOptionalNumber(editForm.lift_height_inches),
+        condition_score: toOptionalNumber(editForm.condition_score),
+        purchase_price: toOptionalNumber(editForm.purchase_price),
+        listing_price: toOptionalNumber(editForm.listing_price),
+        floor_price: toOptionalNumber(editForm.floor_price),
+      });
+
+      const response = await api.patch(`/api/inventory/${inventory.id}`, payload);
+
+      if (onUpdate) {
+        onUpdate(response.data);
+      }
+      setIsEditing(false);
+      addToast('Inventory details saved', 'success');
+    } catch (err) {
+      console.error('Error saving inventory:', err);
+      addToast('Failed to save inventory details', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const deleteInventory = async () => {
+    if (isUpdating || !inventory?.id) return;
+    const confirmed = window.confirm(`Delete ${inventory.year || ''} ${inventory.make || ''} ${inventory.model || ''}? This removes it from the FSM inventory list.`);
+    if (!confirmed) return;
+
+    setIsUpdating(true);
+    try {
+      await api.delete(`/api/inventory/${inventory.id}`);
+      if (onDelete) {
+        onDelete(inventory.id);
+      }
+      addToast('Inventory item deleted', 'success');
+    } catch (err) {
+      console.error('Error deleting inventory:', err);
+      addToast('Failed to delete inventory item', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -130,6 +224,13 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
             </span>
           </div>
           <button
+            onClick={() => setIsEditing((value) => !value)}
+            className="text-muted-foreground hover:text-foreground min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl hover:bg-muted transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            aria-label={isEditing ? 'Close edit form' : 'Edit inventory'}
+          >
+            <Edit3 size={18} />
+          </button>
+          <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl hover:bg-muted transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-brand-500"
             aria-label="Close modal"
@@ -169,6 +270,73 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
 
         {/* Content */}
         <div className="p-4 lg:p-6 pt-2">
+          {isEditing && (
+            <div className="mb-6 bg-muted/30 border border-border/30 p-4 lg:p-5 rounded-2xl">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h3 className="text-sm font-semibold text-foreground">Edit Inventory Details</h3>
+                <button
+                  type="button"
+                  onClick={saveDetails}
+                  disabled={isUpdating}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-500 text-white text-xs font-bold disabled:opacity-50"
+                >
+                  {isUpdating ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                  Save
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {[
+                  ['make', 'Make'],
+                  ['model', 'Model'],
+                  ['year', 'Year'],
+                  ['serial', 'Serial'],
+                  ['hours', 'Hours'],
+                  ['capacity_lbs', 'Capacity lbs'],
+                  ['mast_type', 'Mast Type'],
+                  ['lift_height_inches', 'Lift Height Inches'],
+                  ['power_type', 'Power Type'],
+                  ['battery_info', 'Battery Info'],
+                  ['condition_score', 'Condition Score'],
+                  ['purchase_price', 'Purchase Price'],
+                  ['listing_price', 'Listing Price'],
+                  ['floor_price', 'Floor Price'],
+                ].map(([name, label]) => (
+                  <label key={name} className="text-xs font-semibold text-muted-foreground">
+                    {label}
+                    <input
+                      name={name}
+                      value={editForm[name] ?? ''}
+                      onChange={handleEditChange}
+                      className="mt-1 w-full h-10 rounded-xl border border-border/60 bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
+                  </label>
+                ))}
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Status
+                  <select
+                    name="status"
+                    value={editForm.status || 'intake'}
+                    onChange={handleEditChange}
+                    className="mt-1 w-full h-10 rounded-xl border border-border/60 bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  >
+                    {['intake', 'listed', 'reserved', 'pending', 'sold', 'archived'].map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="sm:col-span-2 lg:col-span-3 text-xs font-semibold text-muted-foreground">
+                  Condition Notes
+                  <textarea
+                    name="condition_notes"
+                    value={editForm.condition_notes ?? ''}
+                    onChange={handleEditChange}
+                    className="mt-1 w-full min-h-[90px] rounded-xl border border-border/60 bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+
           {/* Image Gallery */}
           {images.length > 0 && (
             <div className="mb-6">
@@ -300,6 +468,7 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
                 { status: 'reserved', label: 'RESERVED', icon: <Clock size={15} />, activeColor: 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-2 border-amber-200 dark:border-amber-800' },
                 { status: 'pending', label: 'PENDING', icon: <AlertCircle size={15} />, activeColor: 'bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 border-2 border-orange-200 dark:border-orange-800' },
                 { status: 'sold', label: 'SOLD', icon: <ShoppingCart size={15} />, activeColor: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border-2 border-blue-200 dark:border-blue-800' },
+                { status: 'archived', label: 'ARCHIVE', icon: <Archive size={15} />, activeColor: 'bg-gray-100 dark:bg-gray-800/50 text-gray-500 border-2 border-gray-300 dark:border-gray-700' },
               ].map(({ status, label, icon, activeColor }) => (
                 <button
                   key={status}
@@ -318,6 +487,15 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={deleteInventory}
+              disabled={isUpdating}
+              className="mt-3 w-full flex items-center justify-center gap-2 p-3 rounded-xl text-xs font-semibold transition-all active:scale-[0.95] disabled:cursor-not-allowed bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-950/30"
+            >
+              {isUpdating ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={15} />}
+              <span>DELETE INVENTORY ITEM</span>
+            </button>
           </div>
 
           {/* Attachments */}
