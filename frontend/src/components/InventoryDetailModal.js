@@ -11,16 +11,23 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
-  const [hasListings, setHasListings] = useState(false);
+  const [marketplaceStatus, setMarketplaceStatus] = useState({ hasLiveListings: false, hasStagedListings: false });
   const { addToast } = useToast();
   const modalRef = useRef(null);
 
-  // Check if item already has marketplace listings
+  // Check if item already has live marketplace listings. Website-listed is not
+  // the same thing as externally posted, and manual_required rows must not hide
+  // the Publish Button.
   useEffect(() => {
     if (isOpen && inventory?.id) {
       api.get(`/api/publish/${inventory.id}`)
-        .then((res) => setHasListings(res.data.listings?.length > 0))
-        .catch(() => setHasListings(false));
+        .then((res) => {
+          const listings = Array.isArray(res.data.listings) ? res.data.listings : [];
+          const hasLiveListings = listings.some((listing) => listing.status === 'published' && listing.platform_url);
+          const hasStagedListings = listings.some((listing) => ['manual_required', 'publishing'].includes(listing.status));
+          setMarketplaceStatus({ hasLiveListings, hasStagedListings });
+        })
+        .catch(() => setMarketplaceStatus({ hasLiveListings: false, hasStagedListings: false }));
     }
   }, [isOpen, inventory?.id]);
 
@@ -133,10 +140,10 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
 
         {/* Publish Action Bar - Always visible at top */}
         <div className="px-4 lg:px-6 pt-4 pb-2">
-          {hasListings ? (
+          {marketplaceStatus.hasLiveListings ? (
             <div className="w-full flex items-center justify-center gap-2 p-3.5 rounded-xl text-sm font-bold bg-neon-green/10 text-neon-green border-2 border-neon-green/30 cursor-default">
               <CheckCircle size={18} />
-              <span>Already Published to Marketplaces</span>
+              <span>Live Marketplace Listing Detected</span>
             </div>
           ) : inventory.status === 'sold' || inventory.status === 'archived' ? (
             <div className="w-full flex items-center justify-center gap-2 p-3.5 rounded-xl text-sm font-bold bg-muted text-muted-foreground border border-border cursor-not-allowed opacity-50">
@@ -144,11 +151,19 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
               <span>{inventory.status === 'sold' ? 'Item Sold — Cannot Publish' : 'Archived — Cannot Publish'}</span>
             </div>
           ) : (
-            <PublishButton
-              unit={inventory}
-              onClick={() => setShowPublishModal(true)}
-              className="w-full"
-            />
+            <>
+              {marketplaceStatus.hasStagedListings && (
+                <div className="mb-3 flex items-center justify-center gap-2 p-3 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30">
+                  <AlertCircle size={16} />
+                  <span>Marketplace staging exists; no live external URL detected yet.</span>
+                </div>
+              )}
+              <PublishButton
+                unit={inventory}
+                onClick={() => setShowPublishModal(true)}
+                className="w-full"
+              />
+            </>
           )}
         </div>
 
@@ -265,17 +280,17 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
             </h3>
 
             {/* Publish to Marketplaces - Quick Action */}
-            {!hasListings && inventory.status !== 'sold' && inventory.status !== 'archived' && (
+            {!marketplaceStatus.hasLiveListings && inventory.status !== 'sold' && inventory.status !== 'archived' && (
               <PublishButton
                 unit={inventory}
                 onClick={() => setShowPublishModal(true)}
                 className="w-full mb-4"
               />
             )}
-            {hasListings && (
+            {marketplaceStatus.hasLiveListings && (
               <div className="w-full mb-4 flex items-center justify-center gap-2 p-4 rounded-xl text-sm font-bold bg-neon-green/10 text-neon-green border-2 border-neon-green/30 cursor-default">
                 <CheckCircle size={18} />
-                <span>Already Published to Marketplaces</span>
+                <span>Live Marketplace Listing Detected</span>
               </div>
             )}
 
@@ -362,16 +377,22 @@ const InventoryDetailModal = ({ isOpen, onClose, inventory, onUpdate }) => {
         inventory={inventory}
         onPublished={(data) => {
           const results = data?.results || [];
-          const succeeded = results.filter((result) => result.status === 'published').length;
-          setHasListings(succeeded > 0);
+          const succeeded = results.filter((result) => result.status === 'published' && result.url).length;
+          const staged = results.filter((result) => result.manualPasteRequired || result.status === 'not_implemented').length;
+          setMarketplaceStatus({
+            hasLiveListings: succeeded > 0,
+            hasStagedListings: staged > 0,
+          });
           if (onUpdate && inventory.status === 'intake') {
             onUpdate({ ...inventory, status: 'listed' });
           }
           addToast(
             succeeded > 0
               ? `Prepared ${succeeded} marketplace listing${succeeded === 1 ? '' : 's'}.`
-              : 'No marketplace listings were prepared.',
-            succeeded > 0 ? 'success' : 'error'
+              : staged > 0
+                ? `Staged ${staged} browser-posting handoff${staged === 1 ? '' : 's'}.`
+                : 'No marketplace listings were prepared.',
+            succeeded > 0 || staged > 0 ? 'success' : 'error'
           );
         }}
       />
