@@ -11,6 +11,7 @@ const router = express.Router();
 const { generateProductSchema } = require('../services/seo/schemaGenerator');
 const { generateMeta, generateSlug } = require('../services/seo/metaGenerator');
 const { generateFaq } = require('../services/seo/faqGenerator');
+const { runCraigslistBridge } = require('../services/local-publisher/craigslistBridge');
 const db = require('../db');
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -132,6 +133,36 @@ function buildMarketingAssets(unit) {
       complete: Object.values(requiredFields).every(Boolean),
     },
   };
+}
+
+async function buildLocalPublisherReceipt(platform, marketingPayload, options = {}) {
+  if (platform !== 'craigslist') return null;
+
+  try {
+    const receipt = await runCraigslistBridge(marketingPayload, {
+      ...options,
+      dryRun: true,
+    });
+
+    return {
+      platform,
+      status: receipt.status,
+      dryRun: receipt.dryRun,
+      receiptId: receipt.receiptId,
+      mutationPerformed: receipt.browser?.mutationPerformed === true,
+      target: receipt.draft?.target || null,
+      draft: receipt.draft || null,
+    };
+  } catch (err) {
+    return {
+      platform,
+      status: 'bridge_unavailable',
+      dryRun: true,
+      mutationPerformed: false,
+      error: err.message,
+      missing: err.missing || undefined,
+    };
+  }
 }
 
 async function optionalPublishQuery(label, fn, fallbackRows = []) {
@@ -331,6 +362,7 @@ router.post('/:inventoryId', async (req, res, next) => {
         const publishResult = await handler(unit, options[platform] || {});
 
         if (publishResult.status === 'not_implemented') {
+          const localPublisher = await buildLocalPublisherReceipt(platform, marketingPayload, options[platform] || {});
           await optionalPublishQuery('inventory_listings', () => db.query(
             `UPDATE inventory_listings SET status = 'manual_required', updated_at = NOW() WHERE id = $1`,
             [listingId]
@@ -341,6 +373,7 @@ router.post('/:inventoryId', async (req, res, next) => {
             url: null,
             error: publishResult.error,
             manualPasteRequired: true,
+            localPublisher,
           });
           continue;
         }
