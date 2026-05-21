@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { X, Globe, Video, Check, ChevronRight, Share2, Eye } from 'lucide-react';
+import { X, Globe, Video, Check, ChevronRight, Share2, Eye, AlertTriangle, Loader2 } from 'lucide-react';
 import api from '../api';
 import PublishProgress from './PublishProgress';
 import PublishResults from './PublishResults';
 
 const PLATFORMS = [
+  {
+    id: 'materialsolutionsnj',
+    name: 'MaterialSolutionsNJ.com',
+    icon: <Globe size={24} className="text-vortex-yellow" />,
+    description: 'Live website listing page',
+    color: '#FFD700',
+    recommended: true,
+  },
   {
     id: 'craigslist',
     name: 'Craigslist',
@@ -46,6 +54,38 @@ const PLATFORMS = [
     recommended: false,
   },
   {
+    id: 'ebay',
+    name: 'eBay Business',
+    icon: '🛒',
+    description: 'Business & industrial buyers',
+    color: '#E53238',
+    recommended: false,
+  },
+  {
+    id: 'linkedin',
+    name: 'LinkedIn',
+    icon: <Share2 size={24} className="text-blue-500" />,
+    description: 'B2B social distribution',
+    color: '#0A66C2',
+    recommended: false,
+  },
+  {
+    id: 'google_business_profile',
+    name: 'Google Business Profile',
+    icon: <Globe size={24} className="text-green-500" />,
+    description: 'Local search visibility',
+    color: '#34A853',
+    recommended: false,
+  },
+  {
+    id: 'forkliftaction_forum',
+    name: 'Forkliftaction Forum',
+    icon: '💬',
+    description: 'Forklift industry forum',
+    color: '#64748B',
+    recommended: false,
+  },
+  {
     id: 'youtube',
     name: 'YouTube',
     icon: <Video size={24} className="text-red-600" />,
@@ -57,10 +97,13 @@ const PLATFORMS = [
 
 export default function PublishModal({ isOpen, onClose, inventory, onPublished }) {
   const [step, setStep] = useState('select'); // select, progress, results
-  const [selected, setSelected] = useState(new Set(['facebook_marketplace', 'craigslist']));
+  const [selected, setSelected] = useState(new Set(['materialsolutionsnj', 'facebook_marketplace', 'craigslist']));
   const [options] = useState({});
   const [publishResults, setPublishResults] = useState(null);
   const [progress, setProgress] = useState({});
+  const [payloadPreview, setPayloadPreview] = useState(null);
+  const [payloadLoading, setPayloadLoading] = useState(false);
+  const [payloadError, setPayloadError] = useState('');
 
   // Reset state when modal opens
   useEffect(() => {
@@ -68,8 +111,31 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
       setStep('select');
       setPublishResults(null);
       setProgress({});
+      setPayloadPreview(null);
+      setPayloadError('');
+
+      if (inventory?.id) {
+        let cancelled = false;
+        setPayloadLoading(true);
+        api.get(`/api/publish/${inventory.id}/payload`)
+          .then((res) => {
+            if (!cancelled) setPayloadPreview(res.data);
+          })
+          .catch((err) => {
+            if (!cancelled) {
+              setPayloadError(err.response?.data?.error || err.message || 'Publish payload unavailable');
+            }
+          })
+          .finally(() => {
+            if (!cancelled) setPayloadLoading(false);
+          });
+
+        return () => {
+          cancelled = true;
+        };
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, inventory?.id]);
 
   if (!isOpen || !inventory) return null;
 
@@ -119,9 +185,19 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
 
     } catch (err) {
       console.error('Publishing failed:', err);
+      setPublishResults({
+        inventoryId: inventory.id,
+        unit: `${inventory.year || ''} ${inventory.make || ''} ${inventory.model || ''}`.trim(),
+        results: platforms.map((platform) => ({
+          platform,
+          status: 'error',
+          error: err.response?.data?.error || err.message || 'Publish request failed',
+        })),
+        seo: payloadPreview,
+      });
       // Fallback: show error in progress
       const errorProgress = { ...initialProgress };
-      platforms.forEach(p => errorProgress[p] = { status: 'error', error: err.message });
+      platforms.forEach(p => errorProgress[p] = { status: 'error', error: err.response?.data?.error || err.message });
       setProgress(errorProgress);
       setTimeout(() => setStep('results'), 1000);
     }
@@ -175,6 +251,50 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
 
         {/* Platform List */}
         <div className="flex-1 overflow-y-auto p-6 space-y-3">
+          <div className="rounded-xl border border-vortex-yellow/20 bg-vortex-black/40 p-4 mb-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-display text-gray-500 uppercase tracking-widest">Publish Button Readiness</p>
+                <p className="text-gray-300 text-xs mt-1">
+                  Read-only payload check before any marketplace write.
+                </p>
+              </div>
+              {payloadLoading ? (
+                <Loader2 size={18} className="text-vortex-yellow animate-spin shrink-0" />
+              ) : payloadPreview?.complete ? (
+                <span className="text-[10px] font-display text-green-400 border border-green-500/30 bg-green-500/10 px-2 py-1 rounded">READY</span>
+              ) : (
+                <span className="text-[10px] font-display text-vortex-yellow border border-vortex-yellow/30 bg-vortex-yellow/10 px-2 py-1 rounded">REVIEW</span>
+              )}
+            </div>
+
+            {payloadError ? (
+              <div className="mt-3 flex items-center gap-2 text-red-400 text-xs">
+                <AlertTriangle size={14} className="shrink-0" />
+                <span>{payloadError}</span>
+              </div>
+            ) : payloadPreview?.requiredFields ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+                {Object.entries(payloadPreview.requiredFields).map(([field, ready]) => (
+                  <div
+                    key={field}
+                    className={`rounded-lg border px-2 py-2 text-[10px] font-bold uppercase tracking-widest ${
+                      ready
+                        ? 'border-green-500/20 bg-green-500/10 text-green-400'
+                        : 'border-vortex-yellow/30 bg-vortex-yellow/10 text-vortex-yellow'
+                    }`}
+                  >
+                    {field.replace(/([A-Z])/g, ' $1')}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-xs mt-3">
+                Checking title, description, price, specs, media, SEO, AEO, and schema readiness.
+              </p>
+            )}
+          </div>
+
           <p className="text-xs font-display text-gray-500 uppercase tracking-widest mb-2">Select Channels</p>
 
           {PLATFORMS.map((platform) => {

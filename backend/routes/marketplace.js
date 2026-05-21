@@ -9,21 +9,11 @@
 const express = require('express');
 const router = express.Router();
 const MarketplaceOrchestrator = require('../services/marketplace/orchestrator');
-
-// Lazy initialization to avoid circular deps
-let orchestrator = null;
-
-const getOrchestrator = () => {
-  if (!orchestrator) {
-    orchestrator = new MarketplaceOrchestrator(req.app.locals.db);
-    orchestrator.initialize().catch(console.error);
-  }
-  return orchestrator;
-};
+const db = require('../db');
 
 // Middleware to get DB
 router.use((req, res, next) => {
-  req.db = req.app.locals.db;
+  req.db = req.app.locals.db || db;
   next();
 });
 

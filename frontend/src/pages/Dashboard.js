@@ -8,11 +8,12 @@ import { LocalBusinessSchema } from '../components/SEO';
 import { Layout, PageHeader, Grid } from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Package, CheckCircle2, DollarSign, Users, TrendingUp, Target, Camera, UserPlus, BarChart3, Settings, ArrowUpRight, Truck, GitBranch } from 'lucide-react';
+import { Package, CheckCircle2, DollarSign, Users, TrendingUp, Target, Camera, UserPlus, BarChart3, Settings, ArrowUpRight, Truck, GitBranch, Megaphone } from 'lucide-react';
 
 const Dashboard = () => {
   const [kpis, setKpis] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [retrying, setRetrying] = useState({});
   const { addToast } = useToast();
   const navigate = useNavigate();
 
@@ -31,6 +32,21 @@ const Dashboard = () => {
 
     fetchKPIs();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const retryQueueItem = async (item) => {
+    const key = `${item.inventory_id}-${item.platform}`;
+    setRetrying((prev) => ({ ...prev, [key]: true }));
+    try {
+      await api.post(`/api/publish/${item.inventory_id}/${item.platform}/retry`, { options: {} });
+      addToast('Publish Button retry refreshed', 'success');
+      const response = await api.get('/api/dashboard/kpis');
+      setKpis(response.data);
+    } catch (err) {
+      addToast(err.response?.data?.error || 'Publish Button retry failed', 'error');
+    } finally {
+      setRetrying((prev) => ({ ...prev, [key]: false }));
+    }
+  };
 
   if (loading) {
     return (
@@ -62,6 +78,8 @@ const Dashboard = () => {
   const conversionRate = leadKpis.conversion_rate || 0;
   const recentListings = kpis?.recentListings || [];
   const hotLeadRows = kpis?.hotLeads || [];
+  const publishingKpis = kpis?.publishing || {};
+  const manualPublishQueue = kpis?.manualPublishQueue || [];
 
   const kpiCards = [
     {
@@ -111,6 +129,14 @@ const Dashboard = () => {
       iconBg: 'bg-rose-50 dark:bg-rose-950/30 text-rose-500',
       change: 'Industry avg: 2.5%',
       type: 'neutral'
+    },
+    {
+      label: 'Publish Button',
+      value: publishingKpis.published || 0,
+      icon: <Megaphone size={20} />,
+      iconBg: 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-500',
+      change: `${publishingKpis.manual_required || 0} manual review`,
+      type: publishingKpis.failed > 0 ? 'neutral' : 'positive'
     },
   ];
 
@@ -218,6 +244,48 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="mt-8 overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <CardTitle className="text-base font-semibold">Manual Publish Queue</CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/pipeline')} className="text-brand-500 gap-1 hover:text-brand-600">
+            Review <ArrowUpRight size={14} />
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-1 pt-0">
+          {publishingKpis.degraded ? (
+            <p className="text-sm text-muted-foreground p-3">Publish listing table unavailable. Run the Phase 6C schema repair before relying on queue metrics.</p>
+          ) : manualPublishQueue.length > 0 ? (
+            manualPublishQueue.map((item, index) => (
+              <div key={`${item.inventory_id}-${item.platform}-${index}`} className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition-colors -mx-1">
+                <div className="w-10 h-10 bg-yellow-50 dark:bg-yellow-950/30 text-yellow-500 rounded-xl flex items-center justify-center">
+                  <Megaphone size={18} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate text-foreground">
+                    {[item.year, item.make, item.model].filter(Boolean).join(' ') || item.inventory_id}
+                  </p>
+                  <p className="text-xs text-muted-foreground capitalize">{item.platform?.replace('_', ' ')} · {item.status?.replace('_', ' ')}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => retryQueueItem(item)}
+                  disabled={retrying[`${item.inventory_id}-${item.platform}`]}
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-lg disabled:opacity-50 ${
+                    item.status === 'failed'
+                      ? 'bg-red-50 dark:bg-red-950/30 text-red-500'
+                      : 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-600'
+                  }`}
+                >
+                  {retrying[`${item.inventory_id}-${item.platform}`] ? 'Retrying' : item.status === 'failed' ? 'Retry' : 'Refresh'}
+                </button>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground p-3">No manual publish work waiting.</p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <Card className="mt-8 bg-gradient-to-br from-[#0F172A] via-[#1a1f3a] to-[#0F172A] text-white border border-neon-cyan/20 shadow-xl shadow-neon-cyan/10 overflow-hidden relative">

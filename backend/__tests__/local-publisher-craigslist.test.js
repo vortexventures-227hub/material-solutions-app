@@ -73,6 +73,16 @@ test('local publisher CLI reads stdin and emits a receipt', async () => {
   assert.equal(receipt.browser.mutationPerformed, false);
 });
 
+test('local publisher CLI emits guarded manual drafts for non-Craigslist platforms', async () => {
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
+  const receipt = await execNodeJson(scriptPath, ['--platform', 'facebook_marketplace'], samplePayload);
+
+  assert.equal(receipt.platform, 'facebook_marketplace');
+  assert.equal(receipt.status, 'manual_draft_ready');
+  assert.equal(receipt.browser.mutationPerformed, false);
+  assert.match(receipt.draft.fields.body, /Photos\/details: https:\/\/www\.materialsolutionsnj\.com\/inventory\//);
+});
+
 function execNodeJson(scriptPath, args, input) {
   return new Promise((resolve, reject) => {
     const child = execFile(

@@ -12,7 +12,9 @@ const { generateProductSchema } = require('../services/seo/schemaGenerator');
 const { generateMeta, generateSlug } = require('../services/seo/metaGenerator');
 const { generateFaq } = require('../services/seo/faqGenerator');
 const { runCraigslistBridge } = require('../services/local-publisher/craigslistBridge');
+const { buildManualPlatformDraft } = require('../services/local-publisher/manualDraft');
 const db = require('../db');
+const SEO_CONFIG = require('../services/seo/seoConfig');
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -165,6 +167,28 @@ async function buildLocalPublisherReceipt(platform, marketingPayload, options = 
   }
 }
 
+function safeBuildManualPlatformDraft(platform, marketingPayload, options = {}) {
+  try {
+    return buildManualPlatformDraft(platform, marketingPayload, options);
+  } catch (err) {
+    return {
+      platform,
+      inventoryId: marketingPayload?.inventoryId || null,
+      error: err.message,
+      target: { postUrl: null, reviewRequired: true },
+      fields: {
+        title: marketingPayload?.title || null,
+        body: [
+          marketingPayload?.description || null,
+          marketingPayload?.inventoryId ? `Photos/details: ${SEO_CONFIG.baseUrl}/inventory/${marketingPayload.inventoryId}` : null,
+        ].filter(Boolean).join('\n\n') || null,
+        listingUrl: marketingPayload?.inventoryId ? `${SEO_CONFIG.baseUrl}/inventory/${marketingPayload.inventoryId}` : null,
+      },
+      media: marketingPayload?.media || {},
+    };
+  }
+}
+
 async function optionalPublishQuery(label, fn, fallbackRows = []) {
   try {
     return { result: await fn(), warning: null };
@@ -253,21 +277,119 @@ async function saveSeoRecord(inventoryId, unit, meta, slug, faqData) {
 
 // Platform publish handlers (mock — Cipher integrates real APIs)
 const PLATFORM_HANDLERS = {
+  materialsolutionsnj: publishToMaterialSolutionsNj,
   craigslist: publishToCraigslist,
   facebook_marketplace: publishToFacebook,
   machinerytrader: publishToMachineryTrader,
   equipfinder: publishToEquipFinder,
   machineryats: publishToMachineryATS,
+  ebay: publishToEbay,
+  linkedin: publishToLinkedIn,
+  google_business_profile: publishToGoogleBusinessProfile,
+  forkliftaction_forum: publishToForkliftActionForum,
   youtube: publishToYouTube,
 };
 
 const PLATFORM_CATALOG = [
-  { key: 'craigslist', available: false, status: 'manual_required' },
-  { key: 'facebook_marketplace', available: false, status: 'manual_required' },
-  { key: 'machinerytrader', available: false, status: 'manual_required' },
-  { key: 'equipfinder', available: false, status: 'manual_required' },
-  { key: 'machineryats', available: false, status: 'manual_required' },
-  { key: 'youtube', available: false, status: 'manual_required' },
+  {
+    key: 'materialsolutionsnj',
+    label: 'MaterialSolutionsNJ.com',
+    available: true,
+    status: 'live',
+    mode: 'automatic',
+    completion: 95,
+    nextStep: 'Set fresh storefront FSM production auth and verify live inventory smoke.',
+  },
+  {
+    key: 'craigslist',
+    label: 'Craigslist',
+    available: false,
+    status: 'manual_required',
+    mode: 'guarded_local_draft',
+    completion: 70,
+    nextStep: 'Add local browser adapter with human submit approval.',
+  },
+  {
+    key: 'facebook_marketplace',
+    label: 'Facebook Marketplace',
+    available: false,
+    status: 'manual_required',
+    mode: 'guarded_manual_draft',
+    completion: 60,
+    nextStep: 'Connect approved posting workflow or keep operator-reviewed drafts.',
+  },
+  {
+    key: 'machinerytrader',
+    label: 'MachineryTrader',
+    available: false,
+    status: 'manual_required',
+    mode: 'guarded_manual_draft',
+    completion: 60,
+    nextStep: 'Connect vendor posting credentials or keep operator-reviewed drafts.',
+  },
+  {
+    key: 'equipfinder',
+    label: 'EquipFinder',
+    available: false,
+    status: 'manual_required',
+    mode: 'guarded_manual_draft',
+    completion: 60,
+    nextStep: 'Connect vendor posting credentials or keep operator-reviewed drafts.',
+  },
+  {
+    key: 'machineryats',
+    label: 'MachineryATS',
+    available: false,
+    status: 'manual_required',
+    mode: 'guarded_manual_draft',
+    completion: 60,
+    nextStep: 'Connect vendor posting credentials or keep operator-reviewed drafts.',
+  },
+  {
+    key: 'ebay',
+    label: 'eBay Business',
+    available: false,
+    status: 'manual_required',
+    mode: 'guarded_manual_draft',
+    completion: 55,
+    nextStep: 'Map category-specific eBay fields before API or browser posting.',
+  },
+  {
+    key: 'linkedin',
+    label: 'LinkedIn',
+    available: false,
+    status: 'manual_required',
+    mode: 'guarded_manual_draft',
+    completion: 55,
+    nextStep: 'Confirm target company/page posting path.',
+  },
+  {
+    key: 'google_business_profile',
+    label: 'Google Business Profile',
+    available: false,
+    status: 'manual_required',
+    mode: 'guarded_manual_draft',
+    completion: 55,
+    nextStep: 'Confirm post type and GBP account authorization.',
+  },
+  {
+    key: 'forkliftaction_forum',
+    label: 'Forkliftaction Forum',
+    available: false,
+    status: 'manual_required',
+    mode: 'guarded_manual_draft',
+    completion: 55,
+    nextStep: 'Confirm forum account and posting rules.',
+  },
+  {
+    key: 'youtube',
+    label: 'YouTube',
+    available: false,
+    status: 'manual_required',
+    mode: 'guarded_manual_draft',
+    completion: 45,
+    nextStep: 'Generate or attach inventory walkaround video before upload.',
+  },
 ];
 
 /**
@@ -299,6 +421,103 @@ router.get('/:inventoryId/payload', async (req, res, next) => {
   }
 });
 
+async function publishInventoryToPlatforms(inventoryId, platforms = [], options = {}) {
+  const invRes = await db.query(`SELECT * FROM inventory WHERE id = $1`, [inventoryId]);
+  if (!invRes.rows.length) {
+    const error = new Error('Inventory not found');
+    error.status = 404;
+    throw error;
+  }
+  const unit = normalizeUnitForMarketing(invRes.rows[0]);
+
+  // Empty-platform publish is the safe no-op/dry-run probe path. Do not touch
+  // optional Phase 6C tables or mutate inventory state for this acceptance gate.
+  if (!Array.isArray(platforms) || platforms.length === 0) {
+    return { inventoryId, unit: `${unit.year} ${unit.make} ${unit.model}`, results: [] };
+  }
+
+  const { meta, slug, faqData, payload: marketingPayload } = buildMarketingAssets(unit);
+  await saveSeoRecord(inventoryId, unit, meta, slug, faqData);
+
+  if (!unit.status || unit.status === 'intake') {
+    await db.query(`UPDATE inventory SET status = 'listed', updated_at = NOW() WHERE id = $1`, [inventoryId]);
+  }
+
+  const results = [];
+  for (const platform of platforms) {
+    const handler = PLATFORM_HANDLERS[platform];
+    if (!handler) {
+      results.push({ platform, status: 'error', error: 'Unknown platform' });
+      continue;
+    }
+
+    const listingAttempt = await optionalPublishQuery('inventory_listings', () => db.query(
+      `INSERT INTO inventory_listings (inventory_id, platform, status, options, published_at)
+       VALUES ($1, $2, 'publishing', $3, NOW())
+       ON CONFLICT (inventory_id, platform) DO UPDATE SET
+         status = 'publishing', options = EXCLUDED.options, published_at = NOW(), updated_at = NOW()
+       RETURNING id`,
+      [inventoryId, platform, JSON.stringify(options[platform] || {})]
+    ));
+    if (listingAttempt.warning) {
+      results.push({ platform, status: 'error', error: listingAttempt.warning });
+      continue;
+    }
+    const listingId = listingAttempt.result.rows[0].id;
+
+    try {
+      const publishResult = await handler(unit, options[platform] || {});
+
+      if (publishResult.status === 'not_implemented') {
+        const localPublisher = await buildLocalPublisherReceipt(platform, marketingPayload, options[platform] || {});
+        const draft = localPublisher?.draft || safeBuildManualPlatformDraft(platform, marketingPayload, options[platform] || {});
+        await optionalPublishQuery('inventory_listings', () => db.query(
+          `UPDATE inventory_listings SET status = 'manual_required', updated_at = NOW() WHERE id = $1`,
+          [listingId]
+        ));
+        results.push({
+          platform,
+          status: 'not_implemented',
+          url: null,
+          error: publishResult.error,
+          manualPasteRequired: true,
+          localPublisher,
+          draft,
+        });
+        continue;
+      }
+
+      const updateAttempt = await optionalPublishQuery('inventory_listings', () => db.query(
+        `UPDATE inventory_listings SET
+           platform_listing_id = $2, platform_url = $3,
+           status = 'published', published_at = NOW(), updated_at = NOW()
+         WHERE id = $1`,
+        [listingId, publishResult.listingId || publishResult.id, publishResult.url]
+      ));
+      if (updateAttempt.warning) {
+        results.push({ platform, status: 'error', error: updateAttempt.warning });
+        continue;
+      }
+
+      results.push({
+        platform,
+        status: 'published',
+        listingId: publishResult.listingId || publishResult.id,
+        url: publishResult.url,
+        mock: publishResult.mock === true,
+      });
+    } catch (err) {
+      const failureAttempt = await optionalPublishQuery('inventory_listings', () => db.query(
+        `UPDATE inventory_listings SET status = 'failed', sync_error = $2, updated_at = NOW() WHERE id = $1`,
+        [listingId, err.message]
+      ));
+      results.push({ platform, status: 'error', error: failureAttempt.warning || err.message });
+    }
+  }
+
+  return { inventoryId, unit: `${unit.year} ${unit.make} ${unit.model}`, results, seo: marketingPayload };
+}
+
 /**
  * POST /api/publish/:inventoryId
  * Body: { platforms: string[], options: object }
@@ -308,108 +527,10 @@ router.post('/:inventoryId', async (req, res, next) => {
     const { inventoryId } = req.params;
     if (rejectInvalidInventoryId(res, inventoryId)) return;
     const { platforms = [], options = {} } = req.body;
-
-    // Fetch inventory
-    const invRes = await db.query(`SELECT * FROM inventory WHERE id = $1`, [inventoryId]);
-    if (!invRes.rows.length) return res.status(404).json({ error: 'Inventory not found' });
-    const unit = normalizeUnitForMarketing(invRes.rows[0]);
-
-    // Empty-platform publish is the safe no-op/dry-run probe path. Do not touch
-    // optional Phase 6C tables or mutate inventory state for this acceptance gate.
-    if (!Array.isArray(platforms) || platforms.length === 0) {
-      return res.json({ inventoryId, unit: `${unit.year} ${unit.make} ${unit.model}`, results: [] });
-    }
-
-    // Generate SEO data
-    const { meta, slug, faqData, payload: marketingPayload } = buildMarketingAssets(unit);
-
-    // Save optional SEO record. Phase 6C publish tables are deploy-hardening
-    // surfaces; schema drift must not turn safe no-op publish probes into 500s.
-    await saveSeoRecord(inventoryId, unit, meta, slug, faqData);
-
-    // Update inventory status
-    if (!unit.status || unit.status === 'intake') {
-      await db.query(`UPDATE inventory SET status = 'listed', updated_at = NOW() WHERE id = $1`, [inventoryId]);
-    }
-
-    // Publish to each platform
-    const results = [];
-    for (const platform of platforms) {
-      const handler = PLATFORM_HANDLERS[platform];
-      if (!handler) {
-        results.push({ platform, status: 'error', error: 'Unknown platform' });
-        continue;
-      }
-
-      // Create listing record. If optional publish tables are missing or still on
-      // an older Phase 6C schema, report this platform as unavailable instead of
-      // crashing the whole request or invoking external publisher stubs.
-      const listingAttempt = await optionalPublishQuery('inventory_listings', () => db.query(
-        `INSERT INTO inventory_listings (inventory_id, platform, status, options, published_at)
-         VALUES ($1, $2, 'publishing', $3, NOW())
-         ON CONFLICT (inventory_id, platform) DO UPDATE SET
-           status = 'publishing', options = EXCLUDED.options, published_at = NOW(), updated_at = NOW()
-         RETURNING id`,
-        [inventoryId, platform, JSON.stringify(options[platform] || {})]
-      ));
-      if (listingAttempt.warning) {
-        results.push({ platform, status: 'error', error: listingAttempt.warning });
-        continue;
-      }
-      const listingId = listingAttempt.result.rows[0].id;
-
-      try {
-        const publishResult = await handler(unit, options[platform] || {});
-
-        if (publishResult.status === 'not_implemented') {
-          const localPublisher = await buildLocalPublisherReceipt(platform, marketingPayload, options[platform] || {});
-          await optionalPublishQuery('inventory_listings', () => db.query(
-            `UPDATE inventory_listings SET status = 'manual_required', updated_at = NOW() WHERE id = $1`,
-            [listingId]
-          ));
-          results.push({
-            platform,
-            status: 'not_implemented',
-            url: null,
-            error: publishResult.error,
-            manualPasteRequired: true,
-            localPublisher,
-          });
-          continue;
-        }
-
-        // Update listing with result. Treat older optional listing schemas as a
-        // degraded platform result instead of turning safe publish probes into 500s.
-        const updateAttempt = await optionalPublishQuery('inventory_listings', () => db.query(
-          `UPDATE inventory_listings SET
-             platform_listing_id = $2, platform_url = $3,
-             status = 'published', published_at = NOW(), updated_at = NOW()
-           WHERE id = $1`,
-          [listingId, publishResult.listingId || publishResult.id, publishResult.url]
-        ));
-        if (updateAttempt.warning) {
-          results.push({ platform, status: 'error', error: updateAttempt.warning });
-          continue;
-        }
-
-        results.push({
-          platform,
-          status: 'published',
-          listingId: publishResult.listingId || publishResult.id,
-          url: publishResult.url,
-          mock: publishResult.mock === true,
-        });
-      } catch (err) {
-        const failureAttempt = await optionalPublishQuery('inventory_listings', () => db.query(
-          `UPDATE inventory_listings SET status = 'failed', sync_error = $2, updated_at = NOW() WHERE id = $1`,
-          [listingId, err.message]
-        ));
-        results.push({ platform, status: 'error', error: failureAttempt.warning || err.message });
-      }
-    }
-
-    res.json({ inventoryId, unit: `${unit.year} ${unit.make} ${unit.model}`, results, seo: marketingPayload });
+    const payload = await publishInventoryToPlatforms(inventoryId, platforms, options);
+    res.json(payload);
   } catch (err) {
+    if (err.status) return res.status(err.status).json({ error: err.message });
     next(err);
   }
 });
@@ -461,6 +582,31 @@ router.get('/:inventoryId', async (req, res, next) => {
 });
 
 /**
+ * POST /api/publish/:inventoryId/:platform/retry
+ * Retry one platform from the manual/failed queue without rerunning every channel.
+ */
+router.post('/:inventoryId/:platform/retry', async (req, res, next) => {
+  try {
+    const { inventoryId, platform } = req.params;
+    if (rejectInvalidInventoryId(res, inventoryId)) return;
+
+    if (!PLATFORM_HANDLERS[platform]) {
+      return res.status(400).json({ error: 'Unknown platform' });
+    }
+
+    const options = req.body?.options || {};
+    const platformOptions = {
+      [platform]: options[platform] || options,
+    };
+    const payload = await publishInventoryToPlatforms(inventoryId, [platform], platformOptions);
+    res.json({ ...payload, retry: true, platform });
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ error: err.message });
+    next(err);
+  }
+});
+
+/**
  * POST /api/publish/:inventoryId/:platform/unpublish
  */
 router.post('/:inventoryId/:platform/unpublish', async (req, res, next) => {
@@ -507,76 +653,65 @@ router.post('/:inventoryId/:platform/unpublish', async (req, res, next) => {
 
 // ─── Platform Publishers (not yet implemented — manual posting required) ────────
 
-async function publishToCraigslist(unit, options) {
+async function publishToMaterialSolutionsNj(unit, _options) {
+  return {
+    status: 'published',
+    listingId: `msnj-${unit.id}`,
+    url: `${SEO_CONFIG.baseUrl}/inventory/${unit.id}`,
+    mock: false,
+  };
+}
+
+function manualPlatformResult(platformLabel, targetLabel) {
   return {
     status: 'not_implemented',
     dbStatus: 'manual_required',
     externalId: null,
     url: null,
-    error: 'Craigslist publish is not yet wired. The generated content is paste-ready — copy it from the preview and post manually at craigslist.org.',
+    error: `${platformLabel} publish is not yet wired. The generated content is paste-ready — copy it from the preview and post manually at ${targetLabel}.`,
     manualPasteRequired: true,
     mock: false,
   };
+}
+
+async function publishToCraigslist(unit, options) {
+  return manualPlatformResult('Craigslist', 'craigslist.org');
 }
 
 async function publishToFacebook(unit, options) {
-  return {
-    status: 'not_implemented',
-    dbStatus: 'manual_required',
-    externalId: null,
-    url: null,
-    error: 'Facebook Marketplace publish is not yet wired. The generated content is paste-ready — copy it from the preview and post manually at facebook.com/marketplace.',
-    manualPasteRequired: true,
-    mock: false,
-  };
+  return manualPlatformResult('Facebook Marketplace', 'facebook.com/marketplace');
 }
 
 async function publishToMachineryTrader(unit, options) {
-  return {
-    status: 'not_implemented',
-    dbStatus: 'manual_required',
-    externalId: null,
-    url: null,
-    error: 'MachineryTrader publish is not yet wired. Post manually at machinerytrader.com using the generated listing content.',
-    manualPasteRequired: true,
-    mock: false,
-  };
+  return manualPlatformResult('MachineryTrader', 'machinerytrader.com');
 }
 
 async function publishToEquipFinder(unit, options) {
-  return {
-    status: 'not_implemented',
-    dbStatus: 'manual_required',
-    externalId: null,
-    url: null,
-    error: 'EquipFinder publish is not yet wired. Post manually at equipfinder.com using the generated listing content.',
-    manualPasteRequired: true,
-    mock: false,
-  };
+  return manualPlatformResult('EquipFinder', 'equipfinder.com');
 }
 
 async function publishToMachineryATS(unit, options) {
-  return {
-    status: 'not_implemented',
-    dbStatus: 'manual_required',
-    externalId: null,
-    url: null,
-    error: 'MachineryATS publish is not yet wired. Post manually at machineryats.com using the generated listing content.',
-    manualPasteRequired: true,
-    mock: false,
-  };
+  return manualPlatformResult('MachineryATS', 'machineryats.com');
+}
+
+async function publishToEbay(unit, options) {
+  return manualPlatformResult('eBay Business & Industrial', 'ebay.com');
+}
+
+async function publishToLinkedIn(unit, options) {
+  return manualPlatformResult('LinkedIn', 'linkedin.com');
+}
+
+async function publishToGoogleBusinessProfile(unit, options) {
+  return manualPlatformResult('Google Business Profile', 'business.google.com');
+}
+
+async function publishToForkliftActionForum(unit, options) {
+  return manualPlatformResult('Forkliftaction Forum', 'forkliftaction.com/forum');
 }
 
 async function publishToYouTube(unit, options) {
-  return {
-    status: 'not_implemented',
-    dbStatus: 'manual_required',
-    externalId: null,
-    url: null,
-    error: 'YouTube publish is not yet wired. Upload the generated video content manually at youtube.com/upload.',
-    manualPasteRequired: true,
-    mock: false,
-  };
+  return manualPlatformResult('YouTube', 'youtube.com/upload');
 }
 
 module.exports = router;

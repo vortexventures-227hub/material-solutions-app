@@ -2,6 +2,15 @@
 
 const fs = require('node:fs/promises');
 const { runCraigslistBridge } = require('../services/local-publisher/craigslistBridge');
+const { buildManualReceipt } = require('../services/local-publisher/manualDraft');
+
+const MANUAL_DRAFT_PLATFORMS = new Set([
+  'facebook_marketplace',
+  'machinerytrader',
+  'equipfinder',
+  'machineryats',
+  'youtube',
+]);
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
@@ -14,11 +23,17 @@ async function main() {
     contactPhone: args.contactPhone,
   };
 
-  if (args.platform !== 'craigslist') {
+  if (args.platform === 'craigslist') {
+    const receipt = await runCraigslistBridge(input, options);
+    process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
+    return;
+  }
+
+  if (!MANUAL_DRAFT_PLATFORMS.has(args.platform)) {
     throw new Error(`Unsupported local publisher platform: ${args.platform}`);
   }
 
-  const receipt = await runCraigslistBridge(input, options);
+  const receipt = buildManualReceipt(args.platform, input, options);
   process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
 }
 
@@ -99,7 +114,7 @@ Usage:
   curl http://localhost:5001/api/publish/<inventoryId>/payload | node backend/scripts/run-local-publisher.js
 
 Options:
-  --platform craigslist       Local publisher target. Default: craigslist
+  --platform craigslist       Local publisher target. Supports craigslist, facebook_marketplace, machinerytrader, equipfinder, machineryats, youtube
   --input path                Read publish job JSON from a file. Defaults to stdin
   --dry-run                   Build a receipt without browser mutation. Default
   --live                      Refused by design until a guarded local browser adapter is added

@@ -48,12 +48,19 @@ export default function Analytics() {
 
   const kpis = data?.kpis || {};
   const platformData = data?.platformBreakdown || [];
+  const hasPlatformData = platformData.length > 0;
+  const recentEmailActivity = data?.recentEmailActivity || [];
+  const degradedWarnings = data?.warnings || [];
+  const totalListingViews = Number(kpis.totalListingViews || 0);
+  const marketplaceInquiries = Number(kpis.marketplaceInquiries || 0);
+  const leadsGenerated = Number(kpis.leadsGenerated || 0);
+  const leadSourceData = data?.leadSourceBreakdown || [];
 
   return (
     <Layout>
       <PageHeader 
-        title="MARKETPLACE ANALYTICS" 
-        description="Tracking reach across all distribution channels."
+        title="Publish Button Analytics" 
+        description="Live distribution signals only. Empty charts mean no channel data has been recorded yet."
         actions={
           <div className="flex items-center gap-2">
             <select 
@@ -74,10 +81,10 @@ export default function Analytics() {
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
-          { label: 'Total Listing Views', value: kpis.activeListings * 450, icon: <Eye />, color: 'text-vortex-yellow' },
-          { label: 'Marketplace Inquiries', value: kpis.activeListings * 12, icon: <MessageSquare />, color: 'text-vortex-orange' },
+          { label: 'Total Listing Views', value: totalListingViews, icon: <Eye />, color: 'text-vortex-yellow' },
+          { label: 'Marketplace Inquiries', value: marketplaceInquiries, icon: <MessageSquare />, color: 'text-vortex-orange' },
           { label: 'Email Open Rate', value: kpis.emailOpenRate + '%', icon: <Mail />, color: 'text-green-400' },
-          { label: 'Leads Generated', value: Math.round(kpis.totalLeads * 0.4), icon: <Users />, color: 'text-blue-400' },
+          { label: 'Leads Generated', value: leadsGenerated, icon: <Users />, color: 'text-blue-400' },
         ].map((kpi, i) => (
           <Card key={i} className="p-0 overflow-hidden">
             <CardContent className="p-6">
@@ -85,8 +92,8 @@ export default function Analytics() {
                 <div className={`p-2 rounded-lg bg-vortex-black ${kpi.color} border border-current/20`}>
                   {React.cloneElement(kpi.icon, { size: 20 })}
                 </div>
-                <span className="text-[10px] font-bold text-green-500 flex items-center gap-1">
-                  <ArrowUpRight size={12} /> +14%
+                <span className="text-[10px] font-bold text-gray-500 flex items-center gap-1">
+                  <ArrowUpRight size={12} /> LIVE
                 </span>
               </div>
               <p className="text-3xl font-display text-white tracking-wider">{kpi.value}</p>
@@ -104,24 +111,33 @@ export default function Analytics() {
             <CardTitle>REACH BY PLATFORM</CardTitle>
           </CardHeader>
           <CardContent className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={platformData.length > 0 ? platformData : mockPlatformData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#FDE047" strokeOpacity={0.05} vertical={false} />
-                <XAxis 
-                  dataKey="platform" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#9CA3AF', fontSize: 10, fontFamily: 'Bebas Neue' }}
-                  tickFormatter={(val) => val.split('_')[0].toUpperCase()}
-                />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 10 }} />
-                <Tooltip 
-                  cursor={{ fill: 'rgba(253, 224, 71, 0.05)' }}
-                  contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #FDE04766', borderRadius: '12px' }}
-                />
-                <Bar dataKey="active" name="Active Listings" fill="#FDE047" radius={[4, 4, 0, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
+            {hasPlatformData ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={platformData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#FDE047" strokeOpacity={0.05} vertical={false} />
+                  <XAxis
+                    dataKey="platform"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#9CA3AF', fontSize: 10, fontFamily: 'Bebas Neue' }}
+                    tickFormatter={(val) => val.split('_')[0].toUpperCase()}
+                  />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 10 }} />
+                  <Tooltip
+                    cursor={{ fill: 'rgba(253, 224, 71, 0.05)' }}
+                    contentStyle={{ backgroundColor: '#1A1A1A', border: '1px solid #FDE04766', borderRadius: '12px' }}
+                  />
+                  <Bar dataKey="active" name="Active Listings" fill="#FDE047" radius={[4, 4, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center px-6">
+                <p className="font-display text-vortex-yellow tracking-widest uppercase">No channel analytics yet</p>
+                <p className="text-xs text-gray-500 mt-2 max-w-sm">
+                  Publish inventory first, then record views and inquiries from live marketplace channels.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -131,33 +147,55 @@ export default function Analytics() {
             <CardTitle>LEAD SOURCE</CardTitle>
           </CardHeader>
           <CardContent className="h-80 flex flex-col items-center justify-center">
-            <ResponsiveContainer width="100%" height="70%">
-              <PieChart>
-                <Pie
-                  data={mockSourceData}
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {mockSourceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            {leadSourceData.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height="70%">
+                  <PieChart>
+                    <Pie
+                      data={leadSourceData}
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {leadSourceData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="grid grid-cols-2 gap-4 mt-4 w-full">
+                  {leadSourceData.map((item, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                      <span className="text-[10px] font-display text-gray-400 uppercase tracking-widest">{item.name}</span>
+                    </div>
                   ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="grid grid-cols-2 gap-4 mt-4 w-full">
-              {mockSourceData.map((item, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                  <span className="text-[10px] font-display text-gray-400 uppercase tracking-widest">{item.name}</span>
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="text-center px-6">
+                <p className="font-display text-vortex-yellow tracking-widest uppercase">No attributed leads yet</p>
+                <p className="text-xs text-gray-500 mt-2">Incoming storefront leads will appear here once they carry a source.</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {degradedWarnings.length > 0 && (
+        <Card className="mt-6 border-vortex-yellow/30 bg-vortex-yellow/5">
+          <CardContent className="p-4">
+            <p className="font-display text-vortex-yellow text-xs uppercase tracking-[0.2em] mb-2">Analytics surfaces degraded</p>
+            <ul className="space-y-1">
+              {degradedWarnings.map((warning, index) => (
+                <li key={index} className="text-xs text-gray-400">{warning}</li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Email Activity */}
       <Card className="mt-6 overflow-hidden">
@@ -178,7 +216,7 @@ export default function Analytics() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-vortex-yellow/10">
-                {(data?.recentEmailActivity || mockEmailActivity).map((row, i) => (
+                {recentEmailActivity.map((row, i) => (
                   <tr key={i} className="hover:bg-vortex-yellow/5 transition-colors">
                     <td className="px-6 py-4">
                       <p className="text-sm font-bold text-white">{row.name}</p>
@@ -200,6 +238,13 @@ export default function Analytics() {
                     </td>
                   </tr>
                 ))}
+                {recentEmailActivity.length === 0 && (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-8 text-center text-sm text-gray-500">
+                      No email outreach activity has been recorded.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -214,24 +259,3 @@ const MessageSquare = ({ size }) => (
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
   </svg>
 );
-
-const mockPlatformData = [
-  { platform: 'Facebook', active: 12 },
-  { platform: 'Craigslist', active: 8 },
-  { platform: 'eBay', active: 5 },
-  { platform: 'MachineryTrader', active: 10 },
-  { platform: 'LinkedIn', active: 4 },
-];
-
-const mockSourceData = [
-  { name: 'Facebook', value: 45 },
-  { name: 'Direct Email', value: 25 },
-  { name: 'Organic SEO', value: 15 },
-  { name: 'Referral', value: 10 },
-  { name: 'Other', value: 5 },
-];
-
-const mockEmailActivity = [
-  { name: 'John Smith', email: 'jsmith@logistics.com', year: 2019, make: 'Raymond', model: '7400', current_step: 0, sequence_status: 'active', last_sent_at: new Date() },
-  { name: 'Sarah Jones', email: 'sjones@warehousing.com', year: 2021, make: 'Toyota', model: '8FGCU25', current_step: 1, sequence_status: 'active', last_sent_at: new Date() },
-];

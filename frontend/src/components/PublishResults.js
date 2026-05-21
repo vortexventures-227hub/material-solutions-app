@@ -1,17 +1,61 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ExternalLink, Check, AlertTriangle, ShieldCheck, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
+import api from '../api';
 
 /**
  * PublishResults — shown after publish completes
  * Shows platform links, email stats, SEO summary
  */
 export default function PublishResults({ results, unit, seoData, onClose }) {
+  const [retrying, setRetrying] = useState({});
+  const [retryMessages, setRetryMessages] = useState({});
   const total = results?.results?.length || 0;
   const succeeded = results?.results?.filter(r => r.status === 'published').length || 0;
   const manual = results?.results?.filter(r => r.manualPasteRequired || r.status === 'not_implemented').length || 0;
   const failed = results?.results?.filter(r => r.status === 'error').length || 0;
   const isFullyLive = total > 0 && succeeded === total;
+  const copyDraft = async (result) => {
+    const draft = result.draft || result.localPublisher?.draft;
+    if (!draft) return;
+
+    const fields = draft.fields || {};
+    const mediaUrls = Array.isArray(draft.media?.urls) ? draft.media.urls : [];
+    const text = [
+      fields.title,
+      fields.price ? `Price: $${Number(fields.price).toLocaleString()}` : null,
+      fields.body,
+      fields.listingUrl ? `Listing: ${fields.listingUrl}` : null,
+      mediaUrls.length ? `Photos:\n${mediaUrls.map((url) => `- ${url}`).join('\n')}` : null,
+    ].filter(Boolean).join('\n\n');
+
+    await navigator.clipboard?.writeText(text);
+  };
+  const retryPlatform = async (platform) => {
+    if (!unit?.id || !platform) return;
+    setRetrying((prev) => ({ ...prev, [platform]: true }));
+    setRetryMessages((prev) => ({ ...prev, [platform]: '' }));
+
+    try {
+      const res = await api.post(`/api/publish/${unit.id}/${platform}/retry`, { options: {} });
+      const result = res.data?.results?.[0];
+      setRetryMessages((prev) => ({
+        ...prev,
+        [platform]: result?.status === 'published'
+          ? 'Retry published'
+          : result?.manualPasteRequired
+            ? 'Draft refreshed'
+            : result?.error || 'Retry complete',
+      }));
+    } catch (err) {
+      setRetryMessages((prev) => ({
+        ...prev,
+        [platform]: err.response?.data?.error || err.message || 'Retry failed',
+      }));
+    } finally {
+      setRetrying((prev) => ({ ...prev, [platform]: false }));
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
@@ -102,6 +146,9 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                       {result.localPublisher?.receiptId && (
                         <p className="text-[10px] text-gray-500 font-mono mt-1">Receipt: {result.localPublisher.receiptId}</p>
                       )}
+                      {result.draft?.fields?.title && (
+                        <p className="text-[10px] text-gray-500 font-mono mt-1">Draft: {result.draft.fields.title}</p>
+                      )}
                     </div>
                   </div>
                   
@@ -117,10 +164,44 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                   ) : result.status === 'published' && result.mock ? (
                     <span className="text-[10px] text-vortex-yellow/70 font-mono pr-2">Manual post required</span>
                   ) : result.manualPasteRequired || result.status === 'not_implemented' ? (
-                    <span className="text-[10px] text-vortex-yellow/80 font-mono pr-2">No live submit</span>
+                    <div className="flex items-center gap-2">
+                      {(result.draft || result.localPublisher?.draft) && (
+                        <button
+                          type="button"
+                          onClick={() => copyDraft(result)}
+                          className="text-[10px] text-vortex-black bg-vortex-yellow rounded px-2 py-1 font-bold uppercase tracking-widest"
+                        >
+                          Copy Draft
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => retryPlatform(result.platform)}
+                        disabled={retrying[result.platform]}
+                        className="text-[10px] text-vortex-yellow border border-vortex-yellow/40 rounded px-2 py-1 font-bold uppercase tracking-widest disabled:opacity-50"
+                      >
+                        {retrying[result.platform] ? 'Retrying' : 'Retry'}
+                      </button>
+                      <span className="text-[10px] text-vortex-yellow/80 font-mono pr-2">No live submit</span>
+                    </div>
                   ) : result.status === 'error' ? (
-                    <span className="text-[10px] text-red-400/60 font-mono italic pr-2">{result.error || 'API Error'}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => retryPlatform(result.platform)}
+                        disabled={retrying[result.platform]}
+                        className="text-[10px] text-red-200 border border-red-500/40 rounded px-2 py-1 font-bold uppercase tracking-widest disabled:opacity-50"
+                      >
+                        {retrying[result.platform] ? 'Retrying' : 'Retry'}
+                      </button>
+                      <span className="text-[10px] text-red-400/60 font-mono italic pr-2">{result.error || 'API Error'}</span>
+                    </div>
                   ) : null}
+                  {retryMessages[result.platform] && (
+                    <div className="basis-full pl-11 pt-2 text-[10px] text-gray-400 font-mono">
+                      {retryMessages[result.platform]}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

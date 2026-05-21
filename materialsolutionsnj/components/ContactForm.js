@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/router'
 import { motion, useInView } from 'framer-motion'
 import DavidAvatar from './DavidAvatar'
 
@@ -14,6 +15,7 @@ const SERVICES = [
 ]
 
 export default function ContactForm() {
+  const router = useRouter()
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-50px' })
   const [formData, setFormData] = useState({
@@ -22,18 +24,53 @@ export default function ContactForm() {
     phone: '',
     company: '',
     service: '',
+    inventory: '',
     message: ''
   })
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setSubmitted(true)
+    setSubmitting(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}))
+        throw new Error(body.error || 'Lead sync failed')
+      }
+
+      setSubmitted(true)
+    } catch (err) {
+      setError('Message was not sent into the Forklift Sales Machine. Please call us directly or try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
+
+  useEffect(() => {
+    const inventory = typeof router.query.inventory === 'string' ? router.query.inventory : ''
+    if (!inventory) return
+
+    setFormData(prev => ({
+      ...prev,
+      inventory,
+      service: prev.service || 'Forklift Purchase',
+      message: prev.message || `I'm interested in ${inventory}.`,
+    }))
+  }, [router.query.inventory])
 
   return (
     <section id="contact" className="py-24 px-4 relative overflow-hidden" style={{ background: '#FFFFFF' }}>
@@ -154,6 +191,16 @@ export default function ContactForm() {
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
+                  {formData.inventory && (
+                    <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm font-semibold text-yellow-100">
+                      Interested unit: {formData.inventory}
+                    </div>
+                  )}
+                  {error && (
+                    <div className="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
+                      {error}
+                    </div>
+                  )}
                   <div className="grid sm:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-sm font-semibold text-gray-300 mb-2">Name *</label>
@@ -235,15 +282,17 @@ export default function ContactForm() {
 
                   <motion.button
                     type="submit"
+                    disabled={submitting}
                     className="w-full py-4 rounded-xl font-bold text-lg text-black transition-all cursor-pointer"
                     style={{
                       background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                      boxShadow: '0 8px 32px rgba(255, 215, 0, 0.35)'
+                      boxShadow: '0 8px 32px rgba(255, 215, 0, 0.35)',
+                      opacity: submitting ? 0.7 : 1
                     }}
                     whileHover={{ scale: 1.02, boxShadow: '0 12px 40px rgba(255, 215, 0, 0.45)' }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    Send Message →
+                    {submitting ? 'Sending into FSM...' : 'Send Message →'}
                   </motion.button>
 
                   <p className="text-center text-gray-500 text-sm">

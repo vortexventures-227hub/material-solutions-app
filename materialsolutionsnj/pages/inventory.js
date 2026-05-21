@@ -1,7 +1,8 @@
 import Head from 'next/head'
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import DavidAvatar from '../components/DavidAvatar'
+import { fetchFsmInventory } from '../lib/fsmBackend'
 
 const INVENTORY = [
   {
@@ -165,14 +166,42 @@ const INVENTORY = [
 const CATEGORIES = ['All', 'Electric', 'LP Gas', 'Diesel', 'Pneumatic', 'Pallet Jack', 'Reach Truck']
 const SORT_OPTIONS = ['Featured', 'Price: Low to High', 'Price: High to Low', 'Hours: Low to High']
 
-export default function Inventory() {
+export default function Inventory({ initialInventory = [], dataSource = 'fallback', dataError = '' }) {
   const [activeCategory, setActiveCategory] = useState('All')
   const [sortBy, setSortBy] = useState('Featured')
   const [selectedItem, setSelectedItem] = useState(null)
+  const [publishReadiness, setPublishReadiness] = useState(null)
+  const [publishReadinessError, setPublishReadinessError] = useState('')
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-50px' })
+  const inventoryItems = initialInventory.length > 0 ? initialInventory : INVENTORY
 
-  let filtered = INVENTORY.filter(item => {
+  useEffect(() => {
+    setPublishReadiness(null)
+    setPublishReadinessError('')
+
+    if (!selectedItem || dataSource !== 'fsm') return
+
+    let cancelled = false
+    fetch(`/api/publish/${encodeURIComponent(selectedItem.id)}/payload`)
+      .then(async response => {
+        const body = await response.json()
+        if (!response.ok) throw new Error(body.detail || body.error || 'Publish payload unavailable')
+        return body.payload
+      })
+      .then(payload => {
+        if (!cancelled) setPublishReadiness(payload)
+      })
+      .catch(error => {
+        if (!cancelled) setPublishReadinessError(error.message)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedItem, dataSource])
+
+  let filtered = inventoryItems.filter(item => {
     if (activeCategory === 'All') return true
     return item.category.toLowerCase().includes(activeCategory.toLowerCase()) ||
            item.fuel.toLowerCase() === activeCategory.toLowerCase()
@@ -215,8 +244,16 @@ export default function Inventory() {
                 color: '#B8860B'
               }}
             >
-              {INVENTORY.length} UNITS AVAILABLE
+              {inventoryItems.length} UNITS AVAILABLE
             </span>
+            {dataSource !== 'fsm' && (
+              <p className="text-sm text-yellow-700 mb-3">
+                Live Forklift Sales Machine inventory is temporarily unavailable. Showing backup inventory.
+              </p>
+            )}
+            {dataError && (
+              <p className="text-xs text-gray-500 mb-3">{dataError}</p>
+            )}
             <h1 className="text-4xl md:text-6xl font-black text-black mb-4">
               Equipment <span style={{ color: '#B8860B' }}>Inventory</span>
             </h1>
@@ -294,7 +331,7 @@ export default function Inventory() {
                   </div>
 
                   <div className="h-36 overflow-hidden">
-                    <img src={`/images/${item.image}`} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img src={item.imageUrl || `/images/${item.image}`} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   </div>
 
                   <div className="p-4">
@@ -345,7 +382,7 @@ export default function Inventory() {
               </button>
 
               <div className="h-56 overflow-hidden">
-                <img src={`/images/${selectedItem.image}`} alt={selectedItem.name} className="w-full h-full object-cover" />
+                <img src={selectedItem.imageUrl || `/images/${selectedItem.image}`} alt={selectedItem.name} className="w-full h-full object-cover" />
               </div>
 
               <div className="p-6">
@@ -377,6 +414,37 @@ export default function Inventory() {
                   </div>
                 </div>
 
+                {dataSource === 'fsm' && (
+                  <div className="mb-6 rounded-lg p-4" style={{ background: 'rgba(255, 215, 0, 0.08)', border: '1px solid rgba(255, 215, 0, 0.25)' }}>
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <div className="font-bold text-black">Forklift Sales Machine readiness</div>
+                      <div className="text-xs font-bold" style={{ color: publishReadiness?.complete ? '#15803D' : '#B8860B' }}>
+                        {publishReadiness ? (publishReadiness.complete ? 'READY' : 'REVIEW') : 'CHECKING'}
+                      </div>
+                    </div>
+                    {publishReadinessError ? (
+                      <p className="text-sm text-gray-500">{publishReadinessError}</p>
+                    ) : publishReadiness?.requiredFields ? (
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(publishReadiness.requiredFields).map(([field, ready]) => (
+                          <span
+                            key={field}
+                            className="px-2 py-1 rounded text-xs font-semibold"
+                            style={{
+                              background: ready ? 'rgba(34, 197, 94, 0.12)' : 'rgba(255, 215, 0, 0.15)',
+                              color: ready ? '#15803D' : '#B8860B',
+                            }}
+                          >
+                            {field.replace(/([A-Z])/g, ' $1')}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">Checking listing content, media, SEO, AEO, and schema payload.</p>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex gap-3">
                   <a
                     href="/contact"
@@ -385,6 +453,15 @@ export default function Inventory() {
                   >
                     Get Quote
                   </a>
+                  {dataSource === 'fsm' && (
+                    <a
+                      href={`/inventory/${selectedItem.id}`}
+                      className="px-6 py-3 rounded-lg font-semibold text-black text-center"
+                      style={{ background: 'rgba(255, 215, 0, 0.12)', border: '1px solid rgba(255, 215, 0, 0.35)' }}
+                    >
+                      View Listing
+                    </a>
+                  )}
                   <button
                     onClick={() => setSelectedItem(null)}
                     className="px-6 py-3 rounded-lg font-semibold text-black"
@@ -400,4 +477,25 @@ export default function Inventory() {
       </AnimatePresence>
     </>
   )
+}
+
+export async function getServerSideProps() {
+  try {
+    const result = await fetchFsmInventory({ status: 'listed', limit: 100 });
+    return {
+      props: {
+        initialInventory: result.items,
+        dataSource: 'fsm',
+        dataError: '',
+      },
+    };
+  } catch (error) {
+    return {
+      props: {
+        initialInventory: [],
+        dataSource: 'fallback',
+        dataError: error.message || 'FSM inventory unavailable',
+      },
+    };
+  }
 }

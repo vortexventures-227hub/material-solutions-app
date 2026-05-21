@@ -33,6 +33,8 @@ router.get('/overview', async (req, res, next) => {
       totalInventory,
       emailStats,
       listingStats,
+      marketplaceTotals,
+      leadSourceStats,
       recentActivity,
     ] = await Promise.all([
       db.query(`SELECT COUNT(*) as total FROM leads`),
@@ -52,6 +54,20 @@ router.get('/overview', async (req, res, next) => {
         FROM inventory_listings
         GROUP BY platform
       `)),
+      optionalAnalyticsQuery('marketplace_analytics totals', () => db.query(`
+        SELECT
+          COALESCE(SUM(views), 0) as total_views,
+          COALESCE(SUM(inquiries), 0) as total_inquiries,
+          COALESCE(SUM(leads_generated), 0) as leads_generated
+        FROM marketplace_analytics
+      `), [{ total_views: 0, total_inquiries: 0, leads_generated: 0 }]),
+      optionalAnalyticsQuery('lead source', () => db.query(`
+        SELECT COALESCE(NULLIF(source, ''), 'Unknown') as name, COUNT(*)::int as value
+        FROM leads
+        GROUP BY COALESCE(NULLIF(source, ''), 'Unknown')
+        ORDER BY value DESC
+        LIMIT 8
+      `)),
       optionalAnalyticsQuery('email_sequences', () => db.query(`
         SELECT
           l.name, l.email, l.status as lead_status, l.score,
@@ -68,10 +84,17 @@ router.get('/overview', async (req, res, next) => {
     ]);
 
     const e = emailStats.result.rows[0] || {};
+    const mt = marketplaceTotals.result.rows[0] || {};
     const sent = parseInt(e.emails_sent) || 0;
     const opened = parseInt(e.emails_opened) || 0;
     const clicked = parseInt(e.emails_clicked) || 0;
-    const warnings = [emailStats.warning, listingStats.warning, recentActivity.warning].filter(Boolean);
+    const warnings = [
+      emailStats.warning,
+      listingStats.warning,
+      marketplaceTotals.warning,
+      leadSourceStats.warning,
+      recentActivity.warning,
+    ].filter(Boolean);
 
     res.json({
       kpis: {
@@ -81,8 +104,15 @@ router.get('/overview', async (req, res, next) => {
         emailOpenRate: sent > 0 ? ((opened / sent) * 100).toFixed(1) : '0.0',
         emailClickRate: sent > 0 ? ((clicked / sent) * 100).toFixed(1) : '0.0',
         activeListings: listingStats.result.rows.reduce((s, r) => s + parseInt(r.active || 0), 0),
+        totalListingViews: parseInt(mt.total_views) || 0,
+        marketplaceInquiries: parseInt(mt.total_inquiries) || 0,
+        leadsGenerated: parseInt(mt.leads_generated) || 0,
       },
       platformBreakdown: listingStats.result.rows,
+      leadSourceBreakdown: leadSourceStats.result.rows.map((row) => ({
+        name: row.name || 'Unknown',
+        value: parseInt(row.value) || 0,
+      })),
       recentEmailActivity: recentActivity.result.rows,
       degraded: warnings.length > 0,
       warnings,
