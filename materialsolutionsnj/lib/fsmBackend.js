@@ -138,6 +138,8 @@ async function publishFsmInventory(inventoryId, input = {}) {
     body: JSON.stringify({
       platforms: Array.isArray(input.platforms) ? input.platforms : [],
       options: input.options || {},
+      dryRun: input.dryRun === true,
+      testMode: input.testMode === true,
     }),
   });
 }

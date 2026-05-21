@@ -189,6 +189,48 @@ function safeBuildManualPlatformDraft(platform, marketingPayload, options = {}) 
   }
 }
 
+function isDryRunRequested(body = {}) {
+  return body.dryRun === true || body.testMode === true;
+}
+
+async function buildDryRunPlatformResult(platform, unit, marketingPayload, platformOptions = {}) {
+  if (!PLATFORM_HANDLERS[platform]) {
+    return {
+      platform,
+      status: 'error',
+      dryRun: true,
+      mutationPerformed: false,
+      error: 'Unknown platform',
+    };
+  }
+
+  if (platform === 'materialsolutionsnj') {
+    return {
+      platform,
+      status: 'dry_run_ready',
+      dryRun: true,
+      mutationPerformed: false,
+      listingId: `msnj-${unit.id}`,
+      url: `${SEO_CONFIG.baseUrl}/inventory/${unit.id}`,
+      manualPasteRequired: false,
+    };
+  }
+
+  const localPublisher = await buildLocalPublisherReceipt(platform, marketingPayload, platformOptions);
+  const draft = localPublisher?.draft || safeBuildManualPlatformDraft(platform, marketingPayload, platformOptions);
+
+  return {
+    platform,
+    status: 'manual_required',
+    dryRun: true,
+    mutationPerformed: false,
+    url: null,
+    manualPasteRequired: true,
+    localPublisher,
+    draft,
+  };
+}
+
 async function optionalPublishQuery(label, fn, fallbackRows = []) {
   try {
     return { result: await fn(), warning: null };
@@ -421,7 +463,7 @@ router.get('/:inventoryId/payload', async (req, res, next) => {
   }
 });
 
-async function publishInventoryToPlatforms(inventoryId, platforms = [], options = {}) {
+async function publishInventoryToPlatforms(inventoryId, platforms = [], options = {}, controls = {}) {
   const invRes = await db.query(`SELECT * FROM inventory WHERE id = $1`, [inventoryId]);
   if (!invRes.rows.length) {
     const error = new Error('Inventory not found');
@@ -429,14 +471,32 @@ async function publishInventoryToPlatforms(inventoryId, platforms = [], options 
     throw error;
   }
   const unit = normalizeUnitForMarketing(invRes.rows[0]);
+  const platformList = Array.isArray(platforms) ? platforms : [];
+  const dryRun = controls.dryRun === true || controls.testMode === true;
 
   // Empty-platform publish is the safe no-op/dry-run probe path. Do not touch
   // optional Phase 6C tables or mutate inventory state for this acceptance gate.
-  if (!Array.isArray(platforms) || platforms.length === 0) {
-    return { inventoryId, unit: `${unit.year} ${unit.make} ${unit.model}`, results: [] };
+  if (platformList.length === 0) {
+    return { inventoryId, unit: `${unit.year} ${unit.make} ${unit.model}`, dryRun, testMode: dryRun, results: [] };
   }
 
   const { meta, slug, faqData, payload: marketingPayload } = buildMarketingAssets(unit);
+
+  if (dryRun) {
+    const results = [];
+    for (const platform of platformList) {
+      results.push(await buildDryRunPlatformResult(platform, unit, marketingPayload, options[platform] || {}));
+    }
+    return {
+      inventoryId,
+      unit: `${unit.year} ${unit.make} ${unit.model}`,
+      dryRun: true,
+      testMode: true,
+      results,
+      seo: marketingPayload,
+    };
+  }
+
   await saveSeoRecord(inventoryId, unit, meta, slug, faqData);
 
   if (!unit.status || unit.status === 'intake') {
@@ -444,7 +504,7 @@ async function publishInventoryToPlatforms(inventoryId, platforms = [], options 
   }
 
   const results = [];
-  for (const platform of platforms) {
+  for (const platform of platformList) {
     const handler = PLATFORM_HANDLERS[platform];
     if (!handler) {
       results.push({ platform, status: 'error', error: 'Unknown platform' });
@@ -527,7 +587,10 @@ router.post('/:inventoryId', async (req, res, next) => {
     const { inventoryId } = req.params;
     if (rejectInvalidInventoryId(res, inventoryId)) return;
     const { platforms = [], options = {} } = req.body;
-    const payload = await publishInventoryToPlatforms(inventoryId, platforms, options);
+    const payload = await publishInventoryToPlatforms(inventoryId, platforms, options, {
+      dryRun: isDryRunRequested(req.body),
+      testMode: req.body?.testMode === true,
+    });
     res.json(payload);
   } catch (err) {
     if (err.status) return res.status(err.status).json({ error: err.message });
@@ -598,7 +661,10 @@ router.post('/:inventoryId/:platform/retry', async (req, res, next) => {
     const platformOptions = {
       [platform]: options[platform] || options,
     };
-    const payload = await publishInventoryToPlatforms(inventoryId, [platform], platformOptions);
+    const payload = await publishInventoryToPlatforms(inventoryId, [platform], platformOptions, {
+      dryRun: isDryRunRequested(req.body),
+      testMode: req.body?.testMode === true,
+    });
     res.json({ ...payload, retry: true, platform });
   } catch (err) {
     if (err.status) return res.status(err.status).json({ error: err.message });

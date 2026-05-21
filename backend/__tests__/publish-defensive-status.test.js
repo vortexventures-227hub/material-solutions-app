@@ -132,6 +132,51 @@ test('publish POST with empty platforms is a no-op after inventory lookup', asyn
   });
 });
 
+test('publish POST dryRun returns selected channel readiness without write side effects', async () => {
+  const calls = [];
+  const app = buildApp(async (sql) => {
+    calls.push(sql);
+    if (/SELECT \* FROM inventory WHERE id/.test(sql)) {
+      return {
+        rows: [{
+          id: 'ddeb41d4-5261-4851-9324-e2f09ea8f807',
+          year: 2018,
+          make: 'Toyota',
+          model: '8FGCU25',
+          listing_price: '22500.00',
+          condition_notes: 'Clean used pneumatic forklift ready for review.',
+          images: ['https://cdn.example.com/forklift.jpg'],
+          status: 'intake',
+        }],
+      };
+    }
+    throw new Error(`Dry-run publish should not write optional Phase 6C tables or inventory status: ${sql}`);
+  });
+
+  await withServer(app, async (server) => {
+    const res = await request(server, 'POST', '/api/publish/ddeb41d4-5261-4851-9324-e2f09ea8f807', {
+      platforms: ['materialsolutionsnj', 'facebook_marketplace'],
+      options: {},
+      dryRun: true,
+      testMode: true,
+    });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.dryRun, true);
+    assert.equal(res.body.testMode, true);
+    assert.equal(res.body.results.length, 2);
+    assert.equal(res.body.results[0].platform, 'materialsolutionsnj');
+    assert.equal(res.body.results[0].status, 'dry_run_ready');
+    assert.equal(res.body.results[0].mutationPerformed, false);
+    assert.equal(res.body.results[1].platform, 'facebook_marketplace');
+    assert.equal(res.body.results[1].status, 'manual_required');
+    assert.equal(res.body.results[1].manualPasteRequired, true);
+    assert.equal(res.body.results[1].mutationPerformed, false);
+    assert.equal(calls.length, 1);
+    assert.equal(calls.filter((sql) => /INSERT|UPDATE|inventory_listings|inventory_seo|marketplace_analytics/.test(sql)).length, 0);
+  });
+});
+
 test('publish POST falls back to migration 006 SEO columns when legacy SEO columns drift', async () => {
   const calls = [];
   const valuesBySql = [];

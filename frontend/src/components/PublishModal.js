@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Globe, Video, Check, ChevronRight, Share2, Eye, AlertTriangle, Loader2 } from 'lucide-react';
+import { X, Globe, Video, Check, ChevronRight, Share2, Eye, AlertTriangle, Loader2, ShieldCheck } from 'lucide-react';
 import api from '../api';
 import PublishProgress from './PublishProgress';
 import PublishResults from './PublishResults';
@@ -104,6 +104,7 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
   const [payloadPreview, setPayloadPreview] = useState(null);
   const [payloadLoading, setPayloadLoading] = useState(false);
   const [payloadError, setPayloadError] = useState('');
+  const [testMode, setTestMode] = useState(true);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -113,6 +114,7 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
       setProgress({});
       setPayloadPreview(null);
       setPayloadError('');
+      setTestMode(true);
 
       if (inventory?.id) {
         let cancelled = false;
@@ -163,14 +165,17 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
       // Phase 6C API Call
       const res = await api.post(`/api/publish/${inventory.id}`, {
         platforms,
-        options
+        options,
+        dryRun: testMode,
+        testMode
       });
 
       // Update progress with results
       const newProgress = { ...initialProgress };
+      const completeStatuses = new Set(['published', 'dry_run_ready', 'manual_required', 'not_implemented']);
       res.data.results.forEach(r => {
         newProgress[r.platform] = { 
-          status: r.status === 'published' ? 'complete' : 'error',
+          status: completeStatuses.has(r.status) ? 'complete' : 'error',
           error: r.error 
         };
       });
@@ -212,6 +217,7 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
         progress={progress}
         emailsSent={0}
         emailsQueued={0}
+        testMode={testMode}
       />
     );
   }
@@ -360,6 +366,23 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
           </div>
 
           <button
+            type="button"
+            onClick={() => setTestMode((value) => !value)}
+            aria-pressed={testMode}
+            className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition-all ${
+              testMode
+                ? 'border-green-500/30 bg-green-500/10 text-green-300'
+                : 'border-vortex-yellow/30 bg-vortex-black/50 text-vortex-yellow'
+            }`}
+          >
+            <span className="flex items-center gap-2 font-display text-xs uppercase tracking-widest">
+              <ShieldCheck size={16} />
+              Test Mode
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">{testMode ? 'On' : 'Off'}</span>
+          </button>
+
+          <button
             onClick={handlePublish}
             disabled={selected.size === 0}
             className={`
@@ -371,8 +394,8 @@ export default function PublishModal({ isOpen, onClose, inventory, onPublished }
               }
             `}
           >
-            <Globe size={20} />
-            PUBLISH NOW
+            {testMode ? <ShieldCheck size={20} /> : <Globe size={20} />}
+            {testMode ? 'RUN TEST' : 'PUBLISH NOW'}
           </button>
 
           <p className="text-center text-gray-500 text-[10px] uppercase tracking-[0.1em]">

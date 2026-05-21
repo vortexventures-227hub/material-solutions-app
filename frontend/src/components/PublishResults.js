@@ -12,9 +12,12 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
   const [retryMessages, setRetryMessages] = useState({});
   const total = results?.results?.length || 0;
   const succeeded = results?.results?.filter(r => r.status === 'published').length || 0;
+  const dryRun = results?.dryRun === true || results?.testMode === true || results?.results?.some(r => r.dryRun === true);
+  const ready = results?.results?.filter(r => ['published', 'dry_run_ready', 'manual_required', 'not_implemented'].includes(r.status)).length || 0;
   const manual = results?.results?.filter(r => r.manualPasteRequired || r.status === 'not_implemented').length || 0;
   const failed = results?.results?.filter(r => r.status === 'error').length || 0;
-  const isFullyLive = total > 0 && succeeded === total;
+  const isDryRunClean = dryRun && failed === 0;
+  const isFullyLive = !dryRun && total > 0 && succeeded === total;
   const copyDraft = async (result) => {
     const draft = result.draft || result.localPublisher?.draft;
     if (!draft) return;
@@ -37,7 +40,11 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
     setRetryMessages((prev) => ({ ...prev, [platform]: '' }));
 
     try {
-      const res = await api.post(`/api/publish/${unit.id}/${platform}/retry`, { options: {} });
+      const res = await api.post(`/api/publish/${unit.id}/${platform}/retry`, {
+        options: {},
+        dryRun,
+        testMode: dryRun,
+      });
       const result = res.data?.results?.[0];
       setRetryMessages((prev) => ({
         ...prev,
@@ -67,20 +74,20 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center ${
-                isFullyLive ? 'bg-green-500/20 border-green-500' : 'bg-vortex-yellow/15 border-vortex-yellow/60'
+                isFullyLive || isDryRunClean ? 'bg-green-500/20 border-green-500' : 'bg-vortex-yellow/15 border-vortex-yellow/60'
               }`}>
-                {isFullyLive ? <Check size={24} className="text-green-400" /> : <AlertTriangle size={24} className="text-vortex-yellow" />}
+                {isFullyLive || isDryRunClean ? <Check size={24} className="text-green-400" /> : <AlertTriangle size={24} className="text-vortex-yellow" />}
               </div>
               <div>
                 <h2 className="font-display text-2xl text-vortex-yellow tracking-widest uppercase">
-                  {isFullyLive ? 'Distribution Recorded' : 'Distribution Staged'}
+                  {dryRun ? 'Test Complete' : isFullyLive ? 'Distribution Recorded' : 'Distribution Staged'}
                 </h2>
                 <p className="text-gray-400 text-xs mt-0.5">{unit.year} {unit.make} {unit.model}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="font-display text-3xl text-vortex-yellow leading-none">{succeeded}/{total}</p>
-              <p className="text-[10px] text-gray-500 font-display uppercase tracking-widest mt-1">Published</p>
+              <p className="font-display text-3xl text-vortex-yellow leading-none">{dryRun ? ready : succeeded}/{total}</p>
+              <p className="text-[10px] text-gray-500 font-display uppercase tracking-widest mt-1">{dryRun ? 'Ready' : 'Published'}</p>
             </div>
           </div>
 
@@ -110,7 +117,7 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                   key={i}
                   className={`
                     flex items-center justify-between p-4 rounded-xl border-2 transition-all
-                    ${result.status === 'published' 
+                    ${result.status === 'published' || result.status === 'dry_run_ready'
                       ? 'border-green-500/20 bg-vortex-black/40 hover:border-green-500/40' 
                       : result.manualPasteRequired || result.status === 'not_implemented'
                         ? 'border-vortex-yellow/30 bg-vortex-yellow/5'
@@ -120,25 +127,25 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      result.status === 'published'
+                      result.status === 'published' || result.status === 'dry_run_ready'
                         ? 'bg-green-500/10 text-green-400'
                         : result.manualPasteRequired || result.status === 'not_implemented'
                           ? 'bg-vortex-yellow/10 text-vortex-yellow'
                           : 'bg-red-500/10 text-red-400'
                     }`}>
-                      {result.status === 'published' ? <Check size={16} /> : <AlertTriangle size={14} />}
+                      {result.status === 'published' || result.status === 'dry_run_ready' ? <Check size={16} /> : <AlertTriangle size={14} />}
                     </div>
                     <div>
                       <p className="font-display text-white text-sm tracking-wide capitalize">{result.platform?.replace('_', ' ')}</p>
                       <p className={`text-[10px] font-bold uppercase tracking-widest mt-0.5 ${
-                        result.status === 'published'
+                        result.status === 'published' || result.status === 'dry_run_ready'
                           ? 'text-green-500/80'
                           : result.manualPasteRequired || result.status === 'not_implemented'
                             ? 'text-vortex-yellow'
                             : 'text-red-500'
                       }`}>
-                        {result.status === 'published'
-                          ? (result.mock ? 'Template Ready' : 'Live Now')
+                        {result.status === 'published' || result.status === 'dry_run_ready'
+                          ? (result.status === 'dry_run_ready' ? 'Ready' : result.mock ? 'Template Ready' : 'Live Now')
                           : result.manualPasteRequired || result.status === 'not_implemented'
                             ? (result.localPublisher?.status === 'dry_run_ready' ? 'Local Bridge Ready' : 'Manual Required')
                             : 'Failed'}
@@ -152,7 +159,7 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                     </div>
                   </div>
                   
-                  {result.status === 'published' && result.url && !result.mock ? (
+                  {(result.status === 'published' || result.status === 'dry_run_ready') && result.url && !result.mock ? (
                     <a 
                       href={result.url} 
                       target="_blank" 
@@ -180,7 +187,7 @@ export default function PublishResults({ results, unit, seoData, onClose }) {
                         disabled={retrying[result.platform]}
                         className="text-[10px] text-vortex-yellow border border-vortex-yellow/40 rounded px-2 py-1 font-bold uppercase tracking-widest disabled:opacity-50"
                       >
-                        {retrying[result.platform] ? 'Retrying' : 'Retry'}
+                        {retrying[result.platform] ? 'Checking' : dryRun ? 'Refresh' : 'Retry'}
                       </button>
                       <span className="text-[10px] text-vortex-yellow/80 font-mono pr-2">No live submit</span>
                     </div>
