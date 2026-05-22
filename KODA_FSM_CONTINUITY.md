@@ -18,7 +18,7 @@ Current workstream:
 5. Replace demo/fake operator telemetry with live or explicitly degraded data.
 
 Production verification gates:
-- `npm run check:fsm-pr-readiness` at the repo root is the merge/completion receipt. It checks source cleanliness, PR #20 draft/merge/review state, backend health, and the known admin UI/external publish approval gates without printing secrets. Use it on each wake before saying the work is merely blocked.
+- `npm run check:fsm-pr-readiness` at the repo root is the merge/completion receipt. It checks source cleanliness, PR #20 draft/merge/review/check state, backend health, and the known admin UI/external publish approval gates without printing secrets. Use it on each wake before saying the work is merely blocked.
 - `.github/workflows/fsm-pr-checks.yml` gives PR #20 GitHub status checks for backend tests, admin frontend build, and storefront build. The checks passed on commit `3ace0ec`; watch them after each push because the readiness receipt will surface their state through `gh pr view`.
 - `npm run smoke:fsm-live` at the repo root is the preferred one-command live gate. It checks backend `/health`, runs the admin deployment smoke, pulls production storefront env into a temp file, runs the full 11-channel Publish Button dry-run smoke, and asserts Facebook Marketplace, MachineryTrader, EquipFinder, MachineryATS, eBay, LinkedIn, Forkliftaction Forum, Google Business Profile, and YouTube-specific guarded draft fields.
 - `npm run smoke:admin-deploy` in `frontend` verifies the live admin app shell, deployed Publish Button Test Mode bundle markers, and current Publish Button fallback channel markers without requiring login.

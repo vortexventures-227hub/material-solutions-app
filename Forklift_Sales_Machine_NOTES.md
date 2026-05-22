@@ -260,3 +260,9 @@
   - Backend tests.
   - Admin frontend build.
   - Storefront build.
+
+## 2026-05-22 13:55 EDT
+- Hardened the repo-root PR readiness receipt so GitHub checks are part of the ready/merge calculation:
+  - Missing checks now block readiness.
+  - Pending, queued, in-progress, skipped, failed, cancelled, or unknown checks now block readiness.
+  - Only `SUCCESS` checks are treated as passing for the readiness receipt.

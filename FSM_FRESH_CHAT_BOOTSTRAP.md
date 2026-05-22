@@ -70,7 +70,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
 - Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed for 11 channels when run with production FSM auth env.
 - Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, 11-channel Publish Button dry-run checks, Facebook Marketplace-specific draft assertions, MachineryTrader vendor credential assertions, EquipFinder vendor/site readiness assertions, MachineryATS vendor/DNS readiness assertions, eBay OAuth/business-policy readiness assertions, LinkedIn Company Page readiness assertions, Forkliftaction Forum account/rules readiness assertions, Google Business Profile permission readiness assertions, and YouTube video/upload readiness assertions.
-- PR readiness receipt: `npm run check:fsm-pr-readiness` at repo root checks source cleanliness, PR #20 draft/merge/review state, backend health, and the remaining admin UI/external publish approval gates without printing secrets.
+- PR readiness receipt: `npm run check:fsm-pr-readiness` at repo root checks source cleanliness, PR #20 draft/merge/review/check state, backend health, and the remaining admin UI/external publish approval gates without printing secrets.
 - GitHub PR checks are now configured and passing in `.github/workflows/fsm-pr-checks.yml` for backend tests, admin frontend build, and storefront build on pull requests.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
 

@@ -44,6 +44,22 @@ function summarizeChecks(statusCheckRollup = []) {
   }).join(', ');
 }
 
+function getCheckState(check = {}) {
+  return String(check.conclusion || check.state || check.status || 'unknown').toUpperCase();
+}
+
+function findBlockingChecks(statusCheckRollup = []) {
+  if (!Array.isArray(statusCheckRollup) || statusCheckRollup.length === 0) {
+    return ['no GitHub status checks reported'];
+  }
+
+  return statusCheckRollup.flatMap((check) => {
+    const name = check.name || check.context || check.workflowName || check.__typename || 'unknown check';
+    const state = getCheckState(check);
+    return state === 'SUCCESS' ? [] : [`${name} is ${state}`];
+  });
+}
+
 function summarizeReviews(latestReviews = [], reviewDecision = '') {
   if (reviewDecision) return reviewDecision;
   if (!Array.isArray(latestReviews) || latestReviews.length === 0) return 'no reviews yet';
@@ -97,6 +113,9 @@ async function main() {
     if (pr.isDraft) blockers.push(`PR #${PR_NUMBER} is still draft`);
     if (pr.mergeable && pr.mergeable !== 'MERGEABLE') blockers.push(`PR #${PR_NUMBER} mergeable state is ${pr.mergeable}`);
     if (!pr.reviewDecision) blockers.push(`PR #${PR_NUMBER} has no review decision yet`);
+    for (const checkBlocker of findBlockingChecks(pr.statusCheckRollup)) {
+      blockers.push(`PR #${PR_NUMBER} check not ready: ${checkBlocker}`);
+    }
   }
 
   let health = null;
