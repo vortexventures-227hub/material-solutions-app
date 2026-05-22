@@ -311,3 +311,7 @@
 - Added machine-readable readiness output:
   - `npm --silent run check:fsm-pr-readiness:json` emits the same source, deploy, PR, admin, storefront, blocker, and approval state as parseable JSON.
   - Future heartbeats can parse exact blockers instead of relying on vague status prose.
+- Expanded the JSON receipt with `nextAction` and classified blocker groups:
+  - `agent_action_required` for source/deploy/agent-fixable gates.
+  - `wait_for_ci` for pending GitHub checks.
+  - `needs_human_input` when only review/session/approval gates remain.

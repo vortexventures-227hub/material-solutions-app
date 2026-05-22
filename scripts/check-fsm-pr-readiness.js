@@ -131,6 +131,63 @@ function compactChecks(statusCheckRollup = []) {
   });
 }
 
+function classifyBlocker(blocker) {
+  const text = String(blocker || '').toLowerCase();
+  if (
+    text.includes('approved credential') ||
+    text.includes('approved target') ||
+    text.includes('no review decision') ||
+    text.includes('still draft')
+  ) {
+    return 'humanGates';
+  }
+  if (text.includes('check not ready')) {
+    return 'ciGates';
+  }
+  if (
+    text.includes('backend') ||
+    text.includes('admin deployment') ||
+    text.includes('storefront')
+  ) {
+    return 'deployGates';
+  }
+  if (
+    text.includes('working tree') ||
+    text.includes('local head') ||
+    text.includes('body is missing')
+  ) {
+    return 'sourceGates';
+  }
+  return 'agentGates';
+}
+
+function classifyBlockers(blockers = []) {
+  return blockers.reduce((groups, blocker) => {
+    const category = classifyBlocker(blocker);
+    groups[category].push(blocker);
+    return groups;
+  }, {
+    humanGates: [],
+    ciGates: [],
+    deployGates: [],
+    sourceGates: [],
+    agentGates: [],
+  });
+}
+
+function nextActionFor(classifiedBlockers) {
+  if (classifiedBlockers.agentGates.length || classifiedBlockers.sourceGates.length || classifiedBlockers.deployGates.length) {
+    return 'agent_action_required';
+  }
+  if (classifiedBlockers.ciGates.length) {
+    return 'wait_for_ci';
+  }
+  if (classifiedBlockers.humanGates.length) {
+    return 'needs_human_input';
+  }
+  return 'ready_to_mark_ready_or_merge';
+}
+
 async function backendHealth() {
   const response = await fetch(`${BACKEND_URL}/health`);
   const body = await response.json().catch(() => null);
@@ -350,6 +407,8 @@ async function main() {
 
   const readyToMerge = blockers.length === 0;
   const prMissingBodyMarkers = findMissingPrBodyMarkers(pr?.body);
+  const classifiedBlockers = classifyBlockers(blockers);
+  const nextAction = nextActionFor(classifiedBlockers);
   const receipt = {
     generatedAt,
     branch: branch.stdout || 'unknown',
@@ -396,6 +455,8 @@ async function main() {
     } : null,
     externalPublishApproved,
     readyToMerge,
+    nextAction,
+    classifiedBlockers,
     blockers,
     warnings,
   };
@@ -434,6 +495,7 @@ async function main() {
   console.log(`Admin UI verified: ${adminUiVerified ? 'yes' : 'no'}`);
   console.log(`External publish approved: ${externalPublishApproved ? 'yes' : 'no'}`);
   console.log(`Ready to mark PR ready/merge: ${readyToMerge ? 'YES' : 'NO'}`);
+  console.log(`Next action classification: ${nextAction}`);
 
   if (blockers.length) {
     console.log('Current blockers:');
