@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const { spawnSync } = require('node:child_process');
+const fs = require('node:fs');
 
 const BACKEND_URL = (
   process.env.FSM_BACKEND_URL ||
@@ -113,6 +114,31 @@ function findMissingPrBodyMarkers(body = '') {
   return REQUIRED_PR_BODY_MARKERS.filter((marker) => !String(body || '').includes(marker));
 }
 
+function bootstrapFreshness(head = '') {
+  const shortHead = String(head || '').slice(0, 7);
+  try {
+    const body = fs.readFileSync('FSM_FRESH_CHAT_BOOTSTRAP.md', 'utf8');
+    const requiredMarkers = [
+      'Current verified head source of truth: `npm run check:fsm-pr-readiness`',
+      'Current JSON readiness source of truth: `npm --silent run check:fsm-pr-readiness:json`',
+      'nextAction: needs_human_input',
+      'no source/deploy/CI/agent gates',
+    ];
+    const missingMarkers = requiredMarkers.filter((marker) => !body.includes(marker));
+    return {
+      ok: missingMarkers.length === 0,
+      shortHead,
+      missingMarkers,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      shortHead,
+      missingMarkers: [`FSM_FRESH_CHAT_BOOTSTRAP.md unreadable: ${error.message}`],
+    };
+  }
+}
+
 function summarizeReviews(latestReviews = [], reviewDecision = '') {
   if (reviewDecision) return reviewDecision;
   if (!Array.isArray(latestReviews) || latestReviews.length === 0) return 'no reviews yet';
@@ -155,7 +181,8 @@ function classifyBlocker(blocker) {
   if (
     text.includes('working tree') ||
     text.includes('local head') ||
-    text.includes('body is missing')
+    text.includes('body is missing') ||
+    text.includes('bootstrap')
   ) {
     return 'sourceGates';
   }
@@ -310,6 +337,11 @@ async function main() {
     blockers.push(`local HEAD ${head.stdout.slice(0, 7)} is not equal to upstream ${upstreamHead.stdout.slice(0, 7)}`);
   }
 
+  const bootstrap = bootstrapFreshness(head.stdout);
+  if (!bootstrap.ok) {
+    blockers.push(`FSM bootstrap freshness markers are missing for ${bootstrap.shortHead}: ${bootstrap.missingMarkers.join(', ')}`);
+  }
+
   let pr = null;
   const prResult = commandOk('gh', [
     'pr',
@@ -416,6 +448,11 @@ async function main() {
     head: head.stdout || 'unknown',
     upstream: upstream.stdout || 'none',
     workingTree: status.stdout ? 'DIRTY' : 'clean',
+    bootstrap: {
+      currentHeadMarkersOk: bootstrap.ok,
+      expectedShortHead: bootstrap.shortHead,
+      missingMarkers: bootstrap.missingMarkers,
+    },
     backend: {
       healthOk: Boolean(health?.ok),
       healthStatus: health?.status || null,
@@ -476,6 +513,7 @@ async function main() {
   console.log(`HEAD: ${head.stdout || 'unknown'}`);
   console.log(`Upstream: ${upstream.stdout || 'none'}`);
   console.log(`Working tree: ${status.stdout ? 'DIRTY' : 'clean'}`);
+  console.log(`Bootstrap current head markers: ${bootstrap.ok ? 'OK' : 'not OK'}`);
   console.log(`Backend health: ${health?.ok ? `OK (${health.body?.responseTime || 'healthy'}, DB ${health.body?.database})` : 'not OK'}`);
   console.log(`Backend unauthenticated Publish Button catalog: ${backendPublishAuth?.ok ? 'OK (401 protected)' : 'not OK'}`);
   console.log(`Admin deployment shell: ${adminHealth?.ok ? 'OK' : 'not OK'}`);

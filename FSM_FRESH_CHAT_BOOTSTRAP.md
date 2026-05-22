@@ -62,7 +62,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Draft PR is open:
   - `https://github.com/vortexventures-227hub/material-solutions-app/pull/20`
   - Branch: `codex/fsm-inventory-intake-media-20260429`
-  - Current verified head: `7bd9d59`
+  - Current verified head source of truth: `npm run check:fsm-pr-readiness`
   - PR body includes `npm run smoke:admin-session` as the protected admin verification gate.
 
 ## Local Verification Already Passed
@@ -75,7 +75,8 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, 11-channel Publish Button dry-run checks, Facebook Marketplace-specific draft assertions, MachineryTrader vendor credential assertions, EquipFinder vendor/site readiness assertions, MachineryATS vendor/DNS readiness assertions, eBay OAuth/business-policy readiness assertions, LinkedIn Company Page readiness assertions, Forkliftaction Forum account/rules readiness assertions, Google Business Profile permission readiness assertions, and YouTube video/upload readiness assertions.
 - PR readiness receipt: `npm run check:fsm-pr-readiness` at repo root checks source cleanliness, PR #20 draft/merge/review/check state, PR body current-state markers, backend health, backend unauthenticated Publish Button catalog protection, admin deployment shell reachability, admin Publish Button bundle/fallback markers, storefront inventory bridge health, storefront unauthenticated Publish Button POST protection, and the remaining admin UI/external publish approval gates without printing secrets.
 - Machine-readable readiness receipt: `npm --silent run check:fsm-pr-readiness:json` emits the same gate state as JSON, including `nextAction` and classified blocker groups, for heartbeats and future automation.
-- Current JSON readiness at `7bd9d59`: `nextAction: needs_human_input`, PR body markers OK, no source/deploy/CI/agent gates.
+- Current JSON readiness source of truth: `npm --silent run check:fsm-pr-readiness:json`.
+- Current expected readiness classification: `nextAction: needs_human_input`, PR body markers OK, no source/deploy/CI/agent gates.
 - The readiness receipt requires the named PR checks `Backend tests`, `Admin frontend build`, and `Storefront build`; missing required checks block readiness even if other checks are green.
 - GitHub PR checks are now configured and passing in `.github/workflows/fsm-pr-checks.yml` for backend tests, admin frontend build, and storefront build on pull requests.
 - Naming sweep found no active "Push Button" leaks in source paths checked.

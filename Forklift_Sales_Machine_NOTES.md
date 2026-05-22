@@ -334,3 +334,7 @@
   - `nextAction: needs_human_input`
   - PR body markers OK
   - no source/deploy/CI/agent gates
+- Added a bootstrap freshness gate to `npm run check:fsm-pr-readiness`:
+  - Requires `FSM_FRESH_CHAT_BOOTSTRAP.md` to point to the readiness receipts as the source of truth for current HEAD/state.
+  - Requires the bootstrap to carry the current JSON readiness classification.
+  - Classifies stale bootstrap state as a source gate so future wakes fix it instead of repeating stale context.
