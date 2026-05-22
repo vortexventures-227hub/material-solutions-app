@@ -368,3 +368,7 @@
 ## 2026-05-22 16:51 EDT
 - Tightened PR body and bootstrap freshness markers to require `gateActions`.
 - This keeps reviewer-facing and fresh-chat context aligned with the structured actionability fields in the readiness receipt.
+
+## 2026-05-22 16:55 EDT
+- Added `scripts/assert-fsm-readiness-contract.js` and wired it into `npm run check:fsm-scripts`.
+- The script statically asserts the expected `gateActions` IDs, Chris/Koda ownership branches, and agent-actionable readiness messages without requiring live credentials or deploy checks in CI.

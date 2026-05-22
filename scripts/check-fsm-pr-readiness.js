@@ -35,6 +35,7 @@ const REQUIRED_PR_BODY_MARKERS = [
   'Storefront unauthenticated Publish Button POST',
   'FSM script checks',
   'npm run check:fsm-scripts',
+  'assert-fsm-readiness-contract',
   'npm run smoke:admin-session',
   'gateActions',
   'Remaining Gates',
@@ -211,6 +212,7 @@ function bootstrapFreshness(head = '') {
       'no source/deploy/CI/agent gates',
       'FSM script checks',
       'npm run check:fsm-scripts',
+      'assert-fsm-readiness-contract',
       'gateActions',
     ];
     const missingMarkers = requiredMarkers.filter((marker) => !body.includes(marker));

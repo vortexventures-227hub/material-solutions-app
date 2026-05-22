@@ -78,7 +78,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Current JSON readiness source of truth: `npm --silent run check:fsm-pr-readiness:json`.
 - Current expected readiness classification: `nextAction: needs_human_input`, PR body markers OK, no source/deploy/CI/agent gates.
 - Current structured gateActions: `pr_draft`, `pr_review`, `admin_session_smoke`, and `external_publish_target`.
-- FSM script checks: `npm run check:fsm-scripts` at repo root syntax-checks the FSM readiness/admin-session/live-smoke scripts.
+- FSM script checks: `npm run check:fsm-scripts` at repo root syntax-checks the FSM readiness/admin-session/live-smoke scripts and runs `scripts/assert-fsm-readiness-contract.js`.
 - The readiness receipt requires the named PR checks `FSM script checks`, `Backend tests`, `Admin frontend build`, and `Storefront build`; missing required checks block readiness even if other checks are green.
 - GitHub PR checks are now configured and passing in `.github/workflows/fsm-pr-checks.yml` for FSM script checks, backend tests, admin frontend build, and storefront build on pull requests.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
