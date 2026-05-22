@@ -327,3 +327,10 @@
 - Current local run correctly stops at the missing-auth gate because no approved admin credential/session env is present.
 - Updated PR #20 body to list `npm run smoke:admin-session` as the protected admin verification gate.
 - Added `npm run smoke:admin-session` to the PR-body freshness markers so the readiness receipt catches stale PR descriptions if that gate disappears from review context.
+
+## 2026-05-22 16:20 EDT
+- Refreshed `FSM_FRESH_CHAT_BOOTSTRAP.md` to record current verified PR head `7bd9d59`.
+- Added the current JSON readiness classification to the bootstrap:
+  - `nextAction: needs_human_input`
+  - PR body markers OK
+  - no source/deploy/CI/agent gates
