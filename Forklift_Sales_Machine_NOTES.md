@@ -356,3 +356,7 @@
 ## 2026-05-22 16:41 EDT
 - Tightened the PR body freshness markers to require both `FSM script checks` and `npm run check:fsm-scripts`.
 - This makes stale PR descriptions block readiness if the script-safety gate falls out of reviewer-facing verification notes.
+
+## 2026-05-22 16:44 EDT
+- Tightened the bootstrap freshness markers to require both `FSM script checks` and `npm run check:fsm-scripts`.
+- This makes stale fresh-chat bootstrap context block readiness if it omits the current script-safety gate.

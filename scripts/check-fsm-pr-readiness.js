@@ -150,6 +150,8 @@ function bootstrapFreshness(head = '') {
       'Current JSON readiness source of truth: `npm --silent run check:fsm-pr-readiness:json`',
       'nextAction: needs_human_input',
       'no source/deploy/CI/agent gates',
+      'FSM script checks',
+      'npm run check:fsm-scripts',
     ];
     const missingMarkers = requiredMarkers.filter((marker) => !body.includes(marker));
     return {
