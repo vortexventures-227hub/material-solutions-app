@@ -8,6 +8,7 @@
     "start": "next start",
     "check:fsm-env": "node scripts/check-fsm-env.js",
     "smoke:fsm-bridge": "node scripts/smoke-fsm-bridge.js",
+    "smoke:fsm-dry-run": "node scripts/smoke-fsm-dry-run.js",
     "lint": "next lint"
   },
   "dependencies": {
