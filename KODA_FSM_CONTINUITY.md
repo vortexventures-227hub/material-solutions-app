@@ -24,6 +24,7 @@ Production verification gates:
 - Required named checks for readiness are `Backend tests`, `Admin frontend build`, and `Storefront build`; if one disappears from PR metadata, readiness is blocked even if the remaining checks are green.
 - `npm run smoke:fsm-live` at the repo root is the preferred one-command live gate. It checks backend `/health`, runs the admin deployment smoke, pulls production storefront env into a temp file, runs the full 11-channel Publish Button dry-run smoke, and asserts Facebook Marketplace, MachineryTrader, EquipFinder, MachineryATS, eBay, LinkedIn, Forkliftaction Forum, Google Business Profile, and YouTube-specific guarded draft fields.
 - `npm run smoke:admin-deploy` in `frontend` verifies the live admin app shell, deployed Publish Button Test Mode bundle markers, and current Publish Button fallback channel markers without requiring login.
+- `npm run smoke:admin-session` at the repo root verifies the live admin shell plus protected admin user, Dashboard Publish Button metrics, Settings Publish Button channel catalog, and Inventory Publish Button payload preview once approved admin auth is available.
 - `npm run check:fsm-env` in `materialsolutionsnj` confirms required local env exists without printing secrets.
 - `npm run smoke:fsm-bridge` in `materialsolutionsnj` logs into FSM, fetches one listed unit, and verifies read-only Publish Button payload readiness without publishing.
 

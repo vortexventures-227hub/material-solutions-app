@@ -67,6 +67,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Backend tests: `npm test -- --runInBand` in `backend` passed 47/47.
 - Admin frontend build: `npm run build` in `frontend` passed.
 - Admin deploy smoke: `npm run smoke:admin-deploy` in `frontend` passed against `https://frontend-one-tawny-63.vercel.app` and now asserts current Publish Button fallback channel markers.
+- Admin protected-session smoke: `npm run smoke:admin-session` at repo root is available for the remaining admin UI/session gate. It checks the live admin shell plus authenticated admin user, Dashboard Publish Button metrics, Settings Publish Button channel catalog, and Inventory Publish Button payload preview when approved admin auth is provided via `FSM_ADMIN_ACCESS_TOKEN`/`FSM_BACKEND_TOKEN`/`FSM_SERVICE_JWT` or `FSM_ADMIN_EMAIL` plus `FSM_ADMIN_PASSWORD`.
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
 - Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed for 11 channels when run with production FSM auth env.
 - Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, 11-channel Publish Button dry-run checks, Facebook Marketplace-specific draft assertions, MachineryTrader vendor credential assertions, EquipFinder vendor/site readiness assertions, MachineryATS vendor/DNS readiness assertions, eBay OAuth/business-policy readiness assertions, LinkedIn Company Page readiness assertions, Forkliftaction Forum account/rules readiness assertions, Google Business Profile permission readiness assertions, and YouTube video/upload readiness assertions.
@@ -159,6 +160,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
    - Dashboard Publish Button card.
    - Settings Publish Button Channels.
    - Inventory Publish Modal payload preview.
+   - Run `npm run smoke:admin-session` once approved admin auth is available.
    - Requires approved admin credential/session.
 5. Decide the next marketplace target:
    - Recommended: keep MaterialSolutionsNJ automatic as the canonical green path; implement one external channel at a time behind manual/guarded mode.

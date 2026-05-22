@@ -8,6 +8,7 @@
     "test": "npm --prefix backend test",
     "check:fsm-pr-readiness": "node scripts/check-fsm-pr-readiness.js",
     "check:fsm-pr-readiness:json": "node scripts/check-fsm-pr-readiness.js --json",
+    "smoke:admin-session": "node scripts/smoke-admin-session.js",
     "smoke:fsm-live": "node scripts/smoke-fsm-live.js",
     "railway:build": "npm ci --prefix backend --omit=dev"
   },

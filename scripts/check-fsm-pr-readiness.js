@@ -399,7 +399,7 @@ async function main() {
   const externalPublishApproved = boolEnv('FSM_EXTERNAL_PUBLISH_APPROVED');
 
   if (!adminUiVerified) {
-    blockers.push('full admin UI login/render verification still needs an approved credential/session');
+    blockers.push('full admin UI login/render verification still needs an approved credential/session; run npm run smoke:admin-session with approved admin auth, then set FSM_ADMIN_UI_VERIFIED=1');
   }
   if (!externalPublishApproved) {
     blockers.push('external marketplace publishing still needs Chris-approved target/platform/account');

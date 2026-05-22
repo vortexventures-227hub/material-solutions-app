@@ -315,3 +315,13 @@
   - `agent_action_required` for source/deploy/agent-fixable gates.
   - `wait_for_ci` for pending GitHub checks.
   - `needs_human_input` when only review/session/approval gates remain.
+
+## 2026-05-22 16:10 EDT
+- Added `npm run smoke:admin-session` as the executable admin UI/session gate:
+  - Verifies the live admin shell.
+  - Verifies authenticated admin identity through `/api/auth/me`.
+  - Verifies Dashboard Publish Button metrics through `/api/dashboard/kpis`.
+  - Verifies Settings Publish Button channel catalog through `/api/publish/platforms`.
+  - Verifies Inventory Publish Button payload preview through `/api/publish/:inventoryId/payload`.
+- The command accepts approved auth through `FSM_ADMIN_ACCESS_TOKEN`, `FSM_BACKEND_TOKEN`, `FSM_SERVICE_JWT`, or `FSM_ADMIN_EMAIL` plus `FSM_ADMIN_PASSWORD`; it prints no secrets.
+- Current local run correctly stops at the missing-auth gate because no approved admin credential/session env is present.
