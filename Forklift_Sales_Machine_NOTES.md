@@ -360,3 +360,7 @@
 ## 2026-05-22 16:44 EDT
 - Tightened the bootstrap freshness markers to require both `FSM script checks` and `npm run check:fsm-scripts`.
 - This makes stale fresh-chat bootstrap context block readiness if it omits the current script-safety gate.
+
+## 2026-05-22 16:47 EDT
+- Added structured `gateActions` to the human and JSON PR readiness receipts.
+- Each remaining gate now carries an owner, action, and verification command so heartbeats can distinguish Chris-owned approval/credential gates from Koda-owned executable gates.

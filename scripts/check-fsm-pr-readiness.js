@@ -102,6 +102,64 @@ function externalPublishTargetAvailable() {
   );
 }
 
+function buildGateActions({
+  pr,
+  adminUiVerified,
+  hasAdminAuth,
+  externalPublishApproved,
+  hasExternalPublishTarget,
+} = {}) {
+  const actions = [];
+
+  if (pr?.isDraft) {
+    actions.push({
+      gate: 'pr_draft',
+      owner: 'Chris/reviewer',
+      action: `Approve marking PR #${PR_NUMBER} ready for review or merge.`,
+      verification: `gh pr ready ${PR_NUMBER}`,
+    });
+  }
+
+  if (!pr?.reviewDecision) {
+    actions.push({
+      gate: 'pr_review',
+      owner: 'Chris/reviewer',
+      action: `Review and approve PR #${PR_NUMBER}.`,
+      verification: `gh pr view ${PR_NUMBER} --json reviewDecision`,
+    });
+  }
+
+  if (!adminUiVerified) {
+    actions.push(hasAdminAuth ? {
+      gate: 'admin_session_smoke',
+      owner: 'Koda',
+      action: 'Run npm run smoke:admin-session with the approved admin auth already present, then set FSM_ADMIN_UI_VERIFIED=1 for the readiness pass if it succeeds.',
+      verification: 'npm run smoke:admin-session',
+    } : {
+      gate: 'admin_session_smoke',
+      owner: 'Chris',
+      action: 'Provide approved admin auth via FSM_ADMIN_ACCESS_TOKEN, FSM_BACKEND_TOKEN, FSM_SERVICE_JWT, or FSM_ADMIN_EMAIL plus FSM_ADMIN_PASSWORD.',
+      verification: 'npm run smoke:admin-session',
+    });
+  }
+
+  if (!externalPublishApproved) {
+    actions.push(hasExternalPublishTarget ? {
+      gate: 'external_publish_target',
+      owner: 'Koda',
+      action: 'Run guarded dry-run verification for FSM_EXTERNAL_PUBLISH_PLATFORM before any live external publish.',
+      verification: 'FSM_EXTERNAL_PUBLISH_APPROVED=1 readiness pass after dry-run verification',
+    } : {
+      gate: 'external_publish_target',
+      owner: 'Chris',
+      action: 'Provide Chris-approved external publish platform, account, and target approval before any live external publish.',
+      verification: 'FSM_EXTERNAL_PUBLISH_PLATFORM plus FSM_EXTERNAL_PUBLISH_ACCOUNT plus FSM_EXTERNAL_PUBLISH_TARGET_APPROVED=1',
+    });
+  }
+
+  return actions;
+}
+
 function summarizeChecks(statusCheckRollup = []) {
   if (!Array.isArray(statusCheckRollup) || statusCheckRollup.length === 0) {
     return 'no GitHub status checks reported';
@@ -487,6 +545,13 @@ async function main() {
   const prMissingBodyMarkers = findMissingPrBodyMarkers(pr?.body);
   const classifiedBlockers = classifyBlockers(blockers);
   const nextAction = nextActionFor(classifiedBlockers);
+  const gateActions = buildGateActions({
+    pr,
+    adminUiVerified,
+    hasAdminAuth,
+    externalPublishApproved,
+    hasExternalPublishTarget,
+  });
   const receipt = {
     generatedAt,
     branch: branch.stdout || 'unknown',
@@ -546,6 +611,7 @@ async function main() {
     externalPublishApproved,
     readyToMerge,
     nextAction,
+    gateActions,
     classifiedBlockers,
     blockers,
     warnings,
@@ -594,6 +660,13 @@ async function main() {
     console.log('Current blockers:');
     for (const blocker of blockers) {
       console.log(`- ${blocker}`);
+    }
+  }
+
+  if (gateActions.length) {
+    console.log('Gate actions:');
+    for (const item of gateActions) {
+      console.log(`- ${item.gate} (${item.owner}): ${item.action}`);
     }
   }
 
