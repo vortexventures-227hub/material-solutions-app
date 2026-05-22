@@ -209,3 +209,16 @@
   - Status: `SUCCESS`
 - Backend tests now pass 46/46.
 - `npm run smoke:fsm-live` passed and now asserts the MachineryATS vendor/DNS readiness draft shape in production.
+
+## 2026-05-22 09:54 EDT
+- Added YouTube guarded video/upload readiness fields based on official YouTube Data API upload docs:
+  - Chris-approved YouTube channel manager and channel ID readiness.
+  - Video asset requirement with accepted MIME types, max file-size reminder, and buyer-safe walkaround checklist.
+  - OAuth readiness for `https://www.googleapis.com/auth/youtube.upload`.
+  - Metadata, category, privacy status, made-for-kids, quota, and API audit/private-upload guardrails.
+  - CLI hints: `--youtube-account`, `--youtube-channel-id`, `--video-asset-url`, `--video-title`, `--video-tags`, `--youtube-category-id`, `--privacy-status`, and `--self-declared-made-for-kids`.
+- Deployed backend to Railway production:
+  - Deployment ID: `431ed673-46a5-4a9b-a534-f63ecedb5f95`
+  - Status: `SUCCESS`
+- Backend tests now pass 47/47.
+- `npm run smoke:fsm-live` passed and now asserts the YouTube video/upload readiness draft shape in production.

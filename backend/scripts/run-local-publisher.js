@@ -60,6 +60,14 @@ async function main() {
     googleAccount: args.googleAccount,
     googleBusinessAccountId: args.googleBusinessAccountId,
     googleLocationId: args.googleLocationId,
+    youtubeAccount: args.youtubeAccount,
+    youtubeChannelId: args.youtubeChannelId,
+    videoAssetUrl: args.videoAssetUrl,
+    videoTitle: args.videoTitle,
+    videoTags: args.videoTags ? args.videoTags.split(',').map((tag) => tag.trim()).filter(Boolean) : null,
+    youtubeCategoryId: args.youtubeCategoryId,
+    privacyStatus: args.privacyStatus,
+    selfDeclaredMadeForKids: args.selfDeclaredMadeForKids,
     postType: args.postType,
     topicType: args.topicType,
     callToAction: args.callToAction,
@@ -124,6 +132,14 @@ function parseArgs(argv) {
     googleAccount: null,
     googleBusinessAccountId: null,
     googleLocationId: null,
+    youtubeAccount: null,
+    youtubeChannelId: null,
+    videoAssetUrl: null,
+    videoTitle: null,
+    videoTags: null,
+    youtubeCategoryId: null,
+    privacyStatus: null,
+    selfDeclaredMadeForKids: false,
     postType: null,
     topicType: null,
     callToAction: null,
@@ -221,6 +237,22 @@ function parseArgs(argv) {
         parsed.googleBusinessAccountId = next;
       } else if (key === 'google-location-id') {
         parsed.googleLocationId = next;
+      } else if (key === 'youtube-account') {
+        parsed.youtubeAccount = next;
+      } else if (key === 'youtube-channel-id') {
+        parsed.youtubeChannelId = next;
+      } else if (key === 'video-asset-url') {
+        parsed.videoAssetUrl = next;
+      } else if (key === 'video-title') {
+        parsed.videoTitle = next;
+      } else if (key === 'video-tags') {
+        parsed.videoTags = next;
+      } else if (key === 'youtube-category-id') {
+        parsed.youtubeCategoryId = next;
+      } else if (key === 'privacy-status') {
+        parsed.privacyStatus = next;
+      } else if (key === 'self-declared-made-for-kids') {
+        parsed.selfDeclaredMadeForKids = next === 'true';
       } else if (key === 'post-type') {
         parsed.postType = next;
       } else if (key === 'topic-type') {
@@ -312,6 +344,14 @@ Options:
   --google-account text       Chris-approved Google Business Profile owner/manager label
   --google-business-account-id text  Google Business Profile account id readiness hint
   --google-location-id text   Google Business Profile location id readiness hint
+  --youtube-account text      Chris-approved YouTube channel manager label
+  --youtube-channel-id text   YouTube channel id readiness hint
+  --video-asset-url text      Walkaround video asset URL or file reference
+  --video-title text          YouTube video title override
+  --video-tags text           Comma-separated YouTube tag list
+  --youtube-category-id text  YouTube video category id. Default: 2
+  --privacy-status text       YouTube privacy status. Default: unlisted
+  --self-declared-made-for-kids true|false  YouTube made-for-kids declaration. Default: false
   --post-type text            Google Business Profile post type hint. Default: call_to_action
   --topic-type text           Google Business Profile LocalPost topic type hint. Default: STANDARD
   --call-to-action text       Google Business Profile CTA hint. Default: LEARN_MORE

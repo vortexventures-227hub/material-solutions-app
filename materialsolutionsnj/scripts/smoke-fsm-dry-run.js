@@ -91,6 +91,7 @@ async function main() {
   const linkedIn = results.find((result) => result.platform === 'linkedin');
   const forkliftactionForum = results.find((result) => result.platform === 'forkliftaction_forum');
   const googleBusinessProfile = results.find((result) => result.platform === 'google_business_profile');
+  const youTube = results.find((result) => result.platform === 'youtube');
   const mutated = results.filter((result) => result.mutationPerformed !== false);
   const missing = EXPECTED_CHANNELS.filter((platform) => !results.some((result) => result.platform === platform));
   const manualResults = results.filter((result) => result.platform !== 'materialsolutionsnj');
@@ -168,6 +169,14 @@ async function main() {
     googleBusinessProfile.draft.fields.googleBusinessProfile.productPostUnsupported !== true
   ) {
     throw new Error('Google Business Profile dry-run did not include guarded permission readiness fields');
+  }
+  if (
+    youTube?.draft?.target?.videoAssetRequired !== true ||
+    youTube?.draft?.target?.channelApprovalRequired !== true ||
+    !youTube?.draft?.fields?.youtube?.oauthReadiness?.requiredScopes?.includes('https://www.googleapis.com/auth/youtube.upload') ||
+    youTube.draft.fields.youtube.quotaReadiness?.videosInsertCostUnits !== 100
+  ) {
+    throw new Error('YouTube dry-run did not include guarded video/upload readiness fields');
   }
   if (unguardedManual.length) {
     throw new Error(`Manual dry-run guardrails missing for: ${unguardedManual.map((result) => result.platform).join(', ')}`);

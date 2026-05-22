@@ -37,7 +37,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - Environment: `production`
   - Service: `vortex-forklift-api`
 - Backend production deployment succeeded.
-  - Deployment ID: `7ac74783-3c36-45e7-9fb6-c5167254bf4a`
+  - Deployment ID: `431ed673-46a5-4a9b-a534-f63ecedb5f95`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with database connected.
 - Backend includes the Publish Button `dryRun`/`testMode` guard.
@@ -57,17 +57,18 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - LinkedIn dry-run includes Company Page admin approval, organization URN, Marketing Developer Platform access, organization social posting scope readiness, and no-personal-profile guardrails.
   - Forkliftaction Forum dry-run includes member account approval, forum profile/rules review, category selection, commercial intent review, and Machine Listing/Business Listing/advertising path guardrails.
   - Google Business Profile dry-run includes owner/manager approval, `business.manage` OAuth readiness, accountId/locationId, Local Post, CTA, and no-Product-Posts API guardrails.
+  - YouTube dry-run includes channel manager approval, OAuth upload scope, video asset readiness, metadata, privacy, made-for-kids, quota, and API audit/private-upload guardrails.
 - Draft PR is open:
   - `https://github.com/vortexventures-227hub/material-solutions-app/pull/20`
   - Branch: `codex/fsm-inventory-intake-media-20260429`
 
 ## Local Verification Already Passed
-- Backend tests: `npm test -- --runInBand` in `backend` passed 46/46.
+- Backend tests: `npm test -- --runInBand` in `backend` passed 47/47.
 - Admin frontend build: `npm run build` in `frontend` passed.
 - Admin deploy smoke: `npm run smoke:admin-deploy` in `frontend` passed against `https://frontend-one-tawny-63.vercel.app`.
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
 - Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed for 11 channels when run with production FSM auth env.
-- Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, 11-channel Publish Button dry-run checks, Facebook Marketplace-specific draft assertions, MachineryTrader vendor credential assertions, EquipFinder vendor/site readiness assertions, MachineryATS vendor/DNS readiness assertions, eBay OAuth/business-policy readiness assertions, LinkedIn Company Page readiness assertions, Forkliftaction Forum account/rules readiness assertions, and Google Business Profile permission readiness assertions.
+- Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, 11-channel Publish Button dry-run checks, Facebook Marketplace-specific draft assertions, MachineryTrader vendor credential assertions, EquipFinder vendor/site readiness assertions, MachineryATS vendor/DNS readiness assertions, eBay OAuth/business-policy readiness assertions, LinkedIn Company Page readiness assertions, Forkliftaction Forum account/rules readiness assertions, Google Business Profile permission readiness assertions, and YouTube video/upload readiness assertions.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
 
 ## Important Local Files Changed
@@ -121,6 +122,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - LinkedIn guarded draft now has Company Page admin approval, organization URN, Marketing Developer Platform access, organization social posting scope readiness, destination URL, and no-personal-profile guardrails.
 - Forkliftaction Forum guarded draft now has member account approval, forum profile/rules review, category selection, commercial intent review, and Machine Listing/Business Listing/advertising path guardrails.
 - Google Business Profile guarded draft now has owner/manager approval, `business.manage` OAuth readiness, accountId/locationId, Local Post, CTA, language, media, and Product Posts unsupported guardrail fields.
+- YouTube guarded draft now has channel manager approval, OAuth upload scope, video asset readiness, metadata, privacy status, made-for-kids, quota, and API audit/private-upload guardrails.
 
 ## What Is Not Complete Yet
 - True automatic posting to third-party marketplaces is not complete.
@@ -131,7 +133,6 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - LinkedIn
   - Google Business Profile
   - Forkliftaction Forum
-  - YouTube
 - End-to-end write-path verification from admin UI through live backend should continue, but use caution: do read-only checks first and do not publish externally without Chris-approved test target/platform.
 - Full admin UI login/render verification is blocked until Chris provides an approved admin credential or an authenticated browser session.
 - Draft PR #20 still needs review/approval before marking ready or merging.
@@ -150,8 +151,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
    - Requires approved admin credential/session.
 4. Decide the next marketplace target:
    - Recommended: keep MaterialSolutionsNJ automatic as the canonical green path; implement one external channel at a time behind manual/guarded mode.
-5. Continue channel integrations in priority order:
-   - YouTube video asset/upload readiness.
+5. Continue external channel work only after Chris approves a real target account/platform. Current safe manual readiness coverage is complete for the listed 11 Publish Button channels.
 
 ## Current Operational Rule
 Do not treat a progress update as a stopping point. After any update, continue the next highest-impact item unless blocked by missing credentials, destructive risk, or explicit Chris instruction.

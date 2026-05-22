@@ -124,6 +124,20 @@ function buildPlatformTarget(platform, options = {}) {
     };
   }
 
+  if (platform === 'youtube') {
+    return {
+      ...target,
+      approvedAccountRequired: true,
+      oauthRequired: true,
+      videoAssetRequired: true,
+      channelApprovalRequired: true,
+      accountLabel: options.accountLabel || options.youtubeAccount || 'Chris-approved YouTube channel manager only',
+      channelId: options.youtubeChannelId || options.channelId || null,
+      apiResource: 'youtube.videos.insert',
+      uploadUrl: 'https://www.googleapis.com/upload/youtube/v3/videos',
+    };
+  }
+
   return target;
 }
 
@@ -411,6 +425,76 @@ function buildPlatformFields(platform, payload, specs, baseFields, options = {})
     };
   }
 
+  if (platform === 'youtube') {
+    const tags = (options.videoTags || options.tags || [
+      specs.make,
+      specs.model,
+      specs.powerType,
+      'forklift',
+      'Material Solutions NJ',
+    ]).filter(Boolean);
+
+    return {
+      ...baseFields,
+      youtube: {
+        postType: options.postType || 'inventory_walkaround_video',
+        destinationUrl: baseFields.listingUrl,
+        channelId: options.youtubeChannelId || options.channelId || null,
+        videoAssetReadiness: {
+          required: true,
+          sourceVideoUrl: options.videoAssetUrl || options.videoUrl || null,
+          acceptedMimeTypes: [
+            'video/*',
+            'application/octet-stream',
+          ],
+          maxFileSize: '256GB',
+          requiredChecks: [
+            'Attach or generate a buyer-safe walkaround video before upload',
+            'Confirm the video shows the exact inventory unit and does not expose private yard/customer details',
+            'Confirm title, description, tags, thumbnail, and listing URL match the inventory record',
+            'Confirm captions or transcript are available when practical',
+          ],
+        },
+        metadata: {
+          title: clamp(options.videoTitle || baseFields.title, 100),
+          description: [
+            baseFields.body,
+            '',
+            `Full listing: ${baseFields.listingUrl}`,
+          ].join('\n'),
+          tags,
+          categoryId: options.youtubeCategoryId || options.categoryId || '2',
+          privacyStatus: options.privacyStatus || 'unlisted',
+          selfDeclaredMadeForKids: options.selfDeclaredMadeForKids === true,
+        },
+        oauthReadiness: {
+          required: true,
+          requiredScopes: [
+            'https://www.googleapis.com/auth/youtube.upload',
+          ],
+          compatibilityScopes: [
+            'https://www.googleapis.com/auth/youtube',
+          ],
+          requiredCredentials: [
+            'YOUTUBE_CLIENT_ID',
+            'YOUTUBE_CLIENT_SECRET',
+            'YOUTUBE_REFRESH_TOKEN or approved OAuth consent flow',
+          ],
+        },
+        quotaReadiness: {
+          required: true,
+          videosInsertCostUnits: 100,
+          auditNote: 'Official docs note uploads from unverified API projects created after 2020-07-28 are restricted to private viewing until API compliance audit is complete',
+        },
+        sellerDisclosure: [
+          'Do not call YouTube upload APIs until Chris approves the channel, OAuth consent, video asset, privacy status, and made-for-kids setting',
+          'Default to unlisted/manual review for inventory videos unless Chris approves public posting',
+          'Use public MaterialSolutionsNJ inventory URL as the source of truth in the video description',
+        ],
+      },
+    };
+  }
+
   return baseFields;
 }
 
@@ -512,6 +596,14 @@ function buildManualPlatformDraft(platform, job, options = {}) {
       'Confirm the target Google Business Profile owner/manager account and location are approved by Chris',
       'Confirm OAuth consent grants business.manage before any Business Profile API call',
       'Use a Local Post with LEARN_MORE to the inventory URL; do not attempt API Product Posts',
+    );
+  }
+
+  if (platform === 'youtube') {
+    reviewChecklist.push(
+      'Confirm the target YouTube channel and manager account are approved by Chris',
+      'Attach or generate a buyer-safe inventory walkaround video before upload',
+      'Confirm OAuth upload scope, quota/audit status, privacy status, made-for-kids setting, and metadata before any API call',
     );
   }
 

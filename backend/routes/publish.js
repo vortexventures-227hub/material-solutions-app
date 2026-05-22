@@ -429,8 +429,8 @@ const PLATFORM_CATALOG = [
     available: false,
     status: 'manual_required',
     mode: 'guarded_manual_draft',
-    completion: 45,
-    nextStep: 'Generate or attach inventory walkaround video before upload.',
+    completion: 62,
+    nextStep: 'Confirm channel manager approval, OAuth upload scope, video asset, metadata, privacy, made-for-kids setting, and quota/audit status before upload.',
   },
 ];
 

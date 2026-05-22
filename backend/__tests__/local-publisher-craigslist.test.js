@@ -307,6 +307,40 @@ test('local publisher CLI emits Google Business Profile permission readiness fie
   assert.match(receipt.draft.reviewChecklist.join('\n'), /business\.manage/);
 });
 
+test('local publisher CLI emits YouTube video upload readiness fields without mutation', async () => {
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
+  const receipt = await execNodeJson(scriptPath, [
+    '--platform', 'youtube',
+    '--youtube-account', 'Approved MSNJ YouTube manager',
+    '--youtube-channel-id', 'UC123456',
+    '--video-asset-url', 'https://www.materialsolutionsnj.com/videos/unit-walkaround.mp4',
+    '--youtube-category-id', '2',
+    '--privacy-status', 'unlisted',
+    '--self-declared-made-for-kids', 'false',
+  ], samplePayload);
+
+  assert.equal(receipt.platform, 'youtube');
+  assert.equal(receipt.status, 'manual_draft_ready');
+  assert.equal(receipt.browser.mutationPerformed, false);
+  assert.equal(receipt.draft.target.oauthRequired, true);
+  assert.equal(receipt.draft.target.videoAssetRequired, true);
+  assert.equal(receipt.draft.target.channelApprovalRequired, true);
+  assert.equal(receipt.draft.target.accountLabel, 'Approved MSNJ YouTube manager');
+  assert.equal(receipt.draft.target.channelId, 'UC123456');
+  assert.equal(receipt.draft.fields.youtube.channelId, 'UC123456');
+  assert.equal(receipt.draft.fields.youtube.videoAssetReadiness.sourceVideoUrl, 'https://www.materialsolutionsnj.com/videos/unit-walkaround.mp4');
+  assert.ok(receipt.draft.fields.youtube.videoAssetReadiness.acceptedMimeTypes.includes('video/*'));
+  assert.equal(receipt.draft.fields.youtube.metadata.categoryId, '2');
+  assert.equal(receipt.draft.fields.youtube.metadata.privacyStatus, 'unlisted');
+  assert.equal(receipt.draft.fields.youtube.metadata.selfDeclaredMadeForKids, false);
+  assert.deepEqual(receipt.draft.fields.youtube.oauthReadiness.requiredScopes, [
+    'https://www.googleapis.com/auth/youtube.upload',
+  ]);
+  assert.equal(receipt.draft.fields.youtube.quotaReadiness.videosInsertCostUnits, 100);
+  assert.match(receipt.draft.fields.youtube.sellerDisclosure.join('\n'), /made-for-kids/);
+  assert.match(receipt.draft.reviewChecklist.join('\n'), /walkaround video/);
+});
+
 function execNodeJson(scriptPath, args, input) {
   return new Promise((resolve, reject) => {
     const child = execFile(
