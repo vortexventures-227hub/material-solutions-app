@@ -31,3 +31,36 @@
 - Chris flagged this chat is too large for mobile use and needs a fresh-chat continuation without losing context.
 - Created `FSM_FRESH_CHAT_BOOTSTRAP.md` at the project root as the one-file bootstrap anchor for a new chat.
 - Fresh chat instruction: choose folder `/Users/vortexventures/Desktop/Vortex Ventures/VVAxeOps/material-solutions-app`, then ask Koda to read `FSM_FRESH_CHAT_BOOTSTRAP.md` first and continue the highest-impact unfinished Forklift Sales Machine item.
+
+## 2026-05-21 21:33 EDT
+- Source preservation is complete on branch `codex/fsm-inventory-intake-media-20260429`.
+- Draft PR opened: https://github.com/vortexventures-227hub/material-solutions-app/pull/20
+- New commits after the fresh-chat bootstrap:
+  - `d8a4c1a` preserve Forklift Sales Machine Publish Button bridge source.
+  - `88fcd88` stop tracking generated storefront `.next` output.
+  - `6f39c52` add explicit Publish Button `dryRun`/`testMode` guard.
+  - `f895081` ignore `materialsolutionsnj/node_modules`.
+  - `6808e38` add `.railwayignore` so Railway backend deploys upload only the API surface.
+- Backend deployed to Railway production:
+  - Deployment ID: `03624fb6-0568-423b-bcfe-cf824689fb47`
+  - Status: `SUCCESS`
+  - `/health` returns HTTP 200 with DB connected.
+- Admin frontend deployed to Vercel production:
+  - Deployment: `https://frontend-mjgt8rhx5-vortexventures-227hubs-projects.vercel.app`
+  - Alias: `https://frontend-one-tawny-63.vercel.app`
+  - Bundle contains `Test Mode`, `RUN TEST`, `dryRun`, and `testMode`.
+- Storefront deployed to Vercel production:
+  - Deployment: `https://materialsolutionsnj-l7lllls1p-vortexventures-227hubs-projects.vercel.app`
+  - Alias: `https://www.materialsolutionsnj.com`
+- Verified live behavior:
+  - Storefront `/api/inventory?limit=1` returns HTTP 200, `degraded:false`, total 6.
+  - Storefront `/api/publish/<inventoryId>/payload` returns HTTP 200 and `complete:true`.
+  - Storefront unauthenticated Publish Button POST returns HTTP 403, so public write-path remains blocked.
+  - Authenticated backend `dryRun` POST for `materialsolutionsnj` + `facebook_marketplace` returns `dryRun:true`, `testMode:true`, `materialsolutionsnj:dry_run_ready`, `facebook_marketplace:manual_required`, and `mutationPerformed:false`.
+- Tests/builds:
+  - Backend tests pass 38/38.
+  - Admin frontend build passes.
+  - Storefront build passes.
+- Remaining real blocker:
+  - Full live admin UI login/render verification needs an approved admin credential or existing authenticated browser session.
+  - No external marketplace auto-posting should be attempted without a Chris-approved test target/platform.
