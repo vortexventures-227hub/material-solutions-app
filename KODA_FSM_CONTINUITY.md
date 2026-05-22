@@ -26,6 +26,5 @@ Current production auth finding:
 - Production backend deployment `77bfe922-2fe9-4588-9869-edc9cdfe4108` is live on Railway and includes the Publish Button `dryRun`/`testMode` guard plus expanded guarded manual draft channels.
 - Production admin deployment `frontend-mjgt8rhx5-vortexventures-227hubs-projects.vercel.app` is aliased at `https://frontend-one-tawny-63.vercel.app` and includes `Test Mode` / `RUN TEST` UI.
 - Production storefront deployment `materialsolutionsnj-l7lllls1p-vortexventures-227hubs-projects.vercel.app` is aliased at `https://www.materialsolutionsnj.com`.
-- Authenticated live backend dry-run smoke verified selected `materialsolutionsnj` and `facebook_marketplace` channels without mutation.
-- Authenticated live backend dry-run smoke verified `google_business_profile` returns `manual_required`, `mutationPerformed:false`, `submitDisabled:true`, and Chris-approval guardrails.
+- Authenticated live backend dry-run smoke verifies all 10 Publish Button channels: `materialsolutionsnj` is `dry_run_ready`; the 9 manual channels are `manual_required`, `mutationPerformed:false`, `submitDisabled:true`, and include Chris-approval guardrails.
 - Full admin UI login/render verification remains blocked until an approved admin credential or authenticated browser session is available.

@@ -83,5 +83,6 @@
   - YouTube
 - Manual draft receipts include `submitDisabled:true`, `mutationPerformed:false`, no-submit guardrails, and a Chris-approval review checklist.
 - Live authenticated smoke:
-  - Standard `npm run smoke:fsm-dry-run` still passes.
-  - Direct `google_business_profile` dry-run returns `manual_required`, `mutationPerformed:false`, `submitDisabled:true`, and the Chris-approval guardrail.
+  - `npm run smoke:fsm-dry-run` verifies all 10 Publish Button channels against production.
+  - `materialsolutionsnj` returns `dry_run_ready`.
+  - The 9 manual channels return `manual_required`, `mutationPerformed:false`, `submitDisabled:true`, and the Chris-approval guardrail.

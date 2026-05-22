@@ -9,6 +9,19 @@ const backendUrl = (
   'https://vortex-forklift-api-production.up.railway.app'
 ).trim().replace(/\\n/g, '').replace(/\/+$/, '');
 
+const EXPECTED_CHANNELS = [
+  'materialsolutionsnj',
+  'facebook_marketplace',
+  'machinerytrader',
+  'equipfinder',
+  'machineryats',
+  'ebay',
+  'linkedin',
+  'google_business_profile',
+  'forkliftaction_forum',
+  'youtube',
+];
+
 async function request(path, options = {}) {
   const response = await fetch(`${backendUrl}${path}`, {
     ...options,
@@ -60,7 +73,7 @@ async function main() {
     method: 'POST',
     headers: auth,
     body: JSON.stringify({
-      platforms: ['materialsolutionsnj', 'facebook_marketplace'],
+      platforms: EXPECTED_CHANNELS,
       options: {},
       dryRun: true,
       testMode: true,
@@ -69,17 +82,28 @@ async function main() {
 
   const results = Array.isArray(dryRun?.results) ? dryRun.results : [];
   const materialSolutions = results.find((result) => result.platform === 'materialsolutionsnj');
-  const facebook = results.find((result) => result.platform === 'facebook_marketplace');
   const mutated = results.filter((result) => result.mutationPerformed !== false);
+  const missing = EXPECTED_CHANNELS.filter((platform) => !results.some((result) => result.platform === platform));
+  const manualResults = results.filter((result) => result.platform !== 'materialsolutionsnj');
+  const unguardedManual = manualResults.filter((result) => (
+    result.status !== 'manual_required' ||
+    result.manualPasteRequired !== true ||
+    result.draft?.target?.submitDisabled !== true ||
+    !Array.isArray(result.draft?.reviewChecklist) ||
+    !result.draft.reviewChecklist.some((item) => item.includes('Chris approves'))
+  ));
 
   if (dryRun?.dryRun !== true || dryRun?.testMode !== true) {
     throw new Error('Publish Button dry-run response did not preserve dryRun/testMode flags');
   }
+  if (missing.length) {
+    throw new Error(`Publish Button dry-run omitted expected channels: ${missing.join(', ')}`);
+  }
   if (materialSolutions?.status !== 'dry_run_ready') {
     throw new Error('MaterialSolutionsNJ dry-run did not return dry_run_ready');
   }
-  if (facebook?.status !== 'manual_required' || facebook?.manualPasteRequired !== true) {
-    throw new Error('Facebook Marketplace dry-run did not return guarded manual_required status');
+  if (unguardedManual.length) {
+    throw new Error(`Manual dry-run guardrails missing for: ${unguardedManual.map((result) => result.platform).join(', ')}`);
   }
   if (mutated.length) {
     throw new Error(`Dry-run reported mutation risk on: ${mutated.map((result) => result.platform).join(', ')}`);
@@ -90,6 +114,7 @@ async function main() {
   console.log(`Auth: OK (${authSource})`);
   console.log(`Unit: ${[unit.year, unit.make, unit.model].filter(Boolean).join(' ') || unit.id}`);
   console.log(`Dry run: OK (${results.length} channels checked, no external mutation)`);
+  console.log(`Manual guardrails: OK (${manualResults.length} manual channels require review)`);
   console.log(`Statuses: ${results.map((result) => `${result.platform}:${result.status}`).join(', ')}`);
 }
 

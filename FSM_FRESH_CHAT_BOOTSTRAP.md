@@ -44,14 +44,11 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Authenticated read-only smoke verified:
   - `/api/publish/platforms` returns 11 Publish Button channels.
   - `/api/publish/<inventoryId>/payload` returns HTTP 200.
-- Authenticated dry-run smoke verified:
+- Authenticated full-channel dry-run smoke verified:
   - `materialsolutionsnj` returns `dry_run_ready`.
-  - `facebook_marketplace` returns `manual_required`.
+  - Facebook Marketplace, MachineryTrader, EquipFinder, MachineryATS, eBay Business, LinkedIn, Google Business Profile, Forkliftaction Forum, and YouTube return `manual_required`.
   - `mutationPerformed:false` for checked channels.
-- Authenticated Google Business Profile dry-run verified:
-  - `google_business_profile` returns `manual_required`.
-  - `mutationPerformed:false`.
-  - Draft target includes `submitDisabled:true` and Chris-approval guardrail.
+  - Manual draft targets include `submitDisabled:true` and Chris-approval guardrails.
 - Draft PR is open:
   - `https://github.com/vortexventures-227hub/material-solutions-app/pull/20`
   - Branch: `codex/fsm-inventory-intake-media-20260429`
@@ -61,7 +58,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Admin frontend build: `npm run build` in `frontend` passed.
 - Admin deploy smoke: `npm run smoke:admin-deploy` in `frontend` passed against `https://frontend-one-tawny-63.vercel.app`.
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
-- Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed when run with production FSM auth env.
+- Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed for 10 channels when run with production FSM auth env.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
 
 ## Important Local Files Changed
