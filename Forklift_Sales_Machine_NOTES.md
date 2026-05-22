@@ -256,7 +256,7 @@
 - First CI run exposed two source-of-truth issues and both were fixed:
   - Backend test glob now uses a bash-portable one-level pattern.
   - Admin frontend lockfile now includes Tailwind's optional `yaml@2.9.0` peer entry so `npm ci` can run cleanly.
-- PR #20 checks passed on commit `3ace0ec`:
+- PR #20 checks passed after the workflow fixes:
   - Backend tests.
   - Admin frontend build.
   - Storefront build.
@@ -266,3 +266,4 @@
   - Missing checks now block readiness.
   - Pending, queued, in-progress, skipped, failed, cancelled, or unknown checks now block readiness.
   - Only `SUCCESS` checks are treated as passing for the readiness receipt.
+- Verified the hardened receipt blocks while fresh checks are queued and clears the check blockers after all three PR checks pass.
