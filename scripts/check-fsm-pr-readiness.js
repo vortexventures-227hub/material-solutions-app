@@ -22,6 +22,7 @@ const PR_NUMBER = process.env.FSM_PR_NUMBER || '20';
 const STRICT = process.argv.includes('--strict');
 const JSON_OUTPUT = process.argv.includes('--json');
 const REQUIRED_PR_CHECKS = [
+  'FSM script checks',
   'Backend tests',
   'Admin frontend build',
   'Storefront build',

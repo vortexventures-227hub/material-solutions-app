@@ -347,3 +347,8 @@
   - Requires `FSM_EXTERNAL_PUBLISH_PLATFORM`, `FSM_EXTERNAL_PUBLISH_ACCOUNT`, and `FSM_EXTERNAL_PUBLISH_TARGET_APPROVED=1` or `FSM_CHRIS_APPROVED_EXTERNAL_TARGET=1`.
   - If those are present but `FSM_EXTERNAL_PUBLISH_APPROVED` is not set, readiness classifies the external publish gate as `agentGates` for guarded dry-run verification.
   - If no approved target env is present, readiness keeps the external publish gate classified as `humanGates`.
+
+## 2026-05-22 16:38 EDT
+- Added `npm run check:fsm-scripts` at repo root to syntax-check the FSM readiness, protected admin session smoke, and aggregate live smoke scripts.
+- Added a named GitHub PR check, `FSM script checks`, to `.github/workflows/fsm-pr-checks.yml`.
+- Expanded the repo-root PR readiness receipt to require `FSM script checks` alongside backend tests, admin frontend build, and storefront build so heartbeat-control script regressions block PR readiness.

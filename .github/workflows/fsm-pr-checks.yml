@@ -10,6 +10,21 @@ permissions:
   contents: read
 
 jobs:
+  fsm-script-checks:
+    name: FSM script checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Check FSM scripts
+        run: npm run check:fsm-scripts
+
   backend-tests:
     name: Backend tests
     runs-on: ubuntu-latest
