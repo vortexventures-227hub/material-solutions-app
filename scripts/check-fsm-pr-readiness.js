@@ -75,6 +75,19 @@ function boolEnv(name) {
   return ['1', 'true', 'yes', 'y'].includes(String(process.env[name] || '').trim().toLowerCase());
 }
 
+function adminAuthAvailable() {
+  const hasToken = Boolean(
+    process.env.FSM_ADMIN_ACCESS_TOKEN ||
+    process.env.FSM_BACKEND_TOKEN ||
+    process.env.FSM_SERVICE_JWT
+  );
+  const hasLogin = Boolean(
+    (process.env.FSM_ADMIN_EMAIL || process.env.FSM_BACKEND_EMAIL) &&
+    (process.env.FSM_ADMIN_PASSWORD || process.env.FSM_BACKEND_PASSWORD)
+  );
+  return hasToken || hasLogin;
+}
+
 function summarizeChecks(statusCheckRollup = []) {
   if (!Array.isArray(statusCheckRollup) || statusCheckRollup.length === 0) {
     return 'no GitHub status checks reported';
@@ -160,6 +173,9 @@ function compactChecks(statusCheckRollup = []) {
 
 function classifyBlocker(blocker) {
   const text = String(blocker || '').toLowerCase();
+  if (text.includes('approved admin auth appears available')) {
+    return 'agentGates';
+  }
   if (
     text.includes('approved credential') ||
     text.includes('approved target') ||
@@ -429,10 +445,15 @@ async function main() {
   }
 
   const adminUiVerified = boolEnv('FSM_ADMIN_UI_VERIFIED') || boolEnv('FSM_ADMIN_UI_SESSION_READY');
+  const hasAdminAuth = adminAuthAvailable();
   const externalPublishApproved = boolEnv('FSM_EXTERNAL_PUBLISH_APPROVED');
 
   if (!adminUiVerified) {
-    blockers.push('full admin UI login/render verification still needs an approved credential/session; run npm run smoke:admin-session with approved admin auth, then set FSM_ADMIN_UI_VERIFIED=1');
+    if (hasAdminAuth) {
+      blockers.push('approved admin auth appears available; run npm run smoke:admin-session and then set FSM_ADMIN_UI_VERIFIED=1 for the readiness pass');
+    } else {
+      blockers.push('full admin UI login/render verification still needs an approved credential/session; run npm run smoke:admin-session with approved admin auth, then set FSM_ADMIN_UI_VERIFIED=1');
+    }
   }
   if (!externalPublishApproved) {
     blockers.push('external marketplace publishing still needs Chris-approved target/platform/account');
@@ -467,6 +488,7 @@ async function main() {
       bundleMarkersOk: Boolean(adminBundle?.ok),
       bundleCount: adminBundle?.bundleCount || 0,
       missingBundleMarkers: adminBundle?.missingMarkers || [],
+      authAvailable: hasAdminAuth,
       uiVerified: adminUiVerified,
     },
     storefront: {
@@ -532,6 +554,7 @@ async function main() {
   }
 
   console.log(`Admin UI verified: ${adminUiVerified ? 'yes' : 'no'}`);
+  console.log(`Admin auth available: ${hasAdminAuth ? 'yes' : 'no'}`);
   console.log(`External publish approved: ${externalPublishApproved ? 'yes' : 'no'}`);
   console.log(`Ready to mark PR ready/merge: ${readyToMerge ? 'YES' : 'NO'}`);
   console.log(`Next action classification: ${nextAction}`);

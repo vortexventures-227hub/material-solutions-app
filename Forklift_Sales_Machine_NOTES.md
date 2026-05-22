@@ -338,3 +338,8 @@
   - Requires `FSM_FRESH_CHAT_BOOTSTRAP.md` to point to the readiness receipts as the source of truth for current HEAD/state.
   - Requires the bootstrap to carry the current JSON readiness classification.
   - Classifies stale bootstrap state as a source gate so future wakes fix it instead of repeating stale context.
+
+## 2026-05-22 16:26 EDT
+- Expanded the readiness receipt to detect whether approved admin auth appears available from env.
+- If admin auth appears available but `FSM_ADMIN_UI_VERIFIED` is not set, readiness now classifies the admin-session gate as `agentGates` so a heartbeat runs `npm run smoke:admin-session` instead of reporting a human gate.
+- If no admin auth env is present, readiness keeps the gate classified as `humanGates`.
