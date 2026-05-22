@@ -24,6 +24,22 @@ const REQUIRED_PR_CHECKS = [
   'Admin frontend build',
   'Storefront build',
 ];
+const REQUIRED_ADMIN_BUNDLE_MARKERS = [
+  'Publish Button',
+  'Test Mode',
+  'RUN TEST',
+  'Publish Test Running',
+  'dryRun',
+  'testMode',
+  'https://vortex-forklift-api-production.up.railway.app',
+];
+const REQUIRED_ADMIN_FALLBACK_MARKERS = [
+  'manual_required',
+  'Confirm EquipFinder vendor/contact path',
+  'Confirm current MachineryATS domain/portal',
+  'Confirm approved Forkliftaction member account',
+  'Confirm channel manager approval',
+];
 
 function run(command, args, options = {}) {
   return spawnSync(command, args, {
@@ -104,6 +120,38 @@ async function adminDeployHealth() {
   return {
     ok: response.ok && body.includes('<div id="root"></div>'),
     status: response.status,
+  };
+}
+
+async function fetchAdminText(path) {
+  const response = await fetch(`${ADMIN_URL}${path}`);
+  const body = await response.text().catch(() => '');
+  if (!response.ok) {
+    throw new Error(`${path} failed with HTTP ${response.status}`);
+  }
+  return body;
+}
+
+async function adminBundleHealth() {
+  const manifest = JSON.parse(await fetchAdminText('/asset-manifest.json'));
+  const jsPaths = Object.values(manifest.files || {})
+    .filter((path) => typeof path === 'string' && path.startsWith('/static/js/') && path.endsWith('.js'));
+  if (!jsPaths.length) {
+    return {
+      ok: false,
+      bundleCount: 0,
+      missingMarkers: ['JavaScript bundles'],
+    };
+  }
+
+  const bundleText = (await Promise.all(jsPaths.map((path) => fetchAdminText(path)))).join('\n');
+  const missingMarkers = REQUIRED_ADMIN_BUNDLE_MARKERS
+    .concat(REQUIRED_ADMIN_FALLBACK_MARKERS)
+    .filter((marker) => !bundleText.includes(marker));
+  return {
+    ok: missingMarkers.length === 0,
+    bundleCount: jsPaths.length,
+    missingMarkers,
   };
 }
 
@@ -192,6 +240,7 @@ async function main() {
 
   let health = null;
   let adminHealth = null;
+  let adminBundle = null;
   let storefrontHealth = null;
   let storefrontPublishAuth = null;
   try {
@@ -210,6 +259,15 @@ async function main() {
     }
   } catch (error) {
     blockers.push(`admin deployment shell request failed: ${error.message}`);
+  }
+
+  try {
+    adminBundle = await adminBundleHealth();
+    if (!adminBundle.ok) {
+      blockers.push(`admin deployment bundle is missing markers: ${adminBundle.missingMarkers.join(', ')}`);
+    }
+  } catch (error) {
+    blockers.push(`admin deployment bundle marker request failed: ${error.message}`);
   }
 
   try {
@@ -250,6 +308,7 @@ async function main() {
   console.log(`Working tree: ${status.stdout ? 'DIRTY' : 'clean'}`);
   console.log(`Backend health: ${health?.ok ? `OK (${health.body?.responseTime || 'healthy'}, DB ${health.body?.database})` : 'not OK'}`);
   console.log(`Admin deployment shell: ${adminHealth?.ok ? 'OK' : 'not OK'}`);
+  console.log(`Admin deployment bundle markers: ${adminBundle?.ok ? `OK (${adminBundle.bundleCount} bundles checked)` : 'not OK'}`);
   console.log(`Storefront inventory bridge: ${storefrontHealth?.ok ? `OK (${storefrontHealth.itemCount}/${storefrontHealth.total} checked, degraded:${storefrontHealth.degraded})` : 'not OK'}`);
   console.log(`Storefront unauthenticated Publish Button POST: ${storefrontPublishAuth?.ok ? 'OK (403 blocked)' : 'not OK'}`);
 

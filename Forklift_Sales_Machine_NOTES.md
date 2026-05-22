@@ -287,3 +287,10 @@
   - `Admin frontend build`
   - `Storefront build`
 - This prevents PR readiness from staying green if the workflow is partially removed, renamed, skipped, or otherwise stops reporting one of the required coverage gates.
+
+## 2026-05-22 15:15 EDT
+- Expanded the repo-root PR readiness receipt to verify the live admin deployment bundle markers directly:
+  - Reads `/asset-manifest.json` from the admin alias.
+  - Fetches deployed JavaScript bundles.
+  - Requires Publish Button Test Mode markers, production backend URL, and current fallback channel markers.
+- This moves the admin deployment smoke's most important bundle checks into the merge/completion readiness receipt.
