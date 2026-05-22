@@ -29,6 +29,13 @@ async function main() {
     location: args.location,
     accountLabel: args.accountLabel,
     facebookAccount: args.facebookAccount,
+    dealerAccount: args.dealerAccount,
+    machineryTraderAccount: args.machineryTraderAccount,
+    dealerProgram: args.dealerProgram,
+    machineryTraderContactPhone: args.machineryTraderContactPhone,
+    portalUrl: args.portalUrl,
+    sourceSystem: args.sourceSystem,
+    listingType: args.listingType,
     ebayAccount: args.ebayAccount,
     ebayEnvironment: args.ebayEnvironment,
     listingFormat: args.listingFormat,
@@ -71,6 +78,13 @@ function parseArgs(argv) {
     location: null,
     accountLabel: null,
     facebookAccount: null,
+    dealerAccount: null,
+    machineryTraderAccount: null,
+    dealerProgram: null,
+    machineryTraderContactPhone: null,
+    portalUrl: null,
+    sourceSystem: null,
+    listingType: null,
     ebayAccount: null,
     ebayEnvironment: null,
     listingFormat: null,
@@ -115,6 +129,20 @@ function parseArgs(argv) {
         parsed.accountLabel = next;
       } else if (key === 'facebook-account') {
         parsed.facebookAccount = next;
+      } else if (key === 'dealer-account') {
+        parsed.dealerAccount = next;
+      } else if (key === 'machinerytrader-account') {
+        parsed.machineryTraderAccount = next;
+      } else if (key === 'dealer-program') {
+        parsed.dealerProgram = next;
+      } else if (key === 'machinerytrader-contact-phone') {
+        parsed.machineryTraderContactPhone = next;
+      } else if (key === 'portal-url') {
+        parsed.portalUrl = next;
+      } else if (key === 'source-system') {
+        parsed.sourceSystem = next;
+      } else if (key === 'listing-type') {
+        parsed.listingType = next;
       } else if (key === 'ebay-account') {
         parsed.ebayAccount = next;
       } else if (key === 'ebay-environment') {
@@ -193,6 +221,13 @@ Options:
   --location "New Jersey"     Manual draft location hint for Facebook Marketplace
   --category-hint text        Manual category hint for Facebook Marketplace
   --account-label text        Chris-approved target account/page label for Facebook Marketplace
+  --dealer-account text       Chris-approved dealer/vendor account label for MachineryTrader-style channels
+  --machinerytrader-account text  Chris-approved MachineryTrader dealer/advertiser account label
+  --dealer-program text       MachineryTrader dealer advertising program/package reminder
+  --machinerytrader-contact-phone text  MachineryTrader advertising contact phone reminder
+  --portal-url text           Dealer portal URL readiness hint
+  --source-system text        Inventory source system label for vendor feed readiness
+  --listing-type text         Vendor listing type hint. Default varies by platform
   --ebay-account text         Chris-approved eBay Business seller account label
   --ebay-environment text     eBay OAuth readiness environment. Default: production
   --listing-format text       eBay listing format hint. Default: fixed_price

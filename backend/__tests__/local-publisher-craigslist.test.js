@@ -163,6 +163,29 @@ test('local publisher CLI emits eBay OAuth readiness fields without mutation', a
   assert.match(receipt.draft.reviewChecklist.join('\n'), /eBay Business seller account/);
 });
 
+test('local publisher CLI emits MachineryTrader vendor credential readiness fields without mutation', async () => {
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
+  const receipt = await execNodeJson(scriptPath, [
+    '--platform', 'machinerytrader',
+    '--machinerytrader-account', 'Approved MSNJ MachineryTrader dealer',
+    '--dealer-program', 'Dealer Program Advertising',
+    '--category-hint', 'Forklifts',
+    '--source-system', 'FSM inventory feed',
+  ], samplePayload);
+
+  assert.equal(receipt.platform, 'machinerytrader');
+  assert.equal(receipt.status, 'manual_draft_ready');
+  assert.equal(receipt.browser.mutationPerformed, false);
+  assert.equal(receipt.draft.target.dealerPortalRequired, true);
+  assert.equal(receipt.draft.target.accountLabel, 'Approved MSNJ MachineryTrader dealer');
+  assert.equal(receipt.draft.target.dealerProgram, 'Dealer Program Advertising');
+  assert.equal(receipt.draft.fields.machineryTrader.categoryHint, 'Forklifts');
+  assert.equal(receipt.draft.fields.machineryTrader.advertisingProgramRequired, true);
+  assert.equal(receipt.draft.fields.machineryTrader.inventorySyncReadiness.sourceSystem, 'FSM inventory feed');
+  assert.match(receipt.draft.fields.machineryTrader.sellerDisclosure.join('\n'), /Dealer Portal/);
+  assert.match(receipt.draft.reviewChecklist.join('\n'), /Sandhills portal access/);
+});
+
 test('local publisher CLI emits Google Business Profile permission readiness fields without mutation', async () => {
   const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
   const receipt = await execNodeJson(scriptPath, [

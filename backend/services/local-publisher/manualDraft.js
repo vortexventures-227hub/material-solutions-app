@@ -41,6 +41,18 @@ function buildPlatformTarget(platform, options = {}) {
     };
   }
 
+  if (platform === 'machinerytrader') {
+    return {
+      ...target,
+      approvedAccountRequired: true,
+      dealerPortalRequired: true,
+      accountLabel: options.accountLabel || options.dealerAccount || options.machineryTraderAccount || 'Chris-approved MachineryTrader dealer/advertiser account only',
+      dealerProgram: options.dealerProgram || 'MachineryTrader / Sandhills dealer advertising program',
+      contactPhone: options.machineryTraderContactPhone || '(800) 247-4898',
+      portalUrl: options.portalUrl || 'https://www.sandhillscloud.com/',
+    };
+  }
+
   if (platform === 'ebay') {
     return {
       ...target,
@@ -117,6 +129,42 @@ function buildPlatformFields(platform, payload, specs, baseFields, options = {})
           'Confirm category, item specifics, and business policies in eBay Seller Hub before posting',
           'Do not call eBay Inventory/Offer APIs until Chris approves the seller account and OAuth scope set',
           'Use public MaterialSolutionsNJ inventory URL as the source of truth',
+        ],
+      },
+    };
+  }
+
+  if (platform === 'machinerytrader') {
+    return {
+      ...baseFields,
+      machineryTrader: {
+        listingType: options.listingType || 'dealer_inventory',
+        categoryHint: options.categoryHint || 'Forklifts',
+        advertisingProgramRequired: true,
+        dealerPortalRequired: true,
+        inventorySyncReadiness: {
+          required: true,
+          sourceSystem: options.sourceSystem || 'Forklift Sales Machine',
+          requiredVendorApproval: [
+            'MachineryTrader dealer/advertiser account',
+            'Sandhills dealer portal or approved inventory feed access',
+            'Chris-approved contact and billing owner',
+          ],
+        },
+        requiredSpecs: [
+          'make',
+          'model',
+          'year',
+          'hours',
+          'capacityLbs',
+          'mastType',
+          'liftHeightInches',
+          'powerType',
+        ],
+        sellerDisclosure: [
+          'Confirm MachineryTrader dealer/advertiser account and listing package before posting',
+          'Use the Dealer Portal or approved Sandhills inventory feed only after Chris approves credentials',
+          'Verify forklift category, location, price, photos, and contact details before any manual listing',
         ],
       },
     };
@@ -213,6 +261,14 @@ function buildManualPlatformDraft(platform, job, options = {}) {
       'Confirm the target eBay Business seller account is approved by Chris before opening Seller Hub',
       'Confirm eBay category, item specifics, payment, return, and fulfillment policies before any API or manual listing',
       'Treat OAuth credentials as missing until the approved seller account grants the required scopes',
+    );
+  }
+
+  if (platform === 'machinerytrader') {
+    reviewChecklist.push(
+      'Confirm the MachineryTrader dealer/advertiser account or Sandhills portal access is approved by Chris',
+      'Confirm forklift category, listing package, billing owner, contact phone, and inventory feed/manual posting path',
+      'Do not upload inventory or submit listings until vendor credentials and target package are approved',
     );
   }
 

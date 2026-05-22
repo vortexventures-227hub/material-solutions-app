@@ -84,6 +84,7 @@ async function main() {
   const results = Array.isArray(dryRun?.results) ? dryRun.results : [];
   const materialSolutions = results.find((result) => result.platform === 'materialsolutionsnj');
   const facebookMarketplace = results.find((result) => result.platform === 'facebook_marketplace');
+  const machineryTrader = results.find((result) => result.platform === 'machinerytrader');
   const ebay = results.find((result) => result.platform === 'ebay');
   const googleBusinessProfile = results.find((result) => result.platform === 'google_business_profile');
   const mutated = results.filter((result) => result.mutationPerformed !== false);
@@ -112,6 +113,13 @@ async function main() {
     !facebookMarketplace.draft.fields.marketplace.sellerDisclosure?.some((item) => item.includes('category fit'))
   ) {
     throw new Error('Facebook Marketplace dry-run did not include guarded marketplace draft fields');
+  }
+  if (
+    machineryTrader?.draft?.target?.dealerPortalRequired !== true ||
+    machineryTrader?.draft?.fields?.machineryTrader?.advertisingProgramRequired !== true ||
+    !machineryTrader.draft.fields.machineryTrader.sellerDisclosure?.some((item) => item.includes('Dealer Portal'))
+  ) {
+    throw new Error('MachineryTrader dry-run did not include guarded vendor credential readiness fields');
   }
   if (
     ebay?.draft?.target?.oauthRequired !== true ||

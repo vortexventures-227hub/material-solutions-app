@@ -366,8 +366,8 @@ const PLATFORM_CATALOG = [
     available: false,
     status: 'manual_required',
     mode: 'guarded_manual_draft',
-    completion: 60,
-    nextStep: 'Connect vendor posting credentials or keep operator-reviewed drafts.',
+    completion: 66,
+    nextStep: 'Confirm MachineryTrader dealer/advertiser account, Sandhills portal/feed access, package, billing owner, and forklift category before posting.',
   },
   {
     key: 'equipfinder',

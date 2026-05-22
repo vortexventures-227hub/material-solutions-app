@@ -70,7 +70,7 @@
   - Deployment ID: `77bfe922-2fe9-4588-9869-edc9cdfe4108`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with DB connected.
-- Backend tests are green: `npm test -- --runInBand` in `backend` passes 41/41.
+- Backend tests are green: `npm test -- --runInBand` in `backend` passes 42/42.
 - Local publisher manual drafts now support:
   - Facebook Marketplace
   - MachineryTrader
@@ -143,3 +143,16 @@
   - Status: `SUCCESS`
 - Backend tests now pass 41/41.
 - `npm run smoke:fsm-live` passed and now asserts the Google Business Profile permission readiness draft shape in production.
+
+## 2026-05-22 01:50 EDT
+- Added MachineryTrader guarded vendor credential readiness fields based on MachineryTrader's official advertising/dealer-program pages:
+  - Chris-approved dealer/advertiser account requirement.
+  - Sandhills Dealer Portal or approved inventory feed readiness.
+  - Dealer advertising program/package, billing/contact owner, and contact phone reminders.
+  - Forklift category and required equipment spec checklist.
+  - CLI hints: `--machinerytrader-account`, `--dealer-program`, `--machinerytrader-contact-phone`, `--portal-url`, `--source-system`, and `--listing-type`.
+- Deployed backend to Railway production:
+  - Deployment ID: `53fbc80e-8766-4bb3-b0ac-7729f9f785be`
+  - Status: `SUCCESS`
+- Backend tests now pass 42/42.
+- `npm run smoke:fsm-live` passed and now asserts the MachineryTrader vendor credential readiness draft shape in production.
