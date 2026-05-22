@@ -35,6 +35,13 @@ async function main() {
     paymentPolicy: args.paymentPolicy,
     returnPolicy: args.returnPolicy,
     fulfillmentPolicy: args.fulfillmentPolicy,
+    googleAccount: args.googleAccount,
+    googleBusinessAccountId: args.googleBusinessAccountId,
+    googleLocationId: args.googleLocationId,
+    postType: args.postType,
+    topicType: args.topicType,
+    callToAction: args.callToAction,
+    languageCode: args.languageCode,
   };
 
   if (args.platform === 'craigslist') {
@@ -70,6 +77,13 @@ function parseArgs(argv) {
     paymentPolicy: null,
     returnPolicy: null,
     fulfillmentPolicy: null,
+    googleAccount: null,
+    googleBusinessAccountId: null,
+    googleLocationId: null,
+    postType: null,
+    topicType: null,
+    callToAction: null,
+    languageCode: null,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -113,6 +127,20 @@ function parseArgs(argv) {
         parsed.returnPolicy = next;
       } else if (key === 'fulfillment-policy') {
         parsed.fulfillmentPolicy = next;
+      } else if (key === 'google-account') {
+        parsed.googleAccount = next;
+      } else if (key === 'google-business-account-id') {
+        parsed.googleBusinessAccountId = next;
+      } else if (key === 'google-location-id') {
+        parsed.googleLocationId = next;
+      } else if (key === 'post-type') {
+        parsed.postType = next;
+      } else if (key === 'topic-type') {
+        parsed.topicType = next;
+      } else if (key === 'call-to-action') {
+        parsed.callToAction = next;
+      } else if (key === 'language-code') {
+        parsed.languageCode = next;
       } else if (Object.prototype.hasOwnProperty.call(parsed, key)) {
         parsed[key] = next;
       } else {
@@ -171,6 +199,13 @@ Options:
   --payment-policy text       eBay payment policy reminder
   --return-policy text        eBay return policy reminder
   --fulfillment-policy text   eBay fulfillment/freight policy reminder
+  --google-account text       Chris-approved Google Business Profile owner/manager label
+  --google-business-account-id text  Google Business Profile account id readiness hint
+  --google-location-id text   Google Business Profile location id readiness hint
+  --post-type text            Google Business Profile post type hint. Default: call_to_action
+  --topic-type text           Google Business Profile LocalPost topic type hint. Default: STANDARD
+  --call-to-action text       Google Business Profile CTA hint. Default: LEARN_MORE
+  --language-code text        Google Business Profile language code. Default: en-US
   --contact-phone number      Phone number inserted into the listing body
 `);
 }

@@ -163,6 +163,33 @@ test('local publisher CLI emits eBay OAuth readiness fields without mutation', a
   assert.match(receipt.draft.reviewChecklist.join('\n'), /eBay Business seller account/);
 });
 
+test('local publisher CLI emits Google Business Profile permission readiness fields without mutation', async () => {
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
+  const receipt = await execNodeJson(scriptPath, [
+    '--platform', 'google_business_profile',
+    '--google-account', 'Approved MSNJ GBP owner',
+    '--google-business-account-id', 'accounts/123',
+    '--google-location-id', 'locations/456',
+    '--call-to-action', 'LEARN_MORE',
+  ], samplePayload);
+
+  assert.equal(receipt.platform, 'google_business_profile');
+  assert.equal(receipt.status, 'manual_draft_ready');
+  assert.equal(receipt.browser.mutationPerformed, false);
+  assert.equal(receipt.draft.target.oauthRequired, true);
+  assert.equal(receipt.draft.target.accountLabel, 'Approved MSNJ GBP owner');
+  assert.equal(receipt.draft.target.accountId, 'accounts/123');
+  assert.equal(receipt.draft.target.locationId, 'locations/456');
+  assert.equal(receipt.draft.target.apiResource, 'accounts.locations.localPosts');
+  assert.equal(receipt.draft.fields.googleBusinessProfile.callToAction, 'LEARN_MORE');
+  assert.equal(receipt.draft.fields.googleBusinessProfile.productPostUnsupported, true);
+  assert.deepEqual(receipt.draft.fields.googleBusinessProfile.oauthReadiness.requiredScopes, [
+    'https://www.googleapis.com/auth/business.manage',
+  ]);
+  assert.match(receipt.draft.fields.googleBusinessProfile.sellerDisclosure.join('\n'), /Product Posts cannot be created/);
+  assert.match(receipt.draft.reviewChecklist.join('\n'), /business\.manage/);
+});
+
 function execNodeJson(scriptPath, args, input) {
   return new Promise((resolve, reject) => {
     const child = execFile(

@@ -70,7 +70,7 @@
   - Deployment ID: `77bfe922-2fe9-4588-9869-edc9cdfe4108`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with DB connected.
-- Backend tests are green: `npm test -- --runInBand` in `backend` passes 40/40.
+- Backend tests are green: `npm test -- --runInBand` in `backend` passes 41/41.
 - Local publisher manual drafts now support:
   - Facebook Marketplace
   - MachineryTrader
@@ -129,3 +129,17 @@
   - Status: `SUCCESS`
 - Backend tests now pass 40/40.
 - `npm run smoke:fsm-live` passed and now asserts the eBay OAuth/business-policy readiness draft shape in production.
+
+## 2026-05-22 01:30 EDT
+- Added Google Business Profile guarded permission readiness fields based on official Google Business Profile API docs:
+  - Chris-approved owner/manager account requirement.
+  - OAuth readiness with required scope `https://www.googleapis.com/auth/business.manage`.
+  - Account/location ID readiness for `accounts.locations.localPosts`.
+  - Local Post / `LEARN_MORE` CTA draft fields pointing to the inventory URL.
+  - Product Posts unsupported guardrail for the API path.
+  - CLI hints: `--google-account`, `--google-business-account-id`, `--google-location-id`, `--post-type`, `--topic-type`, `--call-to-action`, and `--language-code`.
+- Deployed backend to Railway production:
+  - Deployment ID: `430e4501-5249-413a-bc0a-0404bef499df`
+  - Status: `SUCCESS`
+- Backend tests now pass 41/41.
+- `npm run smoke:fsm-live` passed and now asserts the Google Business Profile permission readiness draft shape in production.

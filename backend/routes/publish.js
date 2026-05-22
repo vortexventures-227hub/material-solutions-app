@@ -411,8 +411,8 @@ const PLATFORM_CATALOG = [
     available: false,
     status: 'manual_required',
     mode: 'guarded_manual_draft',
-    completion: 55,
-    nextStep: 'Confirm post type and GBP account authorization.',
+    completion: 62,
+    nextStep: 'Confirm owner/manager access, business.manage OAuth consent, accountId/locationId, and Local Post type before API posting.',
   },
   {
     key: 'forkliftaction_forum',

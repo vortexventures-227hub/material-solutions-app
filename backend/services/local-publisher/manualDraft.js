@@ -51,6 +51,18 @@ function buildPlatformTarget(platform, options = {}) {
     };
   }
 
+  if (platform === 'google_business_profile') {
+    return {
+      ...target,
+      approvedAccountRequired: true,
+      oauthRequired: true,
+      accountLabel: options.accountLabel || options.googleAccount || 'Chris-approved Google Business Profile owner/manager only',
+      accountId: options.googleBusinessAccountId || options.accountId || null,
+      locationId: options.googleLocationId || options.locationId || null,
+      apiResource: 'accounts.locations.localPosts',
+    };
+  }
+
   return target;
 }
 
@@ -110,6 +122,44 @@ function buildPlatformFields(platform, payload, specs, baseFields, options = {})
     };
   }
 
+  if (platform === 'google_business_profile') {
+    return {
+      ...baseFields,
+      googleBusinessProfile: {
+        postType: options.postType || 'call_to_action',
+        topicType: options.topicType || 'STANDARD',
+        callToAction: options.callToAction || 'LEARN_MORE',
+        destinationUrl: baseFields.listingUrl,
+        languageCode: options.languageCode || 'en-US',
+        mediaFormat: 'PHOTO',
+        productPostUnsupported: true,
+        oauthReadiness: {
+          required: true,
+          requiredScopes: [
+            'https://www.googleapis.com/auth/business.manage',
+          ],
+          deprecatedCompatibilityScopes: [
+            'https://www.googleapis.com/auth/plus.business.manage',
+          ],
+          requiredIdentifiers: [
+            'Google Business Profile accountId',
+            'Google Business Profile locationId',
+          ],
+          requiredCredentials: [
+            'GOOGLE_CLIENT_ID',
+            'GOOGLE_CLIENT_SECRET',
+            'GOOGLE_REFRESH_TOKEN or approved OAuth consent flow',
+          ],
+        },
+        sellerDisclosure: [
+          'Use a Local Post with LEARN_MORE pointing to the MaterialSolutionsNJ inventory URL',
+          'Do not attempt Product Posts through the Google Business Profile API; Google docs say Product Posts cannot be created via the API',
+          'Do not call Business Profile APIs until Chris approves the owner/manager account, location, and OAuth consent',
+        ],
+      },
+    };
+  }
+
   return baseFields;
 }
 
@@ -163,6 +213,14 @@ function buildManualPlatformDraft(platform, job, options = {}) {
       'Confirm the target eBay Business seller account is approved by Chris before opening Seller Hub',
       'Confirm eBay category, item specifics, payment, return, and fulfillment policies before any API or manual listing',
       'Treat OAuth credentials as missing until the approved seller account grants the required scopes',
+    );
+  }
+
+  if (platform === 'google_business_profile') {
+    reviewChecklist.push(
+      'Confirm the target Google Business Profile owner/manager account and location are approved by Chris',
+      'Confirm OAuth consent grants business.manage before any Business Profile API call',
+      'Use a Local Post with LEARN_MORE to the inventory URL; do not attempt API Product Posts',
     );
   }
 
