@@ -267,3 +267,9 @@
   - Pending, queued, in-progress, skipped, failed, cancelled, or unknown checks now block readiness.
   - Only `SUCCESS` checks are treated as passing for the readiness receipt.
 - Verified the hardened receipt blocks while fresh checks are queued and clears the check blockers after all three PR checks pass.
+
+## 2026-05-22 14:15 EDT
+- Expanded the repo-root PR readiness receipt to include live deploy health beyond backend `/health`:
+  - Admin deployment shell must return HTTP 200 and the React root marker.
+  - Storefront inventory bridge must return HTTP 200, `degraded:false`, and at least one inventory item.
+- This makes admin/storefront production drift block readiness instead of only being mentioned in separate smoke notes.

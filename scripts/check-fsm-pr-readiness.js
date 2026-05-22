@@ -7,6 +7,16 @@ const BACKEND_URL = (
   'https://vortex-forklift-api-production.up.railway.app'
 ).trim().replace(/\\n/g, '').replace(/\/+$/, '');
 
+const ADMIN_URL = (
+  process.env.FSM_ADMIN_URL ||
+  'https://frontend-one-tawny-63.vercel.app'
+).trim().replace(/\\n/g, '').replace(/\/+$/, '');
+
+const STOREFRONT_URL = (
+  process.env.FSM_STOREFRONT_URL ||
+  'https://www.materialsolutionsnj.com'
+).trim().replace(/\\n/g, '').replace(/\/+$/, '');
+
 const PR_NUMBER = process.env.FSM_PR_NUMBER || '20';
 const STRICT = process.argv.includes('--strict');
 
@@ -76,6 +86,29 @@ async function backendHealth() {
   };
 }
 
+async function adminDeployHealth() {
+  const response = await fetch(ADMIN_URL);
+  const body = await response.text().catch(() => '');
+  return {
+    ok: response.ok && body.includes('<div id="root"></div>'),
+    status: response.status,
+  };
+}
+
+async function storefrontInventoryHealth() {
+  const response = await fetch(`${STOREFRONT_URL}/api/inventory?limit=1`);
+  const body = await response.json().catch(() => null);
+  const total = Number(body?.total || 0);
+  const itemCount = Array.isArray(body?.items) ? body.items.length : 0;
+  return {
+    ok: response.ok && body?.degraded === false && total > 0 && itemCount > 0,
+    status: response.status,
+    total,
+    itemCount,
+    degraded: body?.degraded,
+  };
+}
+
 async function main() {
   const blockers = [];
   const warnings = [];
@@ -119,6 +152,8 @@ async function main() {
   }
 
   let health = null;
+  let adminHealth = null;
+  let storefrontHealth = null;
   try {
     health = await backendHealth();
     if (!health.ok) {
@@ -126,6 +161,24 @@ async function main() {
     }
   } catch (error) {
     blockers.push(`backend health request failed: ${error.message}`);
+  }
+
+  try {
+    adminHealth = await adminDeployHealth();
+    if (!adminHealth.ok) {
+      blockers.push(`admin deployment shell failed with HTTP ${adminHealth.status}`);
+    }
+  } catch (error) {
+    blockers.push(`admin deployment shell request failed: ${error.message}`);
+  }
+
+  try {
+    storefrontHealth = await storefrontInventoryHealth();
+    if (!storefrontHealth.ok) {
+      blockers.push(`storefront inventory bridge failed with HTTP ${storefrontHealth.status}`);
+    }
+  } catch (error) {
+    blockers.push(`storefront inventory bridge request failed: ${error.message}`);
   }
 
   const adminUiVerified = boolEnv('FSM_ADMIN_UI_VERIFIED') || boolEnv('FSM_ADMIN_UI_SESSION_READY');
@@ -147,6 +200,8 @@ async function main() {
   console.log(`Upstream: ${upstream.stdout || 'none'}`);
   console.log(`Working tree: ${status.stdout ? 'DIRTY' : 'clean'}`);
   console.log(`Backend health: ${health?.ok ? `OK (${health.body?.responseTime || 'healthy'}, DB ${health.body?.database})` : 'not OK'}`);
+  console.log(`Admin deployment shell: ${adminHealth?.ok ? 'OK' : 'not OK'}`);
+  console.log(`Storefront inventory bridge: ${storefrontHealth?.ok ? `OK (${storefrontHealth.itemCount}/${storefrontHealth.total} checked, degraded:${storefrontHealth.degraded})` : 'not OK'}`);
 
   if (pr) {
     console.log(`PR: #${PR_NUMBER} ${pr.url}`);
