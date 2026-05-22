@@ -114,6 +114,14 @@ async function backendHealth() {
   };
 }
 
+async function backendPublishAuthHealth() {
+  const response = await fetch(`${BACKEND_URL}/api/publish/platforms`);
+  return {
+    ok: response.status === 401,
+    status: response.status,
+  };
+}
+
 async function adminDeployHealth() {
   const response = await fetch(ADMIN_URL);
   const body = await response.text().catch(() => '');
@@ -239,6 +247,7 @@ async function main() {
   }
 
   let health = null;
+  let backendPublishAuth = null;
   let adminHealth = null;
   let adminBundle = null;
   let storefrontHealth = null;
@@ -250,6 +259,15 @@ async function main() {
     }
   } catch (error) {
     blockers.push(`backend health request failed: ${error.message}`);
+  }
+
+  try {
+    backendPublishAuth = await backendPublishAuthHealth();
+    if (!backendPublishAuth.ok) {
+      blockers.push(`backend unauthenticated Publish Button catalog expected 401 but got ${backendPublishAuth.status}`);
+    }
+  } catch (error) {
+    blockers.push(`backend unauthenticated Publish Button catalog request failed: ${error.message}`);
   }
 
   try {
@@ -307,6 +325,7 @@ async function main() {
   console.log(`Upstream: ${upstream.stdout || 'none'}`);
   console.log(`Working tree: ${status.stdout ? 'DIRTY' : 'clean'}`);
   console.log(`Backend health: ${health?.ok ? `OK (${health.body?.responseTime || 'healthy'}, DB ${health.body?.database})` : 'not OK'}`);
+  console.log(`Backend unauthenticated Publish Button catalog: ${backendPublishAuth?.ok ? 'OK (401 protected)' : 'not OK'}`);
   console.log(`Admin deployment shell: ${adminHealth?.ok ? 'OK' : 'not OK'}`);
   console.log(`Admin deployment bundle markers: ${adminBundle?.ok ? `OK (${adminBundle.bundleCount} bundles checked)` : 'not OK'}`);
   console.log(`Storefront inventory bridge: ${storefrontHealth?.ok ? `OK (${storefrontHealth.itemCount}/${storefrontHealth.total} checked, degraded:${storefrontHealth.degraded})` : 'not OK'}`);

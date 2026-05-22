@@ -294,3 +294,9 @@
   - Fetches deployed JavaScript bundles.
   - Requires Publish Button Test Mode markers, production backend URL, and current fallback channel markers.
 - This moves the admin deployment smoke's most important bundle checks into the merge/completion readiness receipt.
+
+## 2026-05-22 15:35 EDT
+- Expanded the repo-root PR readiness receipt to verify backend Publish Button auth protection:
+  - Calls `/api/publish/platforms` without credentials.
+  - Requires HTTP 401 so the backend platform catalog is not public.
+  - Authenticated 11-channel catalog/dry-run coverage remains in `npm run smoke:fsm-live`.
