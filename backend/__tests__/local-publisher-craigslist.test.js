@@ -186,6 +186,30 @@ test('local publisher CLI emits MachineryTrader vendor credential readiness fiel
   assert.match(receipt.draft.reviewChecklist.join('\n'), /Sandhills portal access/);
 });
 
+test('local publisher CLI emits EquipFinder vendor credential readiness fields without mutation', async () => {
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
+  const receipt = await execNodeJson(scriptPath, [
+    '--platform', 'equipfinder',
+    '--equipfinder-account', 'Approved MSNJ EquipFinder contact',
+    '--equipfinder-listing-path', 'Vendor contact workflow',
+    '--category-hint', 'Lift trucks',
+    '--public-access-status', 'Verify through approved browser session',
+  ], samplePayload);
+
+  assert.equal(receipt.platform, 'equipfinder');
+  assert.equal(receipt.status, 'manual_draft_ready');
+  assert.equal(receipt.browser.mutationPerformed, false);
+  assert.equal(receipt.draft.target.vendorCredentialRequired, true);
+  assert.equal(receipt.draft.target.siteReachabilityReviewRequired, true);
+  assert.equal(receipt.draft.target.accountLabel, 'Approved MSNJ EquipFinder contact');
+  assert.equal(receipt.draft.target.listingPath, 'Vendor contact workflow');
+  assert.equal(receipt.draft.fields.equipFinder.categoryHint, 'Lift trucks');
+  assert.equal(receipt.draft.fields.equipFinder.vendorCredentialReadiness.required, true);
+  assert.equal(receipt.draft.fields.equipFinder.siteReachabilityReadiness.observedStatus, 'Verify through approved browser session');
+  assert.match(receipt.draft.fields.equipFinder.sellerDisclosure.join('\n'), /self-serve posting flow or API/);
+  assert.match(receipt.draft.reviewChecklist.join('\n'), /vendor\/contact path/);
+});
+
 test('local publisher CLI emits LinkedIn company page readiness fields without mutation', async () => {
   const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
   const receipt = await execNodeJson(scriptPath, [

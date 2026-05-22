@@ -34,6 +34,10 @@ async function main() {
     dealerProgram: args.dealerProgram,
     machineryTraderContactPhone: args.machineryTraderContactPhone,
     portalUrl: args.portalUrl,
+    vendorAccount: args.vendorAccount,
+    equipFinderAccount: args.equipFinderAccount,
+    equipFinderListingPath: args.equipFinderListingPath,
+    publicAccessStatus: args.publicAccessStatus,
     sourceSystem: args.sourceSystem,
     listingType: args.listingType,
     linkedinAccount: args.linkedinAccount,
@@ -92,6 +96,10 @@ function parseArgs(argv) {
     dealerProgram: null,
     machineryTraderContactPhone: null,
     portalUrl: null,
+    vendorAccount: null,
+    equipFinderAccount: null,
+    equipFinderListingPath: null,
+    publicAccessStatus: null,
     sourceSystem: null,
     listingType: null,
     linkedinAccount: null,
@@ -157,6 +165,14 @@ function parseArgs(argv) {
         parsed.machineryTraderContactPhone = next;
       } else if (key === 'portal-url') {
         parsed.portalUrl = next;
+      } else if (key === 'vendor-account') {
+        parsed.vendorAccount = next;
+      } else if (key === 'equipfinder-account') {
+        parsed.equipFinderAccount = next;
+      } else if (key === 'equipfinder-listing-path') {
+        parsed.equipFinderListingPath = next;
+      } else if (key === 'public-access-status') {
+        parsed.publicAccessStatus = next;
       } else if (key === 'source-system') {
         parsed.sourceSystem = next;
       } else if (key === 'listing-type') {
@@ -262,6 +278,10 @@ Options:
   --dealer-program text       MachineryTrader dealer advertising program/package reminder
   --machinerytrader-contact-phone text  MachineryTrader advertising contact phone reminder
   --portal-url text           Dealer portal URL readiness hint
+  --vendor-account text       Chris-approved vendor/contact account label for vendor channels
+  --equipfinder-account text  Chris-approved EquipFinder vendor/contact label
+  --equipfinder-listing-path text  EquipFinder listing/contact workflow reminder
+  --public-access-status text Site reachability note for guarded manual review
   --source-system text        Inventory source system label for vendor feed readiness
   --listing-type text         Vendor listing type hint. Default varies by platform
   --linkedin-account text     Chris-approved LinkedIn Company Page admin label

@@ -375,8 +375,8 @@ const PLATFORM_CATALOG = [
     available: false,
     status: 'manual_required',
     mode: 'guarded_manual_draft',
-    completion: 60,
-    nextStep: 'Connect vendor posting credentials or keep operator-reviewed drafts.',
+    completion: 62,
+    nextStep: 'Confirm EquipFinder vendor/contact path, public site reachability, seller listing fit, and category acceptance before posting.',
   },
   {
     key: 'machineryats',

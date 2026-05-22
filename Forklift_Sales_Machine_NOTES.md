@@ -183,3 +183,16 @@
   - Status: `SUCCESS`
 - Backend tests now pass 44/44.
 - `npm run smoke:fsm-live` passed and now asserts the Forkliftaction Forum account/rules readiness draft shape in production.
+
+## 2026-05-22 09:16 EDT
+- Added EquipFinder guarded vendor/site readiness fields:
+  - Chris-approved EquipFinder vendor/contact requirement.
+  - Posting-path verification before any listing workflow.
+  - Public-site reachability review because unauthenticated checks returned HTTP 403.
+  - Seller-listing fit, category acceptance, and no-API/self-serve-assumption guardrails.
+  - CLI hints: `--equipfinder-account`, `--equipfinder-listing-path`, `--vendor-account`, and `--public-access-status`.
+- Deployed backend to Railway production:
+  - Deployment ID: `398620b4-038b-490f-be8d-d8ef760e8116`
+  - Status: `SUCCESS`
+- Backend tests now pass 45/45.
+- `npm run smoke:fsm-live` passed and now asserts the EquipFinder vendor/site readiness draft shape in production.

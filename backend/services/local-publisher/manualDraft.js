@@ -53,6 +53,18 @@ function buildPlatformTarget(platform, options = {}) {
     };
   }
 
+  if (platform === 'equipfinder') {
+    return {
+      ...target,
+      approvedAccountRequired: true,
+      vendorCredentialRequired: true,
+      siteReachabilityReviewRequired: true,
+      accountLabel: options.accountLabel || options.equipFinderAccount || options.vendorAccount || options.dealerAccount || 'Chris-approved EquipFinder vendor/contact only',
+      listingPath: options.equipFinderListingPath || options.listingPath || 'EquipFinder / RecycleNet equipment finder workflow',
+      publicAccessStatus: options.publicAccessStatus || 'HTTP 403 observed from unauthenticated client; verify in approved browser/session before use',
+    };
+  }
+
   if (platform === 'linkedin') {
     return {
       ...target,
@@ -233,6 +245,47 @@ function buildPlatformFields(platform, payload, specs, baseFields, options = {})
     };
   }
 
+  if (platform === 'equipfinder') {
+    return {
+      ...baseFields,
+      equipFinder: {
+        listingType: options.listingType || 'vendor_reviewed_equipment_listing',
+        categoryHint: options.categoryHint || 'Lift trucks / material handling equipment',
+        serviceFit: 'Waste/recycling and industrial equipment finder; confirm forklift category acceptance before posting',
+        vendorCredentialReadiness: {
+          required: true,
+          requiredSteps: [
+            'Confirm EquipFinder/Recycling industry network vendor account or approved contact path',
+            'Confirm whether the current service accepts seller listings, dealer referrals, or buyer quote requests',
+            'Confirm listing workflow is reachable from the approved browser/session before preparing any submit flow',
+            'Confirm billing/contact ownership if the workflow requires paid placement or dealer participation',
+          ],
+        },
+        siteReachabilityReadiness: {
+          required: true,
+          publicUrl: PLATFORM_TARGETS.equipfinder,
+          observedStatus: options.publicAccessStatus || 'HTTP 403 from unauthenticated HEAD request on 2026-05-22',
+          requiredFollowUp: 'Verify from Chris-approved network/account before treating EquipFinder as postable',
+        },
+        requiredSpecs: [
+          'make',
+          'model',
+          'year',
+          'hours',
+          'capacityLbs',
+          'powerType',
+          'condition',
+          'location',
+        ],
+        sellerDisclosure: [
+          'Do not assume EquipFinder has a current public self-serve posting flow or API',
+          'Confirm vendor/contact credentials, service fit, and reachable workflow before any manual listing',
+          'Use public MaterialSolutionsNJ inventory URL as the source of truth and stop before submit until Chris approves',
+        ],
+      },
+    };
+  }
+
   if (platform === 'forkliftaction_forum') {
     return {
       ...baseFields,
@@ -364,6 +417,14 @@ function buildManualPlatformDraft(platform, job, options = {}) {
       'Confirm the MachineryTrader dealer/advertiser account or Sandhills portal access is approved by Chris',
       'Confirm forklift category, listing package, billing owner, contact phone, and inventory feed/manual posting path',
       'Do not upload inventory or submit listings until vendor credentials and target package are approved',
+    );
+  }
+
+  if (platform === 'equipfinder') {
+    reviewChecklist.push(
+      'Confirm the EquipFinder vendor/contact path is approved by Chris before opening the workflow',
+      'Confirm the site is reachable from the approved browser/session and accepts seller listings for lift trucks or material handling equipment',
+      'Treat EquipFinder as manual-only until vendor credentials, posting path, and service fit are confirmed',
     );
   }
 
