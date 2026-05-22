@@ -70,7 +70,7 @@
   - Deployment ID: `77bfe922-2fe9-4588-9869-edc9cdfe4108`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with DB connected.
-- Backend tests are green: `npm test -- --runInBand` in `backend` passes 39/39.
+- Backend tests are green: `npm test -- --runInBand` in `backend` passes 40/40.
 - Local publisher manual drafts now support:
   - Facebook Marketplace
   - MachineryTrader
@@ -117,3 +117,15 @@
   - Deployment ID: `d8739d89-f412-4816-b9fa-bdc6647b092d`
   - Status: `SUCCESS`
 - `npm run smoke:fsm-live` passed and now asserts the Facebook Marketplace-specific draft shape in production.
+
+## 2026-05-22 01:10 EDT
+- Added eBay Business guarded draft/OAuth readiness fields:
+  - Chris-approved eBay Business seller account requirement.
+  - OAuth readiness with required scopes: `sell.inventory`, `sell.account`, and `sell.fulfillment`.
+  - Business policy, category, condition, quantity, payment, return, and fulfillment draft fields.
+  - CLI hints: `--ebay-account`, `--ebay-environment`, `--listing-format`, `--payment-policy`, `--return-policy`, and `--fulfillment-policy`.
+- Deployed backend to Railway production:
+  - Deployment ID: `7c9fe93c-8be1-4faf-9885-3a145597aaa5`
+  - Status: `SUCCESS`
+- Backend tests now pass 40/40.
+- `npm run smoke:fsm-live` passed and now asserts the eBay OAuth/business-policy readiness draft shape in production.

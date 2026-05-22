@@ -41,28 +41,76 @@ function buildPlatformTarget(platform, options = {}) {
     };
   }
 
+  if (platform === 'ebay') {
+    return {
+      ...target,
+      approvedAccountRequired: true,
+      oauthRequired: true,
+      accountLabel: options.accountLabel || options.ebayAccount || 'Chris-approved eBay Business seller account only',
+      listingTool: options.listingTool || 'eBay Seller Hub / Sell flow',
+    };
+  }
+
   return target;
 }
 
 function buildPlatformFields(platform, payload, specs, baseFields, options = {}) {
-  if (platform !== 'facebook_marketplace') return baseFields;
-
   const condition = specs.condition || specs.conditionNotes || 'Used - good';
-  return {
-    ...baseFields,
-    marketplace: {
-      listingType: 'single_item',
-      categoryHint: options.categoryHint || 'Business & Industrial / material handling equipment',
-      location: options.location || options.city || 'New Jersey',
-      availability: 'in_stock',
-      condition,
-      sellerDisclosure: [
-        'Commercial forklift listing; confirm Facebook Marketplace category fit before posting',
-        'Use public MaterialSolutionsNJ inventory URL as the source of truth',
-        'Do not submit from automation or without Chris-approved account access',
-      ],
-    },
-  };
+
+  if (platform === 'facebook_marketplace') {
+    return {
+      ...baseFields,
+      marketplace: {
+        listingType: 'single_item',
+        categoryHint: options.categoryHint || 'Business & Industrial / material handling equipment',
+        location: options.location || options.city || 'New Jersey',
+        availability: 'in_stock',
+        condition,
+        sellerDisclosure: [
+          'Commercial forklift listing; confirm Facebook Marketplace category fit before posting',
+          'Use public MaterialSolutionsNJ inventory URL as the source of truth',
+          'Do not submit from automation or without Chris-approved account access',
+        ],
+      },
+    };
+  }
+
+  if (platform === 'ebay') {
+    return {
+      ...baseFields,
+      ebay: {
+        listingFormat: options.listingFormat || 'fixed_price',
+        categoryHint: options.categoryHint || 'Business & Industrial / Forklifts & Telehandlers',
+        condition,
+        quantity: 1,
+        businessPoliciesRequired: true,
+        paymentPolicy: options.paymentPolicy || 'Confirm seller account payment policy before publish',
+        returnPolicy: options.returnPolicy || 'Confirm seller account return policy before publish',
+        fulfillmentPolicy: options.fulfillmentPolicy || 'Confirm freight/local pickup handling before publish',
+        oauthReadiness: {
+          required: true,
+          environment: options.ebayEnvironment || 'production',
+          requiredScopes: [
+            'sell.inventory',
+            'sell.account',
+            'sell.fulfillment',
+          ],
+          requiredCredentials: [
+            'EBAY_CLIENT_ID',
+            'EBAY_CLIENT_SECRET',
+            'EBAY_REFRESH_TOKEN or approved OAuth consent flow',
+          ],
+        },
+        sellerDisclosure: [
+          'Confirm category, item specifics, and business policies in eBay Seller Hub before posting',
+          'Do not call eBay Inventory/Offer APIs until Chris approves the seller account and OAuth scope set',
+          'Use public MaterialSolutionsNJ inventory URL as the source of truth',
+        ],
+      },
+    };
+  }
+
+  return baseFields;
 }
 
 function buildManualPlatformDraft(platform, job, options = {}) {
@@ -107,6 +155,14 @@ function buildManualPlatformDraft(platform, job, options = {}) {
     reviewChecklist.push(
       'Confirm the target Facebook account/page is approved by Chris before opening the create listing flow',
       'Choose the closest Marketplace category manually and verify forklift/equipment policy fit',
+    );
+  }
+
+  if (platform === 'ebay') {
+    reviewChecklist.push(
+      'Confirm the target eBay Business seller account is approved by Chris before opening Seller Hub',
+      'Confirm eBay category, item specifics, payment, return, and fulfillment policies before any API or manual listing',
+      'Treat OAuth credentials as missing until the approved seller account grants the required scopes',
     );
   }
 

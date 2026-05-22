@@ -135,6 +135,34 @@ test('local publisher CLI supports every guarded manual draft channel', async ()
   }
 });
 
+test('local publisher CLI emits eBay OAuth readiness fields without mutation', async () => {
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
+  const receipt = await execNodeJson(scriptPath, [
+    '--platform', 'ebay',
+    '--ebay-account', 'Approved MSNJ eBay seller',
+    '--category-hint', 'Business & Industrial / Warehouse Equipment',
+    '--payment-policy', 'MSNJ payment policy',
+    '--fulfillment-policy', 'Freight or local pickup',
+  ], samplePayload);
+
+  assert.equal(receipt.platform, 'ebay');
+  assert.equal(receipt.status, 'manual_draft_ready');
+  assert.equal(receipt.browser.mutationPerformed, false);
+  assert.equal(receipt.draft.target.oauthRequired, true);
+  assert.equal(receipt.draft.target.accountLabel, 'Approved MSNJ eBay seller');
+  assert.equal(receipt.draft.fields.ebay.businessPoliciesRequired, true);
+  assert.equal(receipt.draft.fields.ebay.categoryHint, 'Business & Industrial / Warehouse Equipment');
+  assert.equal(receipt.draft.fields.ebay.paymentPolicy, 'MSNJ payment policy');
+  assert.equal(receipt.draft.fields.ebay.fulfillmentPolicy, 'Freight or local pickup');
+  assert.deepEqual(receipt.draft.fields.ebay.oauthReadiness.requiredScopes, [
+    'sell.inventory',
+    'sell.account',
+    'sell.fulfillment',
+  ]);
+  assert.match(receipt.draft.fields.ebay.sellerDisclosure.join('\n'), /OAuth scope set/);
+  assert.match(receipt.draft.reviewChecklist.join('\n'), /eBay Business seller account/);
+});
+
 function execNodeJson(scriptPath, args, input) {
   return new Promise((resolve, reject) => {
     const child = execFile(

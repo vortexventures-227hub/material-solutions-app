@@ -37,7 +37,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - Environment: `production`
   - Service: `vortex-forklift-api`
 - Backend production deployment succeeded.
-  - Deployment ID: `d8739d89-f412-4816-b9fa-bdc6647b092d`
+  - Deployment ID: `7c9fe93c-8be1-4faf-9885-3a145597aaa5`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with database connected.
 - Backend includes the Publish Button `dryRun`/`testMode` guard.
@@ -50,17 +50,18 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - `mutationPerformed:false` for checked channels.
   - Manual draft targets include `submitDisabled:true` and Chris-approval guardrails.
   - Facebook Marketplace dry-run includes account/page approval, category-fit, location, availability, condition, and seller-disclosure draft fields.
+  - eBay Business dry-run includes OAuth readiness, seller account approval, business policy, category, condition, and fulfillment draft fields.
 - Draft PR is open:
   - `https://github.com/vortexventures-227hub/material-solutions-app/pull/20`
   - Branch: `codex/fsm-inventory-intake-media-20260429`
 
 ## Local Verification Already Passed
-- Backend tests: `npm test -- --runInBand` in `backend` passed 39/39.
+- Backend tests: `npm test -- --runInBand` in `backend` passed 40/40.
 - Admin frontend build: `npm run build` in `frontend` passed.
 - Admin deploy smoke: `npm run smoke:admin-deploy` in `frontend` passed against `https://frontend-one-tawny-63.vercel.app`.
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
 - Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed for 11 channels when run with production FSM auth env.
-- Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, 11-channel Publish Button dry-run checks, and Facebook Marketplace-specific draft assertions.
+- Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, 11-channel Publish Button dry-run checks, Facebook Marketplace-specific draft assertions, and eBay OAuth/business-policy readiness assertions.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
 
 ## Important Local Files Changed
@@ -107,6 +108,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Manual draft infrastructure for non-API channels: 65-75%, depending on channel.
 - Guarded manual draft coverage now includes Facebook Marketplace, MachineryTrader, EquipFinder, MachineryATS, eBay Business, LinkedIn, Google Business Profile, Forkliftaction Forum, and YouTube via local publisher receipts with no-submit guardrails.
 - Facebook Marketplace guarded draft now has platform-specific account/page approval, category-fit, location, availability, condition, and seller-disclosure fields.
+- eBay Business guarded draft now has seller account approval, OAuth readiness, required scope, category, business policy, condition, and fulfillment fields.
 
 ## What Is Not Complete Yet
 - True automatic posting to third-party marketplaces is not complete.
@@ -139,9 +141,9 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 4. Decide the next marketplace target:
    - Recommended: keep MaterialSolutionsNJ automatic as the canonical green path; implement one external channel at a time behind manual/guarded mode.
 5. Continue channel integrations in priority order:
-   - eBay/OAuth feasibility.
    - Google Business Profile permissions.
    - MachineryTrader/vendor credential feasibility.
+   - LinkedIn company/page target feasibility.
 
 ## Current Operational Rule
 Do not treat a progress update as a stopping point. After any update, continue the next highest-impact item unless blocked by missing credentials, destructive risk, or explicit Chris instruction.

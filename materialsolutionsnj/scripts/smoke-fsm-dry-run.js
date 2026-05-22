@@ -84,6 +84,7 @@ async function main() {
   const results = Array.isArray(dryRun?.results) ? dryRun.results : [];
   const materialSolutions = results.find((result) => result.platform === 'materialsolutionsnj');
   const facebookMarketplace = results.find((result) => result.platform === 'facebook_marketplace');
+  const ebay = results.find((result) => result.platform === 'ebay');
   const mutated = results.filter((result) => result.mutationPerformed !== false);
   const missing = EXPECTED_CHANNELS.filter((platform) => !results.some((result) => result.platform === platform));
   const manualResults = results.filter((result) => result.platform !== 'materialsolutionsnj');
@@ -110,6 +111,13 @@ async function main() {
     !facebookMarketplace.draft.fields.marketplace.sellerDisclosure?.some((item) => item.includes('category fit'))
   ) {
     throw new Error('Facebook Marketplace dry-run did not include guarded marketplace draft fields');
+  }
+  if (
+    ebay?.draft?.target?.oauthRequired !== true ||
+    ebay?.draft?.fields?.ebay?.businessPoliciesRequired !== true ||
+    !ebay.draft.fields.ebay.oauthReadiness?.requiredScopes?.includes('sell.inventory')
+  ) {
+    throw new Error('eBay dry-run did not include guarded OAuth/business policy readiness fields');
   }
   if (unguardedManual.length) {
     throw new Error(`Manual dry-run guardrails missing for: ${unguardedManual.map((result) => result.platform).join(', ')}`);

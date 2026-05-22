@@ -29,6 +29,12 @@ async function main() {
     location: args.location,
     accountLabel: args.accountLabel,
     facebookAccount: args.facebookAccount,
+    ebayAccount: args.ebayAccount,
+    ebayEnvironment: args.ebayEnvironment,
+    listingFormat: args.listingFormat,
+    paymentPolicy: args.paymentPolicy,
+    returnPolicy: args.returnPolicy,
+    fulfillmentPolicy: args.fulfillmentPolicy,
   };
 
   if (args.platform === 'craigslist') {
@@ -58,6 +64,12 @@ function parseArgs(argv) {
     location: null,
     accountLabel: null,
     facebookAccount: null,
+    ebayAccount: null,
+    ebayEnvironment: null,
+    listingFormat: null,
+    paymentPolicy: null,
+    returnPolicy: null,
+    fulfillmentPolicy: null,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -89,6 +101,18 @@ function parseArgs(argv) {
         parsed.accountLabel = next;
       } else if (key === 'facebook-account') {
         parsed.facebookAccount = next;
+      } else if (key === 'ebay-account') {
+        parsed.ebayAccount = next;
+      } else if (key === 'ebay-environment') {
+        parsed.ebayEnvironment = next;
+      } else if (key === 'listing-format') {
+        parsed.listingFormat = next;
+      } else if (key === 'payment-policy') {
+        parsed.paymentPolicy = next;
+      } else if (key === 'return-policy') {
+        parsed.returnPolicy = next;
+      } else if (key === 'fulfillment-policy') {
+        parsed.fulfillmentPolicy = next;
       } else if (Object.prototype.hasOwnProperty.call(parsed, key)) {
         parsed[key] = next;
       } else {
@@ -141,6 +165,12 @@ Options:
   --location "New Jersey"     Manual draft location hint for Facebook Marketplace
   --category-hint text        Manual category hint for Facebook Marketplace
   --account-label text        Chris-approved target account/page label for Facebook Marketplace
+  --ebay-account text         Chris-approved eBay Business seller account label
+  --ebay-environment text     eBay OAuth readiness environment. Default: production
+  --listing-format text       eBay listing format hint. Default: fixed_price
+  --payment-policy text       eBay payment policy reminder
+  --return-policy text        eBay return policy reminder
+  --fulfillment-policy text   eBay fulfillment/freight policy reminder
   --contact-phone number      Phone number inserted into the listing body
 `);
 }

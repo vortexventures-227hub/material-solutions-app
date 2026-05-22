@@ -393,8 +393,8 @@ const PLATFORM_CATALOG = [
     available: false,
     status: 'manual_required',
     mode: 'guarded_manual_draft',
-    completion: 55,
-    nextStep: 'Map category-specific eBay fields before API or browser posting.',
+    completion: 62,
+    nextStep: 'Confirm eBay Business seller account, OAuth scopes, category, item specifics, and business policies before API or browser posting.',
   },
   {
     key: 'linkedin',
