@@ -343,3 +343,7 @@
 - Expanded the readiness receipt to detect whether approved admin auth appears available from env.
 - If admin auth appears available but `FSM_ADMIN_UI_VERIFIED` is not set, readiness now classifies the admin-session gate as `agentGates` so a heartbeat runs `npm run smoke:admin-session` instead of reporting a human gate.
 - If no admin auth env is present, readiness keeps the gate classified as `humanGates`.
+- Added symmetric detection for Chris-approved external publish target env:
+  - Requires `FSM_EXTERNAL_PUBLISH_PLATFORM`, `FSM_EXTERNAL_PUBLISH_ACCOUNT`, and `FSM_EXTERNAL_PUBLISH_TARGET_APPROVED=1` or `FSM_CHRIS_APPROVED_EXTERNAL_TARGET=1`.
+  - If those are present but `FSM_EXTERNAL_PUBLISH_APPROVED` is not set, readiness classifies the external publish gate as `agentGates` for guarded dry-run verification.
+  - If no approved target env is present, readiness keeps the external publish gate classified as `humanGates`.

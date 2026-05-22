@@ -88,6 +88,17 @@ function adminAuthAvailable() {
   return hasToken || hasLogin;
 }
 
+function externalPublishTargetAvailable() {
+  return Boolean(
+    process.env.FSM_EXTERNAL_PUBLISH_PLATFORM &&
+    process.env.FSM_EXTERNAL_PUBLISH_ACCOUNT &&
+    (
+      boolEnv('FSM_EXTERNAL_PUBLISH_TARGET_APPROVED') ||
+      boolEnv('FSM_CHRIS_APPROVED_EXTERNAL_TARGET')
+    )
+  );
+}
+
 function summarizeChecks(statusCheckRollup = []) {
   if (!Array.isArray(statusCheckRollup) || statusCheckRollup.length === 0) {
     return 'no GitHub status checks reported';
@@ -174,6 +185,9 @@ function compactChecks(statusCheckRollup = []) {
 function classifyBlocker(blocker) {
   const text = String(blocker || '').toLowerCase();
   if (text.includes('approved admin auth appears available')) {
+    return 'agentGates';
+  }
+  if (text.includes('chris-approved external publish target appears available')) {
     return 'agentGates';
   }
   if (
@@ -447,6 +461,7 @@ async function main() {
   const adminUiVerified = boolEnv('FSM_ADMIN_UI_VERIFIED') || boolEnv('FSM_ADMIN_UI_SESSION_READY');
   const hasAdminAuth = adminAuthAvailable();
   const externalPublishApproved = boolEnv('FSM_EXTERNAL_PUBLISH_APPROVED');
+  const hasExternalPublishTarget = externalPublishTargetAvailable();
 
   if (!adminUiVerified) {
     if (hasAdminAuth) {
@@ -456,7 +471,11 @@ async function main() {
     }
   }
   if (!externalPublishApproved) {
-    blockers.push('external marketplace publishing still needs Chris-approved target/platform/account');
+    if (hasExternalPublishTarget) {
+      blockers.push('Chris-approved external publish target appears available; run guarded dry-run verification for FSM_EXTERNAL_PUBLISH_PLATFORM and set FSM_EXTERNAL_PUBLISH_APPROVED=1 before any live publish');
+    } else {
+      blockers.push('external marketplace publishing still needs Chris-approved target/platform/account');
+    }
   }
 
   const readyToMerge = blockers.length === 0;
@@ -513,6 +532,12 @@ async function main() {
       missingBodyMarkers: prMissingBodyMarkers,
       reviews: summarizeReviews(pr.latestReviews, pr.reviewDecision),
     } : null,
+    externalPublish: {
+      approved: externalPublishApproved,
+      targetAvailable: hasExternalPublishTarget,
+      platform: process.env.FSM_EXTERNAL_PUBLISH_PLATFORM || null,
+      accountProvided: Boolean(process.env.FSM_EXTERNAL_PUBLISH_ACCOUNT),
+    },
     externalPublishApproved,
     readyToMerge,
     nextAction,
@@ -556,6 +581,7 @@ async function main() {
   console.log(`Admin UI verified: ${adminUiVerified ? 'yes' : 'no'}`);
   console.log(`Admin auth available: ${hasAdminAuth ? 'yes' : 'no'}`);
   console.log(`External publish approved: ${externalPublishApproved ? 'yes' : 'no'}`);
+  console.log(`External publish target available: ${hasExternalPublishTarget ? 'yes' : 'no'}`);
   console.log(`Ready to mark PR ready/merge: ${readyToMerge ? 'YES' : 'NO'}`);
   console.log(`Next action classification: ${nextAction}`);
 
