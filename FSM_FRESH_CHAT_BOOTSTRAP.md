@@ -70,6 +70,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
 - Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed for 11 channels when run with production FSM auth env.
 - Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, 11-channel Publish Button dry-run checks, Facebook Marketplace-specific draft assertions, MachineryTrader vendor credential assertions, EquipFinder vendor/site readiness assertions, MachineryATS vendor/DNS readiness assertions, eBay OAuth/business-policy readiness assertions, LinkedIn Company Page readiness assertions, Forkliftaction Forum account/rules readiness assertions, Google Business Profile permission readiness assertions, and YouTube video/upload readiness assertions.
+- PR readiness receipt: `npm run check:fsm-pr-readiness` at repo root checks source cleanliness, PR #20 draft/merge/review state, backend health, and the remaining admin UI/external publish approval gates without printing secrets.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
 
 ## Important Local Files Changed
@@ -98,6 +99,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - `materialsolutionsnj/components/ContactForm.js`
 - `materialsolutionsnj/scripts/smoke-fsm-dry-run.js`
 - `scripts/smoke-fsm-live.js`
+- `scripts/check-fsm-pr-readiness.js`
 - `.railwayignore`
 - `Forklift_Sales_Machine_NOTES.md`
 - `KODA_FSM_CONTINUITY.md`
@@ -145,14 +147,17 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 2. Keep post-deploy live smoke green:
    - Preferred one-command gate: `npm run smoke:fsm-live` at repo root.
    - Manual fallback: backend `/health`, admin `npm run smoke:admin-deploy`, and authenticated `npm run smoke:fsm-dry-run` with production FSM auth env.
-3. Verify admin UI can login and render:
+3. Keep merge/completion readiness explicit:
+   - Run `npm run check:fsm-pr-readiness` at repo root.
+   - It should stay green for source/deploy health and continue to report true blockers instead of vague "blocked" status.
+4. Verify admin UI can login and render:
    - Dashboard Publish Button card.
    - Settings Publish Button Channels.
    - Inventory Publish Modal payload preview.
    - Requires approved admin credential/session.
-4. Decide the next marketplace target:
+5. Decide the next marketplace target:
    - Recommended: keep MaterialSolutionsNJ automatic as the canonical green path; implement one external channel at a time behind manual/guarded mode.
-5. Continue external channel work only after Chris approves a real target account/platform. Current safe manual readiness coverage is complete for the listed 11 Publish Button channels.
+6. Continue external channel work only after Chris approves a real target account/platform. Current safe manual readiness coverage is complete for the listed 11 Publish Button channels.
 
 ## Current Operational Rule
 Do not treat a progress update as a stopping point. After any update, continue the next highest-impact item unless blocked by missing credentials, destructive risk, or explicit Chris instruction.

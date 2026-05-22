@@ -239,3 +239,10 @@
   - Checks current fallback copy for EquipFinder, MachineryATS, Forkliftaction Forum, and YouTube.
 - `npm --prefix frontend run smoke:admin-deploy` passed.
 - `npm run smoke:fsm-live` passed with the stronger admin bundle assertion.
+
+## 2026-05-22 13:16 EDT
+- Added a repo-root Forklift Sales Machine PR readiness receipt:
+  - Command: `npm run check:fsm-pr-readiness`.
+  - Checks git cleanliness, local/upstream head match, PR #20 draft/merge/review state, backend `/health`, admin UI verification gate, and external publish approval gate.
+  - Default mode exits 0 so heartbeats can report the receipt without breaking on known human/credential gates; `--strict` exits nonzero until everything is ready.
+- The receipt currently confirms backend health and PR mergeability, while correctly blocking ready/merge on draft PR state, missing review decision, missing approved admin UI session, and missing Chris-approved external publishing target/account.
