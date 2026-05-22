@@ -24,6 +24,15 @@ const REQUIRED_PR_CHECKS = [
   'Admin frontend build',
   'Storefront build',
 ];
+const REQUIRED_PR_BODY_MARKERS = [
+  '431ed673-46a5-4a9b-a534-f63ecedb5f95',
+  '47/47',
+  '11-channel',
+  'backend unauthenticated Publish Button catalog protection',
+  'Storefront unauthenticated Publish Button POST',
+  'Remaining Gates',
+  'Chris-approved target/platform/account',
+];
 const REQUIRED_ADMIN_BUNDLE_MARKERS = [
   'Publish Button',
   'Test Mode',
@@ -96,6 +105,10 @@ function findBlockingChecks(statusCheckRollup = []) {
     const state = getCheckState(check);
     return state === 'SUCCESS' ? [] : [`${name} is ${state}`];
   }).concat(missingRequiredChecks);
+}
+
+function findMissingPrBodyMarkers(body = '') {
+  return REQUIRED_PR_BODY_MARKERS.filter((marker) => !String(body || '').includes(marker));
 }
 
 function summarizeReviews(latestReviews = [], reviewDecision = '') {
@@ -230,7 +243,7 @@ async function main() {
     'view',
     PR_NUMBER,
     '--json',
-    'url,state,isDraft,mergeable,headRefOid,statusCheckRollup,reviewDecision,latestReviews',
+    'url,state,isDraft,mergeable,headRefOid,statusCheckRollup,reviewDecision,latestReviews,body',
   ]);
   if (!prResult.ok) {
     blockers.push(`unable to inspect PR #${PR_NUMBER} with gh`);
@@ -243,6 +256,10 @@ async function main() {
     if (!pr.reviewDecision) blockers.push(`PR #${PR_NUMBER} has no review decision yet`);
     for (const checkBlocker of findBlockingChecks(pr.statusCheckRollup)) {
       blockers.push(`PR #${PR_NUMBER} check not ready: ${checkBlocker}`);
+    }
+    const missingPrBodyMarkers = findMissingPrBodyMarkers(pr.body);
+    if (missingPrBodyMarkers.length) {
+      blockers.push(`PR #${PR_NUMBER} body is missing current readiness markers: ${missingPrBodyMarkers.join(', ')}`);
     }
   }
 
@@ -337,6 +354,7 @@ async function main() {
     console.log(`PR head: ${String(pr.headRefOid || '').slice(0, 12)}`);
     console.log(`Required PR checks: ${REQUIRED_PR_CHECKS.join(', ')}`);
     console.log(`PR checks: ${summarizeChecks(pr.statusCheckRollup)}`);
+    console.log(`PR body markers: ${findMissingPrBodyMarkers(pr.body).length ? 'not OK' : 'OK'}`);
     console.log(`PR reviews: ${summarizeReviews(pr.latestReviews, pr.reviewDecision)}`);
   }
 

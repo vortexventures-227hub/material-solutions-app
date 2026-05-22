@@ -300,3 +300,9 @@
   - Calls `/api/publish/platforms` without credentials.
   - Requires HTTP 401 so the backend platform catalog is not public.
   - Authenticated 11-channel catalog/dry-run coverage remains in `npm run smoke:fsm-live`.
+
+## 2026-05-22 15:55 EDT
+- Updated PR #20 body so review starts from the current verified state instead of stale deployment/test/channel counts.
+- Expanded the repo-root PR readiness receipt to catch future PR body drift:
+  - Requires current deployment, test-count, 11-channel, backend auth, storefront auth, remaining-gates, and Chris-approval markers.
+  - Prints `PR body markers: OK` when the PR description matches the current completion receipt.
