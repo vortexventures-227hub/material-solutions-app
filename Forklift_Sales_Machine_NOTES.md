@@ -306,3 +306,8 @@
 - Expanded the repo-root PR readiness receipt to catch future PR body drift:
   - Requires current deployment, test-count, 11-channel, backend auth, storefront auth, remaining-gates, and Chris-approval markers.
   - Prints `PR body markers: OK` when the PR description matches the current completion receipt.
+
+## 2026-05-22 16:00 EDT
+- Added machine-readable readiness output:
+  - `npm --silent run check:fsm-pr-readiness:json` emits the same source, deploy, PR, admin, storefront, blocker, and approval state as parseable JSON.
+  - Future heartbeats can parse exact blockers instead of relying on vague status prose.

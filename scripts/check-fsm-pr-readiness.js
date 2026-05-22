@@ -19,6 +19,7 @@ const STOREFRONT_URL = (
 
 const PR_NUMBER = process.env.FSM_PR_NUMBER || '20';
 const STRICT = process.argv.includes('--strict');
+const JSON_OUTPUT = process.argv.includes('--json');
 const REQUIRED_PR_CHECKS = [
   'Backend tests',
   'Admin frontend build',
@@ -115,6 +116,19 @@ function summarizeReviews(latestReviews = [], reviewDecision = '') {
   if (reviewDecision) return reviewDecision;
   if (!Array.isArray(latestReviews) || latestReviews.length === 0) return 'no reviews yet';
   return latestReviews.map((review) => `${review.author?.login || 'reviewer'}:${review.state}`).join(', ');
+}
+
+function compactChecks(statusCheckRollup = []) {
+  if (!Array.isArray(statusCheckRollup)) return [];
+  return statusCheckRollup.map((check) => {
+    const name = check.name || check.context || check.workflowName || check.__typename || 'unknown check';
+    return {
+      name,
+      state: getCheckState(check),
+      workflowName: check.workflowName || null,
+      detailsUrl: check.detailsUrl || null,
+    };
+  });
 }
 
 async function backendHealth() {
@@ -220,6 +234,7 @@ async function storefrontPublishAuthHealth(inventoryId) {
 async function main() {
   const blockers = [];
   const warnings = [];
+  const generatedAt = new Date().toISOString();
 
   const branch = commandOk('git', ['branch', '--show-current']);
   const head = commandOk('git', ['rev-parse', 'HEAD']);
@@ -334,9 +349,67 @@ async function main() {
   }
 
   const readyToMerge = blockers.length === 0;
+  const prMissingBodyMarkers = findMissingPrBodyMarkers(pr?.body);
+  const receipt = {
+    generatedAt,
+    branch: branch.stdout || 'unknown',
+    head: head.stdout || 'unknown',
+    upstream: upstream.stdout || 'none',
+    workingTree: status.stdout ? 'DIRTY' : 'clean',
+    backend: {
+      healthOk: Boolean(health?.ok),
+      healthStatus: health?.status || null,
+      database: health?.body?.database || null,
+      responseTime: health?.body?.responseTime || null,
+      unauthenticatedPublishCatalogProtected: Boolean(backendPublishAuth?.ok),
+      unauthenticatedPublishCatalogStatus: backendPublishAuth?.status || null,
+    },
+    admin: {
+      shellOk: Boolean(adminHealth?.ok),
+      shellStatus: adminHealth?.status || null,
+      bundleMarkersOk: Boolean(adminBundle?.ok),
+      bundleCount: adminBundle?.bundleCount || 0,
+      missingBundleMarkers: adminBundle?.missingMarkers || [],
+      uiVerified: adminUiVerified,
+    },
+    storefront: {
+      inventoryBridgeOk: Boolean(storefrontHealth?.ok),
+      inventoryStatus: storefrontHealth?.status || null,
+      total: storefrontHealth?.total || 0,
+      checkedItems: storefrontHealth?.itemCount || 0,
+      degraded: storefrontHealth?.degraded ?? null,
+      unauthenticatedPublishPostProtected: Boolean(storefrontPublishAuth?.ok),
+      unauthenticatedPublishPostStatus: storefrontPublishAuth?.status || null,
+    },
+    pr: pr ? {
+      number: PR_NUMBER,
+      url: pr.url,
+      state: pr.state,
+      isDraft: Boolean(pr.isDraft),
+      mergeable: pr.mergeable || 'unknown',
+      head: pr.headRefOid || null,
+      requiredChecks: REQUIRED_PR_CHECKS,
+      checks: compactChecks(pr.statusCheckRollup),
+      bodyMarkersOk: prMissingBodyMarkers.length === 0,
+      missingBodyMarkers: prMissingBodyMarkers,
+      reviews: summarizeReviews(pr.latestReviews, pr.reviewDecision),
+    } : null,
+    externalPublishApproved,
+    readyToMerge,
+    blockers,
+    warnings,
+  };
+
+  if (JSON_OUTPUT) {
+    console.log(JSON.stringify(receipt, null, 2));
+    if (STRICT && !readyToMerge) {
+      process.exit(2);
+    }
+    return;
+  }
 
   console.log('Forklift Sales Machine PR readiness receipt');
-  console.log(`Generated: ${new Date().toISOString()}`);
+  console.log(`Generated: ${generatedAt}`);
   console.log(`Branch: ${branch.stdout || 'unknown'}`);
   console.log(`HEAD: ${head.stdout || 'unknown'}`);
   console.log(`Upstream: ${upstream.stdout || 'none'}`);
