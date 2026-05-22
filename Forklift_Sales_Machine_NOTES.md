@@ -325,3 +325,5 @@
   - Verifies Inventory Publish Button payload preview through `/api/publish/:inventoryId/payload`.
 - The command accepts approved auth through `FSM_ADMIN_ACCESS_TOKEN`, `FSM_BACKEND_TOKEN`, `FSM_SERVICE_JWT`, or `FSM_ADMIN_EMAIL` plus `FSM_ADMIN_PASSWORD`; it prints no secrets.
 - Current local run correctly stops at the missing-auth gate because no approved admin credential/session env is present.
+- Updated PR #20 body to list `npm run smoke:admin-session` as the protected admin verification gate.
+- Added `npm run smoke:admin-session` to the PR-body freshness markers so the readiness receipt catches stale PR descriptions if that gate disappears from review context.

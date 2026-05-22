@@ -31,6 +31,7 @@ const REQUIRED_PR_BODY_MARKERS = [
   '11-channel',
   'backend unauthenticated Publish Button catalog protection',
   'Storefront unauthenticated Publish Button POST',
+  'npm run smoke:admin-session',
   'Remaining Gates',
   'Chris-approved target/platform/account',
 ];
