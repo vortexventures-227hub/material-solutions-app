@@ -246,3 +246,10 @@
   - Checks git cleanliness, local/upstream head match, PR #20 draft/merge/review state, backend `/health`, admin UI verification gate, and external publish approval gate.
   - Default mode exits 0 so heartbeats can report the receipt without breaking on known human/credential gates; `--strict` exits nonzero until everything is ready.
 - The receipt currently confirms backend health and PR mergeability, while correctly blocking ready/merge on draft PR state, missing review decision, missing approved admin UI session, and missing Chris-approved external publishing target/account.
+
+## 2026-05-22 13:35 EDT
+- Added Forklift Sales Machine GitHub PR checks:
+  - Backend tests via `npm ci` + `npm test` in `backend`.
+  - Admin frontend build via `npm ci` + `npm run build` in `frontend`.
+  - Storefront build via `npm ci` + `npm run build` in `materialsolutionsnj`.
+- This closes the PR readiness gap where PR #20 had no GitHub status checks despite local verification being green.
