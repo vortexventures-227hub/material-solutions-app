@@ -23,8 +23,9 @@ Production verification gates:
 - `npm run smoke:fsm-bridge` in `materialsolutionsnj` logs into FSM, fetches one listed unit, and verifies read-only Publish Button payload readiness without publishing.
 
 Current production auth finding:
-- Production backend deployment `03624fb6-0568-423b-bcfe-cf824689fb47` is live on Railway and includes the Publish Button `dryRun`/`testMode` guard.
+- Production backend deployment `77bfe922-2fe9-4588-9869-edc9cdfe4108` is live on Railway and includes the Publish Button `dryRun`/`testMode` guard plus expanded guarded manual draft channels.
 - Production admin deployment `frontend-mjgt8rhx5-vortexventures-227hubs-projects.vercel.app` is aliased at `https://frontend-one-tawny-63.vercel.app` and includes `Test Mode` / `RUN TEST` UI.
 - Production storefront deployment `materialsolutionsnj-l7lllls1p-vortexventures-227hubs-projects.vercel.app` is aliased at `https://www.materialsolutionsnj.com`.
 - Authenticated live backend dry-run smoke verified selected `materialsolutionsnj` and `facebook_marketplace` channels without mutation.
+- Authenticated live backend dry-run smoke verified `google_business_profile` returns `manual_required`, `mutationPerformed:false`, `submitDisabled:true`, and Chris-approval guardrails.
 - Full admin UI login/render verification remains blocked until an approved admin credential or authenticated browser session is available.

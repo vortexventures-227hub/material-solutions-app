@@ -64,3 +64,24 @@
 - Remaining real blocker:
   - Full live admin UI login/render verification needs an approved admin credential or existing authenticated browser session.
   - No external marketplace auto-posting should be attempted without a Chris-approved test target/platform.
+
+## 2026-05-21 23:00 EDT
+- Guarded manual draft channel expansion deployed to Railway production.
+  - Deployment ID: `77bfe922-2fe9-4588-9869-edc9cdfe4108`
+  - Status: `SUCCESS`
+  - `/health` returns HTTP 200 with DB connected.
+- Backend tests are green: `npm test -- --runInBand` in `backend` passes 39/39.
+- Local publisher manual drafts now support:
+  - Facebook Marketplace
+  - MachineryTrader
+  - EquipFinder
+  - MachineryATS
+  - eBay Business
+  - LinkedIn
+  - Google Business Profile
+  - Forkliftaction Forum
+  - YouTube
+- Manual draft receipts include `submitDisabled:true`, `mutationPerformed:false`, no-submit guardrails, and a Chris-approval review checklist.
+- Live authenticated smoke:
+  - Standard `npm run smoke:fsm-dry-run` still passes.
+  - Direct `google_business_profile` dry-run returns `manual_required`, `mutationPerformed:false`, `submitDisabled:true`, and the Chris-approval guardrail.

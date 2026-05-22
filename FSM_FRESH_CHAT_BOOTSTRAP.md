@@ -37,7 +37,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - Environment: `production`
   - Service: `vortex-forklift-api`
 - Backend production deployment succeeded.
-  - Deployment ID: `03624fb6-0568-423b-bcfe-cf824689fb47`
+  - Deployment ID: `77bfe922-2fe9-4588-9869-edc9cdfe4108`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with database connected.
 - Backend includes the Publish Button `dryRun`/`testMode` guard.
@@ -48,12 +48,16 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - `materialsolutionsnj` returns `dry_run_ready`.
   - `facebook_marketplace` returns `manual_required`.
   - `mutationPerformed:false` for checked channels.
+- Authenticated Google Business Profile dry-run verified:
+  - `google_business_profile` returns `manual_required`.
+  - `mutationPerformed:false`.
+  - Draft target includes `submitDisabled:true` and Chris-approval guardrail.
 - Draft PR is open:
   - `https://github.com/vortexventures-227hub/material-solutions-app/pull/20`
   - Branch: `codex/fsm-inventory-intake-media-20260429`
 
 ## Local Verification Already Passed
-- Backend tests: `npm test -- --runInBand` in `backend` passed 38/38.
+- Backend tests: `npm test -- --runInBand` in `backend` passed 39/39.
 - Admin frontend build: `npm run build` in `frontend` passed.
 - Admin deploy smoke: `npm run smoke:admin-deploy` in `frontend` passed against `https://frontend-one-tawny-63.vercel.app`.
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
@@ -100,6 +104,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Publish Button guarded test mode: 100%.
 - Durable draft PR/source preservation: 100%.
 - Manual draft infrastructure for non-API channels: 65-70%, depending on channel.
+- Guarded manual draft coverage now includes Facebook Marketplace, MachineryTrader, EquipFinder, MachineryATS, eBay Business, LinkedIn, Google Business Profile, Forkliftaction Forum, and YouTube via local publisher receipts with no-submit guardrails.
 
 ## What Is Not Complete Yet
 - True automatic posting to third-party marketplaces is not complete.
