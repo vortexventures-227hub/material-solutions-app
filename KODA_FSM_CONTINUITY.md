@@ -18,14 +18,14 @@ Current workstream:
 5. Replace demo/fake operator telemetry with live or explicitly degraded data.
 
 Production verification gates:
-- `npm run smoke:fsm-live` at the repo root is the preferred one-command live gate. It checks backend `/health`, runs the admin deployment smoke, pulls production storefront env into a temp file, and runs the full 10-channel Publish Button dry-run smoke.
+- `npm run smoke:fsm-live` at the repo root is the preferred one-command live gate. It checks backend `/health`, runs the admin deployment smoke, pulls production storefront env into a temp file, and runs the full 11-channel Publish Button dry-run smoke.
 - `npm run smoke:admin-deploy` in `frontend` verifies the live admin app shell and deployed Publish Button Test Mode bundle markers without requiring login.
 - `npm run check:fsm-env` in `materialsolutionsnj` confirms required local env exists without printing secrets.
 - `npm run smoke:fsm-bridge` in `materialsolutionsnj` logs into FSM, fetches one listed unit, and verifies read-only Publish Button payload readiness without publishing.
 
 Current production auth finding:
-- Production backend deployment `77bfe922-2fe9-4588-9869-edc9cdfe4108` is live on Railway and includes the Publish Button `dryRun`/`testMode` guard plus expanded guarded manual draft channels.
+- Production backend deployment `7955b2a6-9b75-43e7-a358-11db7f1aba6d` is live on Railway and includes the Publish Button `dryRun`/`testMode` guard plus Craigslist local-draft guardrails and expanded guarded manual draft channels.
 - Production admin deployment `frontend-mjgt8rhx5-vortexventures-227hubs-projects.vercel.app` is aliased at `https://frontend-one-tawny-63.vercel.app` and includes `Test Mode` / `RUN TEST` UI.
 - Production storefront deployment `materialsolutionsnj-l7lllls1p-vortexventures-227hubs-projects.vercel.app` is aliased at `https://www.materialsolutionsnj.com`.
-- Authenticated live backend dry-run smoke verifies all 10 Publish Button channels: `materialsolutionsnj` is `dry_run_ready`; the 9 manual channels are `manual_required`, `mutationPerformed:false`, `submitDisabled:true`, and include Chris-approval guardrails.
+- Authenticated live backend dry-run smoke verifies all 11 Publish Button channels: `materialsolutionsnj` is `dry_run_ready`; Craigslist plus the 9 other manual channels are `manual_required`, `mutationPerformed:false`, `submitDisabled:true`, and include Chris-approval guardrails.
 - Full admin UI login/render verification remains blocked until an approved admin credential or authenticated browser session is available.

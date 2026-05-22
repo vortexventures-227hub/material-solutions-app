@@ -11,6 +11,7 @@ const backendUrl = (
 
 const EXPECTED_CHANNELS = [
   'materialsolutionsnj',
+  'craigslist',
   'facebook_marketplace',
   'machinerytrader',
   'equipfinder',

@@ -42,11 +42,16 @@ test('Craigslist local bridge builds a paste-ready draft without mutation', asyn
   assert.equal(receipt.status, 'dry_run_ready');
   assert.equal(receipt.dryRun, true);
   assert.equal(receipt.browser.mutationPerformed, false);
+  assert.equal(receipt.browser.submitDisabled, true);
   assert.equal(receipt.inventoryId, samplePayload.inventoryId);
   assert.equal(receipt.draft.target.region, 'southjersey');
+  assert.equal(receipt.draft.target.reviewRequired, true);
+  assert.equal(receipt.draft.target.submitDisabled, true);
   assert.equal(receipt.draft.fields.price, 29500);
   assert.match(receipt.draft.fields.body, /Capacity: 4500 lbs/);
   assert.match(receipt.draft.fields.body, /https:\/\/cdn\.example\.com\/raymond-752r45tt\.jpg/);
+  assert.match(receipt.guardrails.join('\n'), /No external marketplace write/);
+  assert.match(receipt.draft.reviewChecklist.join('\n'), /Chris approves/);
 });
 
 test('Craigslist local bridge rejects live browser mutation', async () => {

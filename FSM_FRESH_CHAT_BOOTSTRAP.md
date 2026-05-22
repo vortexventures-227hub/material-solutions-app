@@ -37,7 +37,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - Environment: `production`
   - Service: `vortex-forklift-api`
 - Backend production deployment succeeded.
-  - Deployment ID: `77bfe922-2fe9-4588-9869-edc9cdfe4108`
+  - Deployment ID: `7955b2a6-9b75-43e7-a358-11db7f1aba6d`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with database connected.
 - Backend includes the Publish Button `dryRun`/`testMode` guard.
@@ -46,7 +46,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - `/api/publish/<inventoryId>/payload` returns HTTP 200.
 - Authenticated full-channel dry-run smoke verified:
   - `materialsolutionsnj` returns `dry_run_ready`.
-  - Facebook Marketplace, MachineryTrader, EquipFinder, MachineryATS, eBay Business, LinkedIn, Google Business Profile, Forkliftaction Forum, and YouTube return `manual_required`.
+  - Craigslist, Facebook Marketplace, MachineryTrader, EquipFinder, MachineryATS, eBay Business, LinkedIn, Google Business Profile, Forkliftaction Forum, and YouTube return `manual_required`.
   - `mutationPerformed:false` for checked channels.
   - Manual draft targets include `submitDisabled:true` and Chris-approval guardrails.
 - Draft PR is open:
@@ -58,12 +58,13 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Admin frontend build: `npm run build` in `frontend` passed.
 - Admin deploy smoke: `npm run smoke:admin-deploy` in `frontend` passed against `https://frontend-one-tawny-63.vercel.app`.
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
-- Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed for 10 channels when run with production FSM auth env.
-- Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, and 10-channel Publish Button dry-run checks.
+- Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed for 11 channels when run with production FSM auth env.
+- Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, and 11-channel Publish Button dry-run checks.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
 
 ## Important Local Files Changed
 - `backend/routes/publish.js`
+- `backend/services/local-publisher/craigslistBridge.js`
 - `backend/services/local-publisher/manualDraft.js`
 - `backend/routes/dashboard.js`
 - `backend/routes/analytics.js`
@@ -136,7 +137,6 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 4. Decide the next marketplace target:
    - Recommended: keep MaterialSolutionsNJ automatic as the canonical green path; implement one external channel at a time behind manual/guarded mode.
 5. Continue channel integrations in priority order:
-   - Craigslist/manual draft refresh.
    - Facebook Marketplace guarded draft.
    - eBay/OAuth feasibility.
    - Google Business Profile permissions.

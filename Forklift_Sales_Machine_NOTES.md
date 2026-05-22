@@ -83,9 +83,9 @@
   - YouTube
 - Manual draft receipts include `submitDisabled:true`, `mutationPerformed:false`, no-submit guardrails, and a Chris-approval review checklist.
 - Live authenticated smoke:
-  - `npm run smoke:fsm-dry-run` verifies all 10 Publish Button channels against production.
+  - `npm run smoke:fsm-dry-run` verifies all 11 Publish Button channels against production.
   - `materialsolutionsnj` returns `dry_run_ready`.
-  - The 9 manual channels return `manual_required`, `mutationPerformed:false`, `submitDisabled:true`, and the Chris-approval guardrail.
+  - Craigslist plus the 9 other manual channels return `manual_required`, `mutationPerformed:false`, `submitDisabled:true`, and the Chris-approval guardrail.
 
 ## 2026-05-21 23:59 EDT
 - Added repo-root aggregate live smoke command:
@@ -93,5 +93,16 @@
 - The command verifies:
   - Railway backend `/health`.
   - Admin production shell and Publish Button Test Mode bundle markers.
-  - Production-authenticated 10-channel Publish Button dry-run with no external mutation.
+  - Production-authenticated 11-channel Publish Button dry-run with no external mutation.
 - Latest run passed end to end.
+
+## 2026-05-22 00:22 EDT
+- Refreshed Craigslist guarded local-draft receipt to match the newer manual channel safety shape:
+  - `submitDisabled:true`
+  - `mutationPerformed:false`
+  - no-submit guardrails
+  - Chris-approval review checklist
+- Deployed backend to Railway production:
+  - Deployment ID: `7955b2a6-9b75-43e7-a358-11db7f1aba6d`
+  - Status: `SUCCESS`
+- `npm run smoke:fsm-live` now passes with all 11 Publish Button channels checked against production.

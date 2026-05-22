@@ -459,6 +459,8 @@ test('publish POST attaches a dry-run local publisher receipt for craigslist', a
     assert.equal(result.localPublisher.status, 'dry_run_ready');
     assert.equal(result.localPublisher.mutationPerformed, false);
     assert.equal(result.localPublisher.target.region, 'southjersey');
+    assert.equal(result.localPublisher.draft.target.submitDisabled, true);
+    assert.match(result.localPublisher.draft.reviewChecklist.join('\n'), /Chris approves/);
     assert.match(result.localPublisher.draft.fields.body, /Raymond/);
   });
 });
