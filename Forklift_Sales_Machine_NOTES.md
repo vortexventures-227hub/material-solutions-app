@@ -274,3 +274,9 @@
   - Storefront inventory bridge must return HTTP 200, `degraded:false`, and at least one inventory item.
 - This makes admin/storefront production drift block readiness instead of only being mentioned in separate smoke notes.
 - Updated the Forklift Sales Machine PR checks workflow from `actions/checkout@v4` / `actions/setup-node@v4` to current `v6` releases after GitHub reported Node 20 action-runtime deprecation warnings.
+
+## 2026-05-22 14:35 EDT
+- Expanded the repo-root PR readiness receipt to verify public storefront write-path protection:
+  - Fetches one live storefront inventory id.
+  - Sends an unauthenticated dry-run Publish Button POST to the storefront bridge.
+  - Requires HTTP 403 so public storefront requests cannot mutate or proxy publish actions.

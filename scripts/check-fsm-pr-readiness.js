@@ -100,12 +100,39 @@ async function storefrontInventoryHealth() {
   const body = await response.json().catch(() => null);
   const total = Number(body?.total || 0);
   const itemCount = Array.isArray(body?.items) ? body.items.length : 0;
+  const firstInventoryId = body?.items?.[0]?.id || null;
   return {
-    ok: response.ok && body?.degraded === false && total > 0 && itemCount > 0,
+    ok: response.ok && body?.degraded === false && total > 0 && itemCount > 0 && Boolean(firstInventoryId),
     status: response.status,
     total,
     itemCount,
     degraded: body?.degraded,
+    firstInventoryId,
+  };
+}
+
+async function storefrontPublishAuthHealth(inventoryId) {
+  if (!inventoryId) {
+    return {
+      ok: false,
+      status: 'missing_inventory_id',
+    };
+  }
+
+  const response = await fetch(`${STOREFRONT_URL}/api/publish/${inventoryId}`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      dryRun: true,
+      testMode: true,
+      platforms: ['materialsolutionsnj'],
+    }),
+  });
+  return {
+    ok: response.status === 403,
+    status: response.status,
   };
 }
 
@@ -154,6 +181,7 @@ async function main() {
   let health = null;
   let adminHealth = null;
   let storefrontHealth = null;
+  let storefrontPublishAuth = null;
   try {
     health = await backendHealth();
     if (!health.ok) {
@@ -181,6 +209,15 @@ async function main() {
     blockers.push(`storefront inventory bridge request failed: ${error.message}`);
   }
 
+  try {
+    storefrontPublishAuth = await storefrontPublishAuthHealth(storefrontHealth?.firstInventoryId);
+    if (!storefrontPublishAuth.ok) {
+      blockers.push(`storefront unauthenticated Publish Button POST expected 403 but got ${storefrontPublishAuth.status}`);
+    }
+  } catch (error) {
+    blockers.push(`storefront unauthenticated Publish Button POST request failed: ${error.message}`);
+  }
+
   const adminUiVerified = boolEnv('FSM_ADMIN_UI_VERIFIED') || boolEnv('FSM_ADMIN_UI_SESSION_READY');
   const externalPublishApproved = boolEnv('FSM_EXTERNAL_PUBLISH_APPROVED');
 
@@ -202,6 +239,7 @@ async function main() {
   console.log(`Backend health: ${health?.ok ? `OK (${health.body?.responseTime || 'healthy'}, DB ${health.body?.database})` : 'not OK'}`);
   console.log(`Admin deployment shell: ${adminHealth?.ok ? 'OK' : 'not OK'}`);
   console.log(`Storefront inventory bridge: ${storefrontHealth?.ok ? `OK (${storefrontHealth.itemCount}/${storefrontHealth.total} checked, degraded:${storefrontHealth.degraded})` : 'not OK'}`);
+  console.log(`Storefront unauthenticated Publish Button POST: ${storefrontPublishAuth?.ok ? 'OK (403 blocked)' : 'not OK'}`);
 
   if (pr) {
     console.log(`PR: #${PR_NUMBER} ${pr.url}`);
