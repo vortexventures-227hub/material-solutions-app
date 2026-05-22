@@ -37,7 +37,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - Environment: `production`
   - Service: `vortex-forklift-api`
 - Backend production deployment succeeded.
-  - Deployment ID: `7955b2a6-9b75-43e7-a358-11db7f1aba6d`
+  - Deployment ID: `d8739d89-f412-4816-b9fa-bdc6647b092d`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with database connected.
 - Backend includes the Publish Button `dryRun`/`testMode` guard.
@@ -49,6 +49,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - Craigslist, Facebook Marketplace, MachineryTrader, EquipFinder, MachineryATS, eBay Business, LinkedIn, Google Business Profile, Forkliftaction Forum, and YouTube return `manual_required`.
   - `mutationPerformed:false` for checked channels.
   - Manual draft targets include `submitDisabled:true` and Chris-approval guardrails.
+  - Facebook Marketplace dry-run includes account/page approval, category-fit, location, availability, condition, and seller-disclosure draft fields.
 - Draft PR is open:
   - `https://github.com/vortexventures-227hub/material-solutions-app/pull/20`
   - Branch: `codex/fsm-inventory-intake-media-20260429`
@@ -59,7 +60,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Admin deploy smoke: `npm run smoke:admin-deploy` in `frontend` passed against `https://frontend-one-tawny-63.vercel.app`.
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
 - Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed for 11 channels when run with production FSM auth env.
-- Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, and 11-channel Publish Button dry-run checks.
+- Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, 11-channel Publish Button dry-run checks, and Facebook Marketplace-specific draft assertions.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
 
 ## Important Local Files Changed
@@ -103,8 +104,9 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Admin frontend deployment to Vercel production: 100%.
 - Publish Button guarded test mode: 100%.
 - Durable draft PR/source preservation: 100%.
-- Manual draft infrastructure for non-API channels: 65-70%, depending on channel.
+- Manual draft infrastructure for non-API channels: 65-75%, depending on channel.
 - Guarded manual draft coverage now includes Facebook Marketplace, MachineryTrader, EquipFinder, MachineryATS, eBay Business, LinkedIn, Google Business Profile, Forkliftaction Forum, and YouTube via local publisher receipts with no-submit guardrails.
+- Facebook Marketplace guarded draft now has platform-specific account/page approval, category-fit, location, availability, condition, and seller-disclosure fields.
 
 ## What Is Not Complete Yet
 - True automatic posting to third-party marketplaces is not complete.
@@ -137,9 +139,9 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 4. Decide the next marketplace target:
    - Recommended: keep MaterialSolutionsNJ automatic as the canonical green path; implement one external channel at a time behind manual/guarded mode.
 5. Continue channel integrations in priority order:
-   - Facebook Marketplace guarded draft.
    - eBay/OAuth feasibility.
    - Google Business Profile permissions.
+   - MachineryTrader/vendor credential feasibility.
 
 ## Current Operational Rule
 Do not treat a progress update as a stopping point. After any update, continue the next highest-impact item unless blocked by missing credentials, destructive risk, or explicit Chris instruction.

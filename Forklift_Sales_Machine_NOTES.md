@@ -106,3 +106,14 @@
   - Deployment ID: `7955b2a6-9b75-43e7-a358-11db7f1aba6d`
   - Status: `SUCCESS`
 - `npm run smoke:fsm-live` now passes with all 11 Publish Button channels checked against production.
+
+## 2026-05-22 00:50 EDT
+- Added Facebook Marketplace-specific guarded draft fields:
+  - Chris-approved account/page requirement.
+  - Manual category-fit warning for forklift/equipment listings.
+  - Location, availability, condition, and seller-disclosure fields.
+  - CLI hints: `--location`, `--category-hint`, and `--account-label`.
+- Deployed backend to Railway production:
+  - Deployment ID: `d8739d89-f412-4816-b9fa-bdc6647b092d`
+  - Status: `SUCCESS`
+- `npm run smoke:fsm-live` passed and now asserts the Facebook Marketplace-specific draft shape in production.

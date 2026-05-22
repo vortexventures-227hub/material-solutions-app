@@ -357,8 +357,8 @@ const PLATFORM_CATALOG = [
     available: false,
     status: 'manual_required',
     mode: 'guarded_manual_draft',
-    completion: 60,
-    nextStep: 'Connect approved posting workflow or keep operator-reviewed drafts.',
+    completion: 65,
+    nextStep: 'Confirm Chris-approved account/page, category fit, and keep operator-reviewed drafts before any posting workflow.',
   },
   {
     key: 'machinerytrader',

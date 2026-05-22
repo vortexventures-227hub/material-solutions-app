@@ -24,7 +24,11 @@ async function main() {
     region: args.region,
     city: args.city,
     category: args.category,
+    categoryHint: args.categoryHint,
     contactPhone: args.contactPhone,
+    location: args.location,
+    accountLabel: args.accountLabel,
+    facebookAccount: args.facebookAccount,
   };
 
   if (args.platform === 'craigslist') {
@@ -49,7 +53,11 @@ function parseArgs(argv) {
     region: null,
     city: null,
     category: null,
+    categoryHint: null,
     contactPhone: null,
+    location: null,
+    accountLabel: null,
+    facebookAccount: null,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -75,6 +83,12 @@ function parseArgs(argv) {
       i += 1;
       if (key === 'contact-phone') {
         parsed.contactPhone = next;
+      } else if (key === 'category-hint') {
+        parsed.categoryHint = next;
+      } else if (key === 'account-label') {
+        parsed.accountLabel = next;
+      } else if (key === 'facebook-account') {
+        parsed.facebookAccount = next;
       } else if (Object.prototype.hasOwnProperty.call(parsed, key)) {
         parsed[key] = next;
       } else {
@@ -124,6 +138,9 @@ Options:
   --live                      Refused by design until a guarded local browser adapter is added
   --region newjersey          Craigslist region subdomain. Default: newjersey
   --category hvo              Craigslist category/search code. Default: hvo
+  --location "New Jersey"     Manual draft location hint for Facebook Marketplace
+  --category-hint text        Manual category hint for Facebook Marketplace
+  --account-label text        Chris-approved target account/page label for Facebook Marketplace
   --contact-phone number      Phone number inserted into the listing body
 `);
 }

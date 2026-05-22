@@ -25,6 +25,46 @@ const PLATFORM_LABELS = {
   youtube: 'YouTube',
 };
 
+function buildPlatformTarget(platform, options = {}) {
+  const target = {
+    postUrl: PLATFORM_TARGETS[platform] || null,
+    reviewRequired: true,
+    submitDisabled: true,
+  };
+
+  if (platform === 'facebook_marketplace') {
+    return {
+      ...target,
+      approvedAccountRequired: true,
+      accountLabel: options.accountLabel || options.facebookAccount || 'Chris-approved Facebook account/page only',
+      location: options.location || options.city || 'New Jersey',
+    };
+  }
+
+  return target;
+}
+
+function buildPlatformFields(platform, payload, specs, baseFields, options = {}) {
+  if (platform !== 'facebook_marketplace') return baseFields;
+
+  const condition = specs.condition || specs.conditionNotes || 'Used - good';
+  return {
+    ...baseFields,
+    marketplace: {
+      listingType: 'single_item',
+      categoryHint: options.categoryHint || 'Business & Industrial / material handling equipment',
+      location: options.location || options.city || 'New Jersey',
+      availability: 'in_stock',
+      condition,
+      sellerDisclosure: [
+        'Commercial forklift listing; confirm Facebook Marketplace category fit before posting',
+        'Use public MaterialSolutionsNJ inventory URL as the source of truth',
+        'Do not submit from automation or without Chris-approved account access',
+      ],
+    },
+  };
+}
+
 function buildManualPlatformDraft(platform, job, options = {}) {
   const payload = normalizePayload(job);
   const specs = payload.specs || {};
@@ -48,34 +88,42 @@ function buildManualPlatformDraft(platform, job, options = {}) {
     `Contact Material Solutions NJ: ${contactPhone}`,
   ].filter(Boolean).join('\n\n');
 
+  const baseFields = {
+    title: clamp(baseTitle, platform === 'youtube' ? 100 : 80),
+    price,
+    body: plainBody,
+    listingUrl,
+    make: specs.make || null,
+    model: specs.model || null,
+    year: specs.year || null,
+  };
+
+  const reviewChecklist = [
+    'Confirm title, price, specs, and media match the inventory record',
+    'Paste content into the target platform without using automated submit',
+  ];
+
+  if (platform === 'facebook_marketplace') {
+    reviewChecklist.push(
+      'Confirm the target Facebook account/page is approved by Chris before opening the create listing flow',
+      'Choose the closest Marketplace category manually and verify forklift/equipment policy fit',
+    );
+  }
+
+  reviewChecklist.push('Stop before final submit until Chris approves the target account/listing');
+
   return {
     platform,
     platformLabel: PLATFORM_LABELS[platform] || platform,
     inventoryId: payload.inventoryId,
-    target: {
-      postUrl: PLATFORM_TARGETS[platform] || null,
-      reviewRequired: true,
-      submitDisabled: true,
-    },
-    fields: {
-      title: clamp(baseTitle, platform === 'youtube' ? 100 : 80),
-      price,
-      body: plainBody,
-      listingUrl,
-      make: specs.make || null,
-      model: specs.model || null,
-      year: specs.year || null,
-    },
+    target: buildPlatformTarget(platform, options),
+    fields: buildPlatformFields(platform, payload, specs, baseFields, options),
     media: {
       primaryUrl: payload.media?.primaryUrl || mediaUrls[0] || null,
       urls: mediaUrls,
       publicUrlReady: Boolean(payload.media?.publicUrlReady),
     },
-    reviewChecklist: [
-      'Confirm title, price, specs, and media match the inventory record',
-      'Paste content into the target platform without using automated submit',
-      'Stop before final submit until Chris approves the target account/listing',
-    ],
+    reviewChecklist,
   };
 }
 

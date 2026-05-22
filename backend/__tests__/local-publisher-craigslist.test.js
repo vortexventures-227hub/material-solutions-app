@@ -80,16 +80,28 @@ test('local publisher CLI reads stdin and emits a receipt', async () => {
 
 test('local publisher CLI emits guarded manual drafts for non-Craigslist platforms', async () => {
   const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
-  const receipt = await execNodeJson(scriptPath, ['--platform', 'facebook_marketplace'], samplePayload);
+  const receipt = await execNodeJson(scriptPath, [
+    '--platform', 'facebook_marketplace',
+    '--location', 'Newark, NJ',
+    '--category-hint', 'Business equipment',
+    '--account-label', 'Approved MSNJ page',
+  ], samplePayload);
 
   assert.equal(receipt.platform, 'facebook_marketplace');
   assert.equal(receipt.status, 'manual_draft_ready');
   assert.equal(receipt.browser.mutationPerformed, false);
   assert.equal(receipt.browser.submitDisabled, true);
   assert.equal(receipt.draft.target.submitDisabled, true);
+  assert.equal(receipt.draft.target.approvedAccountRequired, true);
+  assert.equal(receipt.draft.target.location, 'Newark, NJ');
+  assert.equal(receipt.draft.target.accountLabel, 'Approved MSNJ page');
   assert.equal(receipt.draft.platformLabel, 'Facebook Marketplace');
+  assert.equal(receipt.draft.fields.marketplace.availability, 'in_stock');
+  assert.equal(receipt.draft.fields.marketplace.categoryHint, 'Business equipment');
+  assert.match(receipt.draft.fields.marketplace.sellerDisclosure.join('\n'), /category fit/);
   assert.match(receipt.guardrails.join('\n'), /No external marketplace write/);
   assert.match(receipt.draft.reviewChecklist.join('\n'), /Chris approves/);
+  assert.match(receipt.draft.reviewChecklist.join('\n'), /Facebook account\/page/);
   assert.match(receipt.draft.fields.body, /Photos\/details: https:\/\/www\.materialsolutionsnj\.com\/inventory\//);
 });
 
