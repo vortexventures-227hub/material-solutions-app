@@ -280,3 +280,10 @@
   - Fetches one live storefront inventory id.
   - Sends an unauthenticated dry-run Publish Button POST to the storefront bridge.
   - Requires HTTP 403 so public storefront requests cannot mutate or proxy publish actions.
+
+## 2026-05-22 14:55 EDT
+- Hardened the repo-root PR readiness receipt to require the exact expected GitHub checks:
+  - `Backend tests`
+  - `Admin frontend build`
+  - `Storefront build`
+- This prevents PR readiness from staying green if the workflow is partially removed, renamed, skipped, or otherwise stops reporting one of the required coverage gates.

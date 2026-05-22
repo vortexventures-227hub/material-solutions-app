@@ -19,6 +19,11 @@ const STOREFRONT_URL = (
 
 const PR_NUMBER = process.env.FSM_PR_NUMBER || '20';
 const STRICT = process.argv.includes('--strict');
+const REQUIRED_PR_CHECKS = [
+  'Backend tests',
+  'Admin frontend build',
+  'Storefront build',
+];
 
 function run(command, args, options = {}) {
   return spawnSync(command, args, {
@@ -63,11 +68,18 @@ function findBlockingChecks(statusCheckRollup = []) {
     return ['no GitHub status checks reported'];
   }
 
+  const observedNames = new Set(statusCheckRollup.map((check) => {
+    return check.name || check.context || check.workflowName || check.__typename || 'unknown check';
+  }));
+  const missingRequiredChecks = REQUIRED_PR_CHECKS
+    .filter((name) => !observedNames.has(name))
+    .map((name) => `required check missing: ${name}`);
+
   return statusCheckRollup.flatMap((check) => {
     const name = check.name || check.context || check.workflowName || check.__typename || 'unknown check';
     const state = getCheckState(check);
     return state === 'SUCCESS' ? [] : [`${name} is ${state}`];
-  });
+  }).concat(missingRequiredChecks);
 }
 
 function summarizeReviews(latestReviews = [], reviewDecision = '') {
@@ -245,6 +257,7 @@ async function main() {
     console.log(`PR: #${PR_NUMBER} ${pr.url}`);
     console.log(`PR state: ${pr.state}, draft:${pr.isDraft}, mergeable:${pr.mergeable || 'unknown'}`);
     console.log(`PR head: ${String(pr.headRefOid || '').slice(0, 12)}`);
+    console.log(`Required PR checks: ${REQUIRED_PR_CHECKS.join(', ')}`);
     console.log(`PR checks: ${summarizeChecks(pr.statusCheckRollup)}`);
     console.log(`PR reviews: ${summarizeReviews(pr.latestReviews, pr.reviewDecision)}`);
   }
