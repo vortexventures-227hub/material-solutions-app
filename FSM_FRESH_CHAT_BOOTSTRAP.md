@@ -55,6 +55,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 ## Local Verification Already Passed
 - Backend tests: `npm test -- --runInBand` in `backend` passed 38/38.
 - Admin frontend build: `npm run build` in `frontend` passed.
+- Admin deploy smoke: `npm run smoke:admin-deploy` in `frontend` passed against `https://frontend-one-tawny-63.vercel.app`.
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
 - Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed when run with production FSM auth env.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
@@ -73,6 +74,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - `frontend/src/pages/Settings.js`
 - `frontend/src/pages/Analytics.js`
 - `frontend/src/pages/Pipeline.js`
+- `frontend/scripts/smoke-admin-deploy.js`
 - `materialsolutionsnj/lib/fsmBackend.js`
 - `materialsolutionsnj/pages/api/inventory.js`
 - `materialsolutionsnj/pages/api/leads.js`

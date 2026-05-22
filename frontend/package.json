@@ -22,6 +22,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "smoke:admin-deploy": "node scripts/smoke-admin-deploy.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
