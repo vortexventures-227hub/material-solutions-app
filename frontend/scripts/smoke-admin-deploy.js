@@ -39,11 +39,24 @@ async function main() {
     throw new Error(`Admin bundle is missing expected Publish Button markers: ${missing.join(', ')}`);
   }
 
+  const fallbackMarkers = [
+    'manual_required',
+    'Confirm EquipFinder vendor/contact path',
+    'Confirm current MachineryATS domain/portal',
+    'Confirm approved Forkliftaction member account',
+    'Confirm channel manager approval',
+  ];
+  const missingFallback = fallbackMarkers.filter((marker) => !bundleText.includes(marker));
+  if (missingFallback.length) {
+    throw new Error(`Admin bundle is missing current Publish Button fallback markers: ${missingFallback.join(', ')}`);
+  }
+
   console.log('Forklift Sales Machine admin deployment smoke check');
   console.log(`Admin URL: ${adminUrl}`);
   console.log(`App shell: OK`);
   console.log(`Bundles checked: ${jsPaths.length}`);
   console.log('Publish Button Test Mode bundle markers: OK');
+  console.log('Publish Button fallback channel markers: OK');
 }
 
 main().catch((error) => {

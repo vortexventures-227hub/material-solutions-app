@@ -232,3 +232,10 @@
   - Alias: `https://frontend-one-tawny-63.vercel.app`
 - `npm --prefix frontend run build` passed.
 - `npm run smoke:fsm-live` passed after the admin deployment.
+
+## 2026-05-22 13:14 EDT
+- Strengthened the admin deployment smoke so it now verifies current Publish Button fallback channel markers in the live production bundle.
+  - Checks `manual_required`.
+  - Checks current fallback copy for EquipFinder, MachineryATS, Forkliftaction Forum, and YouTube.
+- `npm --prefix frontend run smoke:admin-deploy` passed.
+- `npm run smoke:fsm-live` passed with the stronger admin bundle assertion.
