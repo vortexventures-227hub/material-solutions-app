@@ -70,7 +70,7 @@
   - Deployment ID: `77bfe922-2fe9-4588-9869-edc9cdfe4108`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with DB connected.
-- Backend tests are green: `npm test -- --runInBand` in `backend` passes 43/43.
+- Backend tests are green: `npm test -- --runInBand` in `backend` passes 44/44.
 - Local publisher manual drafts now support:
   - Facebook Marketplace
   - MachineryTrader
@@ -170,3 +170,16 @@
   - Status: `SUCCESS`
 - Backend tests now pass 43/43.
 - `npm run smoke:fsm-live` passed and now asserts the LinkedIn Company Page readiness draft shape in production.
+
+## 2026-05-22 08:52 EDT
+- Added Forkliftaction Forum guarded account/rules readiness fields based on Forkliftaction forum, profile, advertising, and machine listing pages:
+  - Chris-approved Forkliftaction member account requirement.
+  - Forum profile and rules-of-conduct review requirement.
+  - Forum category and commercial intent review.
+  - Guardrail to use Machine Listing, Business Listing, or paid advertising when the goal is commercial equipment promotion.
+  - CLI hints: `--forkliftaction-account`, `--forum-category-hint`, `--preferred-commercial-path`, and `--rules-url`.
+- Deployed backend to Railway production:
+  - Deployment ID: `ebf68f0d-3594-4fbe-8aac-68a6f4edcea2`
+  - Status: `SUCCESS`
+- Backend tests now pass 44/44.
+- `npm run smoke:fsm-live` passed and now asserts the Forkliftaction Forum account/rules readiness draft shape in production.

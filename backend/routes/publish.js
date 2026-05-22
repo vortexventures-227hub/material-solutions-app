@@ -420,8 +420,8 @@ const PLATFORM_CATALOG = [
     available: false,
     status: 'manual_required',
     mode: 'guarded_manual_draft',
-    completion: 55,
-    nextStep: 'Confirm forum account and posting rules.',
+    completion: 62,
+    nextStep: 'Confirm approved Forkliftaction member account, forum profile, conduct rules, category, and whether Machine Listing/Business Listing/advertising is the correct commercial path.',
   },
   {
     key: 'youtube',

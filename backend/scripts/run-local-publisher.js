@@ -40,6 +40,11 @@ async function main() {
     linkedinOrganizationUrn: args.linkedinOrganizationUrn,
     organizationUrn: args.organizationUrn,
     audience: args.audience,
+    forumAccount: args.forumAccount,
+    forkliftactionAccount: args.forkliftactionAccount,
+    forumCategoryHint: args.forumCategoryHint,
+    preferredCommercialPath: args.preferredCommercialPath,
+    rulesUrl: args.rulesUrl,
     ebayAccount: args.ebayAccount,
     ebayEnvironment: args.ebayEnvironment,
     listingFormat: args.listingFormat,
@@ -93,6 +98,11 @@ function parseArgs(argv) {
     linkedinOrganizationUrn: null,
     organizationUrn: null,
     audience: null,
+    forumAccount: null,
+    forkliftactionAccount: null,
+    forumCategoryHint: null,
+    preferredCommercialPath: null,
+    rulesUrl: null,
     ebayAccount: null,
     ebayEnvironment: null,
     listingFormat: null,
@@ -159,6 +169,16 @@ function parseArgs(argv) {
         parsed.organizationUrn = next;
       } else if (key === 'audience') {
         parsed.audience = next;
+      } else if (key === 'forum-account') {
+        parsed.forumAccount = next;
+      } else if (key === 'forkliftaction-account') {
+        parsed.forkliftactionAccount = next;
+      } else if (key === 'forum-category-hint') {
+        parsed.forumCategoryHint = next;
+      } else if (key === 'preferred-commercial-path') {
+        parsed.preferredCommercialPath = next;
+      } else if (key === 'rules-url') {
+        parsed.rulesUrl = next;
       } else if (key === 'ebay-account') {
         parsed.ebayAccount = next;
       } else if (key === 'ebay-environment') {
@@ -248,6 +268,11 @@ Options:
   --linkedin-organization-urn text  LinkedIn organization URN readiness hint
   --organization-urn text     Organization URN readiness hint for LinkedIn-style channels
   --audience text             LinkedIn audience hint. Default: public
+  --forum-account text        Chris-approved forum member account label
+  --forkliftaction-account text  Chris-approved Forkliftaction member account label
+  --forum-category-hint text  Forkliftaction forum category hint. Default: Business management
+  --preferred-commercial-path text  Forkliftaction commercial path reminder
+  --rules-url text            Forum rules/conduct URL readiness hint
   --ebay-account text         Chris-approved eBay Business seller account label
   --ebay-environment text     eBay OAuth readiness environment. Default: production
   --listing-format text       eBay listing format hint. Default: fixed_price

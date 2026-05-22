@@ -65,6 +65,18 @@ function buildPlatformTarget(platform, options = {}) {
     };
   }
 
+  if (platform === 'forkliftaction_forum') {
+    return {
+      ...target,
+      approvedAccountRequired: true,
+      forumRulesReviewRequired: true,
+      accountLabel: options.accountLabel || options.forumAccount || options.forkliftactionAccount || 'Chris-approved Forkliftaction member account only',
+      forumProfileRequired: true,
+      preferredCommercialPath: options.preferredCommercialPath || 'Machine Listing or Business Listing, not discussion spam',
+      rulesUrl: options.rulesUrl || 'https://www.forkliftaction.com/forum/discussion-forums.aspx',
+    };
+  }
+
   if (platform === 'ebay') {
     return {
       ...target,
@@ -221,6 +233,38 @@ function buildPlatformFields(platform, payload, specs, baseFields, options = {})
     };
   }
 
+  if (platform === 'forkliftaction_forum') {
+    return {
+      ...baseFields,
+      forkliftactionForum: {
+        postType: options.postType || 'discussion_or_reply',
+        forumCategoryHint: options.forumCategoryHint || options.categoryHint || 'Business management',
+        commercialIntentReviewRequired: true,
+        rulesReviewRequired: true,
+        moderationRisk: 'Commercial listings may belong in Machine Listing, Business Listing, or paid advertising paths instead of discussion threads',
+        allowedCommercialAlternatives: [
+          'Machine Listing',
+          'Business Listing',
+          'Paid Forkliftaction advertising',
+        ],
+        accountReadiness: {
+          required: true,
+          requiredSteps: [
+            'Register or log in as an approved member',
+            'Set up the forum profile',
+            'Review rules of conduct before posting',
+            'Choose Start a Discussion or Post a Reply only when the post adds legitimate discussion value',
+          ],
+        },
+        sellerDisclosure: [
+          'Do not use Forkliftaction forums as direct inventory advertising unless rules and moderators allow it',
+          'If the goal is to sell equipment, use Machine Listing, Business Listing, or advertising channels instead of forum spam',
+          'Do not post until Chris approves the member account, category, wording, and commercial intent',
+        ],
+      },
+    };
+  }
+
   if (platform === 'google_business_profile') {
     return {
       ...baseFields,
@@ -328,6 +372,14 @@ function buildManualPlatformDraft(platform, job, options = {}) {
       'Confirm the target LinkedIn Company Page and administrator account are approved by Chris',
       'Confirm Marketing Developer Platform access and organization social posting scopes before any API call',
       'Use a Company Page update pointing to the inventory URL; do not post from a personal profile unless explicitly approved',
+    );
+  }
+
+  if (platform === 'forkliftaction_forum') {
+    reviewChecklist.push(
+      'Confirm the Forkliftaction member account, forum profile, and selected category are approved by Chris',
+      'Review Forkliftaction rules of conduct and confirm the post is discussion-appropriate before posting',
+      'Use Machine Listing, Business Listing, or paid advertising paths when the intent is commercial listing promotion',
     );
   }
 

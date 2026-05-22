@@ -37,7 +37,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - Environment: `production`
   - Service: `vortex-forklift-api`
 - Backend production deployment succeeded.
-  - Deployment ID: `3c1e462d-e990-4107-9095-f5a54ae42345`
+  - Deployment ID: `ebf68f0d-3594-4fbe-8aac-68a6f4edcea2`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with database connected.
 - Backend includes the Publish Button `dryRun`/`testMode` guard.
@@ -53,18 +53,19 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - MachineryTrader dry-run includes dealer/advertiser approval, Sandhills Dealer Portal/feed readiness, listing package, billing/contact, forklift category, and inventory sync guardrails.
   - eBay Business dry-run includes OAuth readiness, seller account approval, business policy, category, condition, and fulfillment draft fields.
   - LinkedIn dry-run includes Company Page admin approval, organization URN, Marketing Developer Platform access, organization social posting scope readiness, and no-personal-profile guardrails.
+  - Forkliftaction Forum dry-run includes member account approval, forum profile/rules review, category selection, commercial intent review, and Machine Listing/Business Listing/advertising path guardrails.
   - Google Business Profile dry-run includes owner/manager approval, `business.manage` OAuth readiness, accountId/locationId, Local Post, CTA, and no-Product-Posts API guardrails.
 - Draft PR is open:
   - `https://github.com/vortexventures-227hub/material-solutions-app/pull/20`
   - Branch: `codex/fsm-inventory-intake-media-20260429`
 
 ## Local Verification Already Passed
-- Backend tests: `npm test -- --runInBand` in `backend` passed 43/43.
+- Backend tests: `npm test -- --runInBand` in `backend` passed 44/44.
 - Admin frontend build: `npm run build` in `frontend` passed.
 - Admin deploy smoke: `npm run smoke:admin-deploy` in `frontend` passed against `https://frontend-one-tawny-63.vercel.app`.
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
 - Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed for 11 channels when run with production FSM auth env.
-- Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, 11-channel Publish Button dry-run checks, Facebook Marketplace-specific draft assertions, MachineryTrader vendor credential assertions, eBay OAuth/business-policy readiness assertions, LinkedIn Company Page readiness assertions, and Google Business Profile permission readiness assertions.
+- Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, 11-channel Publish Button dry-run checks, Facebook Marketplace-specific draft assertions, MachineryTrader vendor credential assertions, eBay OAuth/business-policy readiness assertions, LinkedIn Company Page readiness assertions, Forkliftaction Forum account/rules readiness assertions, and Google Business Profile permission readiness assertions.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
 
 ## Important Local Files Changed
@@ -114,6 +115,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - MachineryTrader guarded draft now has dealer/advertiser approval, Sandhills Dealer Portal/feed readiness, listing package, billing/contact, forklift category, and inventory sync fields.
 - eBay Business guarded draft now has seller account approval, OAuth readiness, required scope, category, business policy, condition, and fulfillment fields.
 - LinkedIn guarded draft now has Company Page admin approval, organization URN, Marketing Developer Platform access, organization social posting scope readiness, destination URL, and no-personal-profile guardrails.
+- Forkliftaction Forum guarded draft now has member account approval, forum profile/rules review, category selection, commercial intent review, and Machine Listing/Business Listing/advertising path guardrails.
 - Google Business Profile guarded draft now has owner/manager approval, `business.manage` OAuth readiness, accountId/locationId, Local Post, CTA, language, media, and Product Posts unsupported guardrail fields.
 
 ## What Is Not Complete Yet
@@ -147,9 +149,9 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 4. Decide the next marketplace target:
    - Recommended: keep MaterialSolutionsNJ automatic as the canonical green path; implement one external channel at a time behind manual/guarded mode.
 5. Continue channel integrations in priority order:
-   - Forkliftaction Forum account/rules feasibility.
    - EquipFinder/vendor credential feasibility.
    - MachineryATS/vendor credential feasibility.
+   - YouTube video asset/upload readiness.
 
 ## Current Operational Rule
 Do not treat a progress update as a stopping point. After any update, continue the next highest-impact item unless blocked by missing credentials, destructive risk, or explicit Chris instruction.

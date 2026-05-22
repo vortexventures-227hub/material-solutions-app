@@ -209,6 +209,28 @@ test('local publisher CLI emits LinkedIn company page readiness fields without m
   assert.match(receipt.draft.reviewChecklist.join('\n'), /organization social posting scopes/);
 });
 
+test('local publisher CLI emits Forkliftaction Forum rules readiness fields without mutation', async () => {
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
+  const receipt = await execNodeJson(scriptPath, [
+    '--platform', 'forkliftaction_forum',
+    '--forkliftaction-account', 'Approved MSNJ Forkliftaction member',
+    '--forum-category-hint', 'Business management',
+    '--preferred-commercial-path', 'Machine Listing',
+  ], samplePayload);
+
+  assert.equal(receipt.platform, 'forkliftaction_forum');
+  assert.equal(receipt.status, 'manual_draft_ready');
+  assert.equal(receipt.browser.mutationPerformed, false);
+  assert.equal(receipt.draft.target.forumRulesReviewRequired, true);
+  assert.equal(receipt.draft.target.accountLabel, 'Approved MSNJ Forkliftaction member');
+  assert.equal(receipt.draft.target.preferredCommercialPath, 'Machine Listing');
+  assert.equal(receipt.draft.fields.forkliftactionForum.forumCategoryHint, 'Business management');
+  assert.equal(receipt.draft.fields.forkliftactionForum.commercialIntentReviewRequired, true);
+  assert.ok(receipt.draft.fields.forkliftactionForum.allowedCommercialAlternatives.includes('Machine Listing'));
+  assert.match(receipt.draft.fields.forkliftactionForum.sellerDisclosure.join('\n'), /forum spam/);
+  assert.match(receipt.draft.reviewChecklist.join('\n'), /rules of conduct/);
+});
+
 test('local publisher CLI emits Google Business Profile permission readiness fields without mutation', async () => {
   const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
   const receipt = await execNodeJson(scriptPath, [

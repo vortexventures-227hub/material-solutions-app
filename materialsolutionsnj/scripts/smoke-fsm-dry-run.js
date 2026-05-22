@@ -87,6 +87,7 @@ async function main() {
   const machineryTrader = results.find((result) => result.platform === 'machinerytrader');
   const ebay = results.find((result) => result.platform === 'ebay');
   const linkedIn = results.find((result) => result.platform === 'linkedin');
+  const forkliftactionForum = results.find((result) => result.platform === 'forkliftaction_forum');
   const googleBusinessProfile = results.find((result) => result.platform === 'google_business_profile');
   const mutated = results.filter((result) => result.mutationPerformed !== false);
   const missing = EXPECTED_CHANNELS.filter((platform) => !results.some((result) => result.platform === platform));
@@ -135,6 +136,13 @@ async function main() {
     !linkedIn.draft.fields.linkedin.oauthReadiness?.requiredScopes?.includes('w_organization_social_feed')
   ) {
     throw new Error('LinkedIn dry-run did not include guarded company page readiness fields');
+  }
+  if (
+    forkliftactionForum?.draft?.target?.forumRulesReviewRequired !== true ||
+    forkliftactionForum?.draft?.fields?.forkliftactionForum?.commercialIntentReviewRequired !== true ||
+    !forkliftactionForum.draft.fields.forkliftactionForum.allowedCommercialAlternatives?.includes('Machine Listing')
+  ) {
+    throw new Error('Forkliftaction Forum dry-run did not include guarded account/rules readiness fields');
   }
   if (
     googleBusinessProfile?.draft?.target?.oauthRequired !== true ||
