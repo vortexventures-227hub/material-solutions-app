@@ -80,7 +80,42 @@ test('local publisher CLI emits guarded manual drafts for non-Craigslist platfor
   assert.equal(receipt.platform, 'facebook_marketplace');
   assert.equal(receipt.status, 'manual_draft_ready');
   assert.equal(receipt.browser.mutationPerformed, false);
+  assert.equal(receipt.browser.submitDisabled, true);
+  assert.equal(receipt.draft.target.submitDisabled, true);
+  assert.equal(receipt.draft.platformLabel, 'Facebook Marketplace');
+  assert.match(receipt.guardrails.join('\n'), /No external marketplace write/);
+  assert.match(receipt.draft.reviewChecklist.join('\n'), /Chris approves/);
   assert.match(receipt.draft.fields.body, /Photos\/details: https:\/\/www\.materialsolutionsnj\.com\/inventory\//);
+});
+
+test('local publisher CLI supports every guarded manual draft channel', async () => {
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
+  const platforms = [
+    'facebook_marketplace',
+    'machinerytrader',
+    'equipfinder',
+    'machineryats',
+    'ebay',
+    'linkedin',
+    'google_business_profile',
+    'forkliftaction_forum',
+    'youtube',
+  ];
+
+  for (const platform of platforms) {
+    const receipt = await execNodeJson(scriptPath, ['--platform', platform], samplePayload);
+
+    assert.equal(receipt.platform, platform);
+    assert.equal(receipt.status, 'manual_draft_ready');
+    assert.equal(receipt.dryRun, true);
+    assert.equal(receipt.browser.mutationPerformed, false);
+    assert.equal(receipt.browser.submitDisabled, true);
+    assert.ok(receipt.draft.target.postUrl, `${platform} should include a target URL`);
+    assert.equal(receipt.draft.target.reviewRequired, true);
+    assert.equal(receipt.draft.target.submitDisabled, true);
+    assert.ok(receipt.draft.fields.title);
+    assert.ok(receipt.draft.fields.body);
+  }
 });
 
 function execNodeJson(scriptPath, args, input) {

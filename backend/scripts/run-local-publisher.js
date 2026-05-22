@@ -9,6 +9,10 @@ const MANUAL_DRAFT_PLATFORMS = new Set([
   'machinerytrader',
   'equipfinder',
   'machineryats',
+  'ebay',
+  'linkedin',
+  'google_business_profile',
+  'forkliftaction_forum',
   'youtube',
 ]);
 
@@ -114,7 +118,7 @@ Usage:
   curl http://localhost:5001/api/publish/<inventoryId>/payload | node backend/scripts/run-local-publisher.js
 
 Options:
-  --platform craigslist       Local publisher target. Supports craigslist, facebook_marketplace, machinerytrader, equipfinder, machineryats, youtube
+  --platform craigslist       Local publisher target. Supports craigslist, facebook_marketplace, machinerytrader, equipfinder, machineryats, ebay, linkedin, google_business_profile, forkliftaction_forum, youtube
   --input path                Read publish job JSON from a file. Defaults to stdin
   --dry-run                   Build a receipt without browser mutation. Default
   --live                      Refused by design until a guarded local browser adapter is added
