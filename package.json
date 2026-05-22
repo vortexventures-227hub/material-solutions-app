@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node backend/server.js",
     "test": "npm --prefix backend test",
+    "smoke:fsm-live": "node scripts/smoke-fsm-live.js",
     "railway:build": "npm ci --prefix backend --omit=dev"
   },
   "engines": {

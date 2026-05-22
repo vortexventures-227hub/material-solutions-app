@@ -59,6 +59,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Admin deploy smoke: `npm run smoke:admin-deploy` in `frontend` passed against `https://frontend-one-tawny-63.vercel.app`.
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
 - Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed for 10 channels when run with production FSM auth env.
+- Aggregate live smoke: `npm run smoke:fsm-live` at repo root passed backend health, admin deploy bundle, and 10-channel Publish Button dry-run checks.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
 
 ## Important Local Files Changed
@@ -85,6 +86,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - `materialsolutionsnj/pages/inventory.js`
 - `materialsolutionsnj/components/ContactForm.js`
 - `materialsolutionsnj/scripts/smoke-fsm-dry-run.js`
+- `scripts/smoke-fsm-live.js`
 - `.railwayignore`
 - `Forklift_Sales_Machine_NOTES.md`
 - `KODA_FSM_CONTINUITY.md`
@@ -124,11 +126,8 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
    - Inspect `git status --short -- . ':!frontend/build' ':!materialsolutionsnj/.next'`.
    - Commit/push any safe verification or continuity improvements to PR #20.
 2. Keep post-deploy live smoke green:
-   - Backend `/health`.
-   - Storefront `/api/inventory?limit=1`.
-   - Authenticated read-only `/api/publish/platforms`.
-   - Authenticated read-only `/api/publish/<inventoryId>/payload`.
-   - Authenticated `npm run smoke:fsm-dry-run` with production FSM auth env.
+   - Preferred one-command gate: `npm run smoke:fsm-live` at repo root.
+   - Manual fallback: backend `/health`, admin `npm run smoke:admin-deploy`, and authenticated `npm run smoke:fsm-dry-run` with production FSM auth env.
 3. Verify admin UI can login and render:
    - Dashboard Publish Button card.
    - Settings Publish Button Channels.

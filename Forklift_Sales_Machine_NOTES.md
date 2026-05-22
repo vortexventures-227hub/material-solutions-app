@@ -86,3 +86,12 @@
   - `npm run smoke:fsm-dry-run` verifies all 10 Publish Button channels against production.
   - `materialsolutionsnj` returns `dry_run_ready`.
   - The 9 manual channels return `manual_required`, `mutationPerformed:false`, `submitDisabled:true`, and the Chris-approval guardrail.
+
+## 2026-05-21 23:59 EDT
+- Added repo-root aggregate live smoke command:
+  - `npm run smoke:fsm-live`
+- The command verifies:
+  - Railway backend `/health`.
+  - Admin production shell and Publish Button Test Mode bundle markers.
+  - Production-authenticated 10-channel Publish Button dry-run with no external mutation.
+- Latest run passed end to end.

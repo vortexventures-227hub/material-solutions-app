@@ -18,6 +18,7 @@ Current workstream:
 5. Replace demo/fake operator telemetry with live or explicitly degraded data.
 
 Production verification gates:
+- `npm run smoke:fsm-live` at the repo root is the preferred one-command live gate. It checks backend `/health`, runs the admin deployment smoke, pulls production storefront env into a temp file, and runs the full 10-channel Publish Button dry-run smoke.
 - `npm run smoke:admin-deploy` in `frontend` verifies the live admin app shell and deployed Publish Button Test Mode bundle markers without requiring login.
 - `npm run check:fsm-env` in `materialsolutionsnj` confirms required local env exists without printing secrets.
 - `npm run smoke:fsm-bridge` in `materialsolutionsnj` logs into FSM, fetches one listed unit, and verifies read-only Publish Button payload readiness without publishing.
