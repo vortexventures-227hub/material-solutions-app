@@ -352,3 +352,7 @@
 - Added `npm run check:fsm-scripts` at repo root to syntax-check the FSM readiness, protected admin session smoke, and aggregate live smoke scripts.
 - Added a named GitHub PR check, `FSM script checks`, to `.github/workflows/fsm-pr-checks.yml`.
 - Expanded the repo-root PR readiness receipt to require `FSM script checks` alongside backend tests, admin frontend build, and storefront build so heartbeat-control script regressions block PR readiness.
+
+## 2026-05-22 16:41 EDT
+- Tightened the PR body freshness markers to require both `FSM script checks` and `npm run check:fsm-scripts`.
+- This makes stale PR descriptions block readiness if the script-safety gate falls out of reviewer-facing verification notes.
