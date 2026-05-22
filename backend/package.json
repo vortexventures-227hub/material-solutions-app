@@ -8,7 +8,7 @@
     "dev": "nodemon server.js",
     "migrate:phase6c-publish": "node scripts/apply-phase6c-publish-schema-repair.js",
     "local-publisher:craigslist": "node scripts/run-local-publisher.js --platform craigslist --dry-run",
-    "test": "node --test __tests__/**/*.test.js"
+    "test": "node --test __tests__/*.test.js"
   },
   "keywords": [
     "forklift",
