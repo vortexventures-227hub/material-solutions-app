@@ -364,3 +364,7 @@
 ## 2026-05-22 16:47 EDT
 - Added structured `gateActions` to the human and JSON PR readiness receipts.
 - Each remaining gate now carries an owner, action, and verification command so heartbeats can distinguish Chris-owned approval/credential gates from Koda-owned executable gates.
+
+## 2026-05-22 16:51 EDT
+- Tightened PR body and bootstrap freshness markers to require `gateActions`.
+- This keeps reviewer-facing and fresh-chat context aligned with the structured actionability fields in the readiness receipt.

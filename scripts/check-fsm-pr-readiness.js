@@ -36,6 +36,7 @@ const REQUIRED_PR_BODY_MARKERS = [
   'FSM script checks',
   'npm run check:fsm-scripts',
   'npm run smoke:admin-session',
+  'gateActions',
   'Remaining Gates',
   'Chris-approved target/platform/account',
 ];
@@ -210,6 +211,7 @@ function bootstrapFreshness(head = '') {
       'no source/deploy/CI/agent gates',
       'FSM script checks',
       'npm run check:fsm-scripts',
+      'gateActions',
     ];
     const missingMarkers = requiredMarkers.filter((marker) => !body.includes(marker));
     return {
