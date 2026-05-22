@@ -273,3 +273,4 @@
   - Admin deployment shell must return HTTP 200 and the React root marker.
   - Storefront inventory bridge must return HTTP 200, `degraded:false`, and at least one inventory item.
 - This makes admin/storefront production drift block readiness instead of only being mentioned in separate smoke notes.
+- Updated the Forklift Sales Machine PR checks workflow from `actions/checkout@v4` / `actions/setup-node@v4` to current `v6` releases after GitHub reported Node 20 action-runtime deprecation warnings.
