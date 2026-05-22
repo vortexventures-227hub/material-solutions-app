@@ -65,6 +65,19 @@ function buildPlatformTarget(platform, options = {}) {
     };
   }
 
+  if (platform === 'machineryats') {
+    return {
+      ...target,
+      approvedAccountRequired: true,
+      vendorCredentialRequired: true,
+      dnsVerificationRequired: true,
+      siteReachabilityReviewRequired: true,
+      accountLabel: options.accountLabel || options.machineryAtsAccount || options.vendorAccount || options.dealerAccount || 'Chris-approved MachineryATS vendor/contact only',
+      listingPath: options.machineryAtsListingPath || options.listingPath || 'MachineryATS vendor/contact workflow, if still active',
+      publicAccessStatus: options.publicAccessStatus || 'DNS resolution failed for www.machineryats.com from the verification environment; verify domain and workflow before use',
+    };
+  }
+
   if (platform === 'linkedin') {
     return {
       ...target,
@@ -286,6 +299,48 @@ function buildPlatformFields(platform, payload, specs, baseFields, options = {})
     };
   }
 
+  if (platform === 'machineryats') {
+    return {
+      ...baseFields,
+      machineryAts: {
+        listingType: options.listingType || 'vendor_reviewed_equipment_listing',
+        categoryHint: options.categoryHint || 'Forklifts / material handling equipment',
+        serviceFit: 'Unknown current public posting surface; confirm MachineryATS is active and accepts seller listings before any workflow',
+        vendorCredentialReadiness: {
+          required: true,
+          requiredSteps: [
+            'Confirm MachineryATS domain, vendor contact, or operator-provided portal is active',
+            'Confirm Chris-approved seller/dealer credentials or contact owner',
+            'Confirm whether the workflow supports manual listings, feed import, or buyer-referral submission',
+            'Confirm billing/contact ownership if the workflow requires a paid vendor package',
+          ],
+        },
+        siteReachabilityReadiness: {
+          required: true,
+          publicUrl: PLATFORM_TARGETS.machineryats,
+          observedStatus: options.publicAccessStatus || 'DNS resolution failed for www.machineryats.com from the verification environment on 2026-05-22',
+          requiredFollowUp: 'Verify the current domain/portal with Chris before treating MachineryATS as postable',
+        },
+        requiredSpecs: [
+          'make',
+          'model',
+          'year',
+          'hours',
+          'capacityLbs',
+          'mastType',
+          'powerType',
+          'condition',
+          'location',
+        ],
+        sellerDisclosure: [
+          'Do not assume MachineryATS has a reachable public posting flow, API, or active domain',
+          'Confirm vendor credentials, current portal URL, listing method, and forklift category fit before any manual listing',
+          'Use public MaterialSolutionsNJ inventory URL as the source of truth and stop before submit until Chris approves',
+        ],
+      },
+    };
+  }
+
   if (platform === 'forkliftaction_forum') {
     return {
       ...baseFields,
@@ -425,6 +480,14 @@ function buildManualPlatformDraft(platform, job, options = {}) {
       'Confirm the EquipFinder vendor/contact path is approved by Chris before opening the workflow',
       'Confirm the site is reachable from the approved browser/session and accepts seller listings for lift trucks or material handling equipment',
       'Treat EquipFinder as manual-only until vendor credentials, posting path, and service fit are confirmed',
+    );
+  }
+
+  if (platform === 'machineryats') {
+    reviewChecklist.push(
+      'Confirm the MachineryATS domain, portal URL, or vendor/contact path is still active before opening any workflow',
+      'Confirm Chris-approved seller/dealer credentials, listing method, and forklift category fit',
+      'Treat MachineryATS as manual-only until DNS/site reachability, vendor credentials, and target workflow are verified',
     );
   }
 

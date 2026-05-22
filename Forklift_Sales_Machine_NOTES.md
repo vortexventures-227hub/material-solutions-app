@@ -196,3 +196,16 @@
   - Status: `SUCCESS`
 - Backend tests now pass 45/45.
 - `npm run smoke:fsm-live` passed and now asserts the EquipFinder vendor/site readiness draft shape in production.
+
+## 2026-05-22 09:35 EDT
+- Added MachineryATS guarded vendor/DNS readiness fields:
+  - Chris-approved MachineryATS vendor/contact requirement.
+  - DNS/site reachability verification because `www.machineryats.com` did not resolve from the verification environment.
+  - Current portal URL, listing method, paid package/contact owner, and forklift category-fit verification.
+  - Guardrail against assuming an active public posting flow or API.
+  - CLI hints: `--machineryats-account`, `--machineryats-listing-path`, `--vendor-account`, and `--public-access-status`.
+- Deployed backend to Railway production:
+  - Deployment ID: `7ac74783-3c36-45e7-9fb6-c5167254bf4a`
+  - Status: `SUCCESS`
+- Backend tests now pass 46/46.
+- `npm run smoke:fsm-live` passed and now asserts the MachineryATS vendor/DNS readiness draft shape in production.

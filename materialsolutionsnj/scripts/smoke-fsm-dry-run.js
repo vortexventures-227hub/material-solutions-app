@@ -86,6 +86,7 @@ async function main() {
   const facebookMarketplace = results.find((result) => result.platform === 'facebook_marketplace');
   const machineryTrader = results.find((result) => result.platform === 'machinerytrader');
   const equipFinder = results.find((result) => result.platform === 'equipfinder');
+  const machineryAts = results.find((result) => result.platform === 'machineryats');
   const ebay = results.find((result) => result.platform === 'ebay');
   const linkedIn = results.find((result) => result.platform === 'linkedin');
   const forkliftactionForum = results.find((result) => result.platform === 'forkliftaction_forum');
@@ -131,6 +132,14 @@ async function main() {
     equipFinder.draft.fields.equipFinder.siteReachabilityReadiness?.required !== true
   ) {
     throw new Error('EquipFinder dry-run did not include guarded vendor/site readiness fields');
+  }
+  if (
+    machineryAts?.draft?.target?.vendorCredentialRequired !== true ||
+    machineryAts?.draft?.target?.dnsVerificationRequired !== true ||
+    machineryAts?.draft?.fields?.machineryAts?.vendorCredentialReadiness?.required !== true ||
+    machineryAts.draft.fields.machineryAts.siteReachabilityReadiness?.required !== true
+  ) {
+    throw new Error('MachineryATS dry-run did not include guarded vendor/DNS readiness fields');
   }
   if (
     ebay?.draft?.target?.oauthRequired !== true ||

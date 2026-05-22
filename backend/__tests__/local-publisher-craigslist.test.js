@@ -210,6 +210,31 @@ test('local publisher CLI emits EquipFinder vendor credential readiness fields w
   assert.match(receipt.draft.reviewChecklist.join('\n'), /vendor\/contact path/);
 });
 
+test('local publisher CLI emits MachineryATS vendor credential readiness fields without mutation', async () => {
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
+  const receipt = await execNodeJson(scriptPath, [
+    '--platform', 'machineryats',
+    '--machineryats-account', 'Approved MSNJ MachineryATS contact',
+    '--machineryats-listing-path', 'Verified vendor portal',
+    '--category-hint', 'Forklifts',
+    '--public-access-status', 'DNS and portal must be verified by operator',
+  ], samplePayload);
+
+  assert.equal(receipt.platform, 'machineryats');
+  assert.equal(receipt.status, 'manual_draft_ready');
+  assert.equal(receipt.browser.mutationPerformed, false);
+  assert.equal(receipt.draft.target.vendorCredentialRequired, true);
+  assert.equal(receipt.draft.target.dnsVerificationRequired, true);
+  assert.equal(receipt.draft.target.siteReachabilityReviewRequired, true);
+  assert.equal(receipt.draft.target.accountLabel, 'Approved MSNJ MachineryATS contact');
+  assert.equal(receipt.draft.target.listingPath, 'Verified vendor portal');
+  assert.equal(receipt.draft.fields.machineryAts.categoryHint, 'Forklifts');
+  assert.equal(receipt.draft.fields.machineryAts.vendorCredentialReadiness.required, true);
+  assert.equal(receipt.draft.fields.machineryAts.siteReachabilityReadiness.observedStatus, 'DNS and portal must be verified by operator');
+  assert.match(receipt.draft.fields.machineryAts.sellerDisclosure.join('\n'), /active domain/);
+  assert.match(receipt.draft.reviewChecklist.join('\n'), /DNS\/site reachability/);
+});
+
 test('local publisher CLI emits LinkedIn company page readiness fields without mutation', async () => {
   const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
   const receipt = await execNodeJson(scriptPath, [

@@ -37,6 +37,8 @@ async function main() {
     vendorAccount: args.vendorAccount,
     equipFinderAccount: args.equipFinderAccount,
     equipFinderListingPath: args.equipFinderListingPath,
+    machineryAtsAccount: args.machineryAtsAccount,
+    machineryAtsListingPath: args.machineryAtsListingPath,
     publicAccessStatus: args.publicAccessStatus,
     sourceSystem: args.sourceSystem,
     listingType: args.listingType,
@@ -99,6 +101,8 @@ function parseArgs(argv) {
     vendorAccount: null,
     equipFinderAccount: null,
     equipFinderListingPath: null,
+    machineryAtsAccount: null,
+    machineryAtsListingPath: null,
     publicAccessStatus: null,
     sourceSystem: null,
     listingType: null,
@@ -171,6 +175,10 @@ function parseArgs(argv) {
         parsed.equipFinderAccount = next;
       } else if (key === 'equipfinder-listing-path') {
         parsed.equipFinderListingPath = next;
+      } else if (key === 'machineryats-account') {
+        parsed.machineryAtsAccount = next;
+      } else if (key === 'machineryats-listing-path') {
+        parsed.machineryAtsListingPath = next;
       } else if (key === 'public-access-status') {
         parsed.publicAccessStatus = next;
       } else if (key === 'source-system') {
@@ -281,6 +289,8 @@ Options:
   --vendor-account text       Chris-approved vendor/contact account label for vendor channels
   --equipfinder-account text  Chris-approved EquipFinder vendor/contact label
   --equipfinder-listing-path text  EquipFinder listing/contact workflow reminder
+  --machineryats-account text Chris-approved MachineryATS vendor/contact label
+  --machineryats-listing-path text MachineryATS portal/contact workflow reminder
   --public-access-status text Site reachability note for guarded manual review
   --source-system text        Inventory source system label for vendor feed readiness
   --listing-type text         Vendor listing type hint. Default varies by platform

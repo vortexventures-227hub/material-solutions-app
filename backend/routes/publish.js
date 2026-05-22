@@ -384,8 +384,8 @@ const PLATFORM_CATALOG = [
     available: false,
     status: 'manual_required',
     mode: 'guarded_manual_draft',
-    completion: 60,
-    nextStep: 'Connect vendor posting credentials or keep operator-reviewed drafts.',
+    completion: 62,
+    nextStep: 'Confirm current MachineryATS domain/portal, vendor credentials, listing method, and forklift category fit before posting.',
   },
   {
     key: 'ebay',
