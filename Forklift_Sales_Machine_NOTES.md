@@ -222,3 +222,13 @@
   - Status: `SUCCESS`
 - Backend tests now pass 47/47.
 - `npm run smoke:fsm-live` passed and now asserts the YouTube video/upload readiness draft shape in production.
+
+## 2026-05-22 13:10 EDT
+- Corrected the admin Settings Publish Button fallback channel map so it matches the live backend platform catalog when `/api/publish/platforms` is unavailable.
+  - Updated manual statuses to `manual_required`.
+  - Aligned completion percentages and next steps for Facebook Marketplace, MachineryTrader, EquipFinder, MachineryATS, eBay Business, LinkedIn, Google Business Profile, Forkliftaction Forum, and YouTube.
+- Deployed admin frontend to Vercel production:
+  - Deployment: `https://frontend-mw6p7cwcy-vortexventures-227hubs-projects.vercel.app`
+  - Alias: `https://frontend-one-tawny-63.vercel.app`
+- `npm --prefix frontend run build` passed.
+- `npm run smoke:fsm-live` passed after the admin deployment.

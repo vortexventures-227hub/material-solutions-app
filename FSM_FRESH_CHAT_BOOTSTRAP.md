@@ -27,10 +27,11 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Storefront Publish Button payload bridge is live and returns complete payloads for known inventory.
 - Storefront unauthenticated Publish Button POST remains blocked with HTTP 403.
 - Admin frontend was deployed to Vercel production.
-  - Deployment: `https://frontend-mjgt8rhx5-vortexventures-227hubs-projects.vercel.app`
+  - Deployment: `https://frontend-mw6p7cwcy-vortexventures-227hubs-projects.vercel.app`
   - Alias: `https://frontend-one-tawny-63.vercel.app`
   - Bundle points to `https://vortex-forklift-api-production.up.railway.app`.
   - Bundle contains `Test Mode`, `RUN TEST`, `dryRun`, and `testMode`.
+  - Settings fallback channel map is aligned with the live backend Publish Button catalog.
 - Railway CLI access was granted by Chris on 2026-05-21.
 - Railway target verified:
   - Project: `vortex-forklift-api`
