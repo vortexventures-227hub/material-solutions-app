@@ -70,7 +70,7 @@
   - Deployment ID: `77bfe922-2fe9-4588-9869-edc9cdfe4108`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with DB connected.
-- Backend tests are green: `npm test -- --runInBand` in `backend` passes 42/42.
+- Backend tests are green: `npm test -- --runInBand` in `backend` passes 43/43.
 - Local publisher manual drafts now support:
   - Facebook Marketplace
   - MachineryTrader
@@ -156,3 +156,17 @@
   - Status: `SUCCESS`
 - Backend tests now pass 42/42.
 - `npm run smoke:fsm-live` passed and now asserts the MachineryTrader vendor credential readiness draft shape in production.
+
+## 2026-05-22 08:32 EDT
+- Added LinkedIn Company Page guarded readiness fields based on official LinkedIn Marketing API / Microsoft Learn docs:
+  - Chris-approved LinkedIn Company Page admin requirement.
+  - Organization URN readiness.
+  - Marketing Developer Platform access requirement.
+  - Organization social posting scope readiness with `w_organization_social_feed` plus compatibility scope notes.
+  - Destination URL and no-personal-profile guardrails.
+  - CLI hints: `--linkedin-account`, `--linkedin-organization-urn`, `--organization-urn`, and `--audience`.
+- Deployed backend to Railway production:
+  - Deployment ID: `3c1e462d-e990-4107-9095-f5a54ae42345`
+  - Status: `SUCCESS`
+- Backend tests now pass 43/43.
+- `npm run smoke:fsm-live` passed and now asserts the LinkedIn Company Page readiness draft shape in production.

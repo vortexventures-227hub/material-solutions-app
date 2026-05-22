@@ -186,6 +186,29 @@ test('local publisher CLI emits MachineryTrader vendor credential readiness fiel
   assert.match(receipt.draft.reviewChecklist.join('\n'), /Sandhills portal access/);
 });
 
+test('local publisher CLI emits LinkedIn company page readiness fields without mutation', async () => {
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
+  const receipt = await execNodeJson(scriptPath, [
+    '--platform', 'linkedin',
+    '--linkedin-account', 'Approved MSNJ LinkedIn page admin',
+    '--linkedin-organization-urn', 'urn:li:organization:123456',
+    '--audience', 'public',
+  ], samplePayload);
+
+  assert.equal(receipt.platform, 'linkedin');
+  assert.equal(receipt.status, 'manual_draft_ready');
+  assert.equal(receipt.browser.mutationPerformed, false);
+  assert.equal(receipt.draft.target.oauthRequired, true);
+  assert.equal(receipt.draft.target.companyPageAdminRequired, true);
+  assert.equal(receipt.draft.target.accountLabel, 'Approved MSNJ LinkedIn page admin');
+  assert.equal(receipt.draft.target.organizationUrn, 'urn:li:organization:123456');
+  assert.equal(receipt.draft.fields.linkedin.companyPageAdminRequired, true);
+  assert.equal(receipt.draft.fields.linkedin.marketingDeveloperAccessRequired, true);
+  assert.equal(receipt.draft.fields.linkedin.oauthReadiness.requiredScopes[0], 'w_organization_social_feed');
+  assert.match(receipt.draft.fields.linkedin.sellerDisclosure.join('\n'), /Company Page/);
+  assert.match(receipt.draft.reviewChecklist.join('\n'), /organization social posting scopes/);
+});
+
 test('local publisher CLI emits Google Business Profile permission readiness fields without mutation', async () => {
   const scriptPath = path.join(__dirname, '..', 'scripts', 'run-local-publisher.js');
   const receipt = await execNodeJson(scriptPath, [

@@ -402,8 +402,8 @@ const PLATFORM_CATALOG = [
     available: false,
     status: 'manual_required',
     mode: 'guarded_manual_draft',
-    completion: 55,
-    nextStep: 'Confirm target company/page posting path.',
+    completion: 62,
+    nextStep: 'Confirm LinkedIn Company Page admin, organization URN, Marketing Developer Platform access, and organization social posting scopes before API posting.',
   },
   {
     key: 'google_business_profile',

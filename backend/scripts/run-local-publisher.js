@@ -36,6 +36,10 @@ async function main() {
     portalUrl: args.portalUrl,
     sourceSystem: args.sourceSystem,
     listingType: args.listingType,
+    linkedinAccount: args.linkedinAccount,
+    linkedinOrganizationUrn: args.linkedinOrganizationUrn,
+    organizationUrn: args.organizationUrn,
+    audience: args.audience,
     ebayAccount: args.ebayAccount,
     ebayEnvironment: args.ebayEnvironment,
     listingFormat: args.listingFormat,
@@ -85,6 +89,10 @@ function parseArgs(argv) {
     portalUrl: null,
     sourceSystem: null,
     listingType: null,
+    linkedinAccount: null,
+    linkedinOrganizationUrn: null,
+    organizationUrn: null,
+    audience: null,
     ebayAccount: null,
     ebayEnvironment: null,
     listingFormat: null,
@@ -143,6 +151,14 @@ function parseArgs(argv) {
         parsed.sourceSystem = next;
       } else if (key === 'listing-type') {
         parsed.listingType = next;
+      } else if (key === 'linkedin-account') {
+        parsed.linkedinAccount = next;
+      } else if (key === 'linkedin-organization-urn') {
+        parsed.linkedinOrganizationUrn = next;
+      } else if (key === 'organization-urn') {
+        parsed.organizationUrn = next;
+      } else if (key === 'audience') {
+        parsed.audience = next;
       } else if (key === 'ebay-account') {
         parsed.ebayAccount = next;
       } else if (key === 'ebay-environment') {
@@ -228,6 +244,10 @@ Options:
   --portal-url text           Dealer portal URL readiness hint
   --source-system text        Inventory source system label for vendor feed readiness
   --listing-type text         Vendor listing type hint. Default varies by platform
+  --linkedin-account text     Chris-approved LinkedIn Company Page admin label
+  --linkedin-organization-urn text  LinkedIn organization URN readiness hint
+  --organization-urn text     Organization URN readiness hint for LinkedIn-style channels
+  --audience text             LinkedIn audience hint. Default: public
   --ebay-account text         Chris-approved eBay Business seller account label
   --ebay-environment text     eBay OAuth readiness environment. Default: production
   --listing-format text       eBay listing format hint. Default: fixed_price

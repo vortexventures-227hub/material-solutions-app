@@ -53,6 +53,18 @@ function buildPlatformTarget(platform, options = {}) {
     };
   }
 
+  if (platform === 'linkedin') {
+    return {
+      ...target,
+      approvedAccountRequired: true,
+      oauthRequired: true,
+      companyPageAdminRequired: true,
+      accountLabel: options.accountLabel || options.linkedinAccount || 'Chris-approved LinkedIn Company Page admin only',
+      organizationUrn: options.linkedinOrganizationUrn || options.organizationUrn || null,
+      apiResource: 'LinkedIn organization social posting',
+    };
+  }
+
   if (platform === 'ebay') {
     return {
       ...target,
@@ -170,6 +182,45 @@ function buildPlatformFields(platform, payload, specs, baseFields, options = {})
     };
   }
 
+  if (platform === 'linkedin') {
+    return {
+      ...baseFields,
+      linkedin: {
+        postType: options.postType || 'company_page_update',
+        audience: options.audience || 'public',
+        destinationUrl: baseFields.listingUrl,
+        organizationUrn: options.linkedinOrganizationUrn || options.organizationUrn || null,
+        companyPageAdminRequired: true,
+        marketingDeveloperAccessRequired: true,
+        oauthReadiness: {
+          required: true,
+          requiredScopes: [
+            'w_organization_social_feed',
+          ],
+          compatibilityScopes: [
+            'w_organization_social',
+            'r_organization_social',
+            'rw_organization_admin',
+          ],
+          requiredIdentifiers: [
+            'LinkedIn organization URN',
+            'Company Page admin member URN',
+          ],
+          requiredCredentials: [
+            'LINKEDIN_CLIENT_ID',
+            'LINKEDIN_CLIENT_SECRET',
+            'LINKEDIN_REFRESH_TOKEN or approved OAuth consent flow',
+          ],
+        },
+        sellerDisclosure: [
+          'Confirm Marketing Developer Platform access and the approved LinkedIn Company Page before posting',
+          'Confirm the operator is an administrator for the target organization/page',
+          'Do not call LinkedIn organization social APIs until Chris approves the page, organization URN, and OAuth scope set',
+        ],
+      },
+    };
+  }
+
   if (platform === 'google_business_profile') {
     return {
       ...baseFields,
@@ -269,6 +320,14 @@ function buildManualPlatformDraft(platform, job, options = {}) {
       'Confirm the MachineryTrader dealer/advertiser account or Sandhills portal access is approved by Chris',
       'Confirm forklift category, listing package, billing owner, contact phone, and inventory feed/manual posting path',
       'Do not upload inventory or submit listings until vendor credentials and target package are approved',
+    );
+  }
+
+  if (platform === 'linkedin') {
+    reviewChecklist.push(
+      'Confirm the target LinkedIn Company Page and administrator account are approved by Chris',
+      'Confirm Marketing Developer Platform access and organization social posting scopes before any API call',
+      'Use a Company Page update pointing to the inventory URL; do not post from a personal profile unless explicitly approved',
     );
   }
 

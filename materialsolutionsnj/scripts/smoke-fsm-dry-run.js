@@ -86,6 +86,7 @@ async function main() {
   const facebookMarketplace = results.find((result) => result.platform === 'facebook_marketplace');
   const machineryTrader = results.find((result) => result.platform === 'machinerytrader');
   const ebay = results.find((result) => result.platform === 'ebay');
+  const linkedIn = results.find((result) => result.platform === 'linkedin');
   const googleBusinessProfile = results.find((result) => result.platform === 'google_business_profile');
   const mutated = results.filter((result) => result.mutationPerformed !== false);
   const missing = EXPECTED_CHANNELS.filter((platform) => !results.some((result) => result.platform === platform));
@@ -127,6 +128,13 @@ async function main() {
     !ebay.draft.fields.ebay.oauthReadiness?.requiredScopes?.includes('sell.inventory')
   ) {
     throw new Error('eBay dry-run did not include guarded OAuth/business policy readiness fields');
+  }
+  if (
+    linkedIn?.draft?.target?.companyPageAdminRequired !== true ||
+    linkedIn?.draft?.fields?.linkedin?.marketingDeveloperAccessRequired !== true ||
+    !linkedIn.draft.fields.linkedin.oauthReadiness?.requiredScopes?.includes('w_organization_social_feed')
+  ) {
+    throw new Error('LinkedIn dry-run did not include guarded company page readiness fields');
   }
   if (
     googleBusinessProfile?.draft?.target?.oauthRequired !== true ||
