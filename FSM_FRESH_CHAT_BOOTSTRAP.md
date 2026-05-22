@@ -20,30 +20,43 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 ## Current Verified State
 - Storefront production auth is fixed.
 - Vercel storefront production is live.
+  - Deployment: `https://materialsolutionsnj-l7lllls1p-vortexventures-227hubs-projects.vercel.app`
+  - Alias: `https://www.materialsolutionsnj.com`
 - `https://www.materialsolutionsnj.com/api/inventory?limit=1` returns HTTP 200, live FSM inventory, `degraded:false`, total 6.
 - Dynamic inventory detail pages are live.
 - Storefront Publish Button payload bridge is live and returns complete payloads for known inventory.
+- Storefront unauthenticated Publish Button POST remains blocked with HTTP 403.
 - Admin frontend was deployed to Vercel production.
-  - Deployment: `https://frontend-1ykdthvna-vortexventures-227hubs-projects.vercel.app`
+  - Deployment: `https://frontend-mjgt8rhx5-vortexventures-227hubs-projects.vercel.app`
   - Alias: `https://frontend-one-tawny-63.vercel.app`
   - Bundle points to `https://vortex-forklift-api-production.up.railway.app`.
+  - Bundle contains `Test Mode`, `RUN TEST`, `dryRun`, and `testMode`.
 - Railway CLI access was granted by Chris on 2026-05-21.
 - Railway target verified:
   - Project: `vortex-forklift-api`
   - Environment: `production`
   - Service: `vortex-forklift-api`
 - Backend production deployment succeeded.
-  - Deployment ID: `14d6c60c-75d0-499a-b3c2-536c4c50ebf1`
+  - Deployment ID: `03624fb6-0568-423b-bcfe-cf824689fb47`
   - Status: `SUCCESS`
   - `/health` returns HTTP 200 with database connected.
+- Backend includes the Publish Button `dryRun`/`testMode` guard.
 - Authenticated read-only smoke verified:
   - `/api/publish/platforms` returns 11 Publish Button channels.
   - `/api/publish/<inventoryId>/payload` returns HTTP 200.
+- Authenticated dry-run smoke verified:
+  - `materialsolutionsnj` returns `dry_run_ready`.
+  - `facebook_marketplace` returns `manual_required`.
+  - `mutationPerformed:false` for checked channels.
+- Draft PR is open:
+  - `https://github.com/vortexventures-227hub/material-solutions-app/pull/20`
+  - Branch: `codex/fsm-inventory-intake-media-20260429`
 
 ## Local Verification Already Passed
-- Backend tests: `npm test -- --runInBand` in `backend` passed 37/37.
+- Backend tests: `npm test -- --runInBand` in `backend` passed 38/38.
 - Admin frontend build: `npm run build` in `frontend` passed.
 - Storefront build: `npm run build` in `materialsolutionsnj` passed.
+- Storefront live dry-run smoke: `npm run smoke:fsm-dry-run` in `materialsolutionsnj` passed when run with production FSM auth env.
 - Naming sweep found no active "Push Button" leaks in source paths checked.
 
 ## Important Local Files Changed
@@ -68,6 +81,8 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - `materialsolutionsnj/pages/inventory/[id].js`
 - `materialsolutionsnj/pages/inventory.js`
 - `materialsolutionsnj/components/ContactForm.js`
+- `materialsolutionsnj/scripts/smoke-fsm-dry-run.js`
+- `.railwayignore`
 - `Forklift_Sales_Machine_NOTES.md`
 - `KODA_FSM_CONTINUITY.md`
 - `FSM_PRODUCTION_AUTH.md`
@@ -80,6 +95,8 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - Backend read-only payload route: 100%.
 - Backend deployment to Railway production: 100%.
 - Admin frontend deployment to Vercel production: 100%.
+- Publish Button guarded test mode: 100%.
+- Durable draft PR/source preservation: 100%.
 - Manual draft infrastructure for non-API channels: 65-70%, depending on channel.
 
 ## What Is Not Complete Yet
@@ -95,27 +112,27 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - Forkliftaction Forum
   - YouTube
 - End-to-end write-path verification from admin UI through live backend should continue, but use caution: do read-only checks first and do not publish externally without Chris-approved test target/platform.
-- Durable commit/PR state still needs cleanup so deployed code is preserved in GitHub, not only Railway/Vercel direct deploys.
+- Full admin UI login/render verification is blocked until Chris provides an approved admin credential or an authenticated browser session.
+- Draft PR #20 still needs review/approval before marking ready or merging.
 
 ## Next Highest-Impact Work
-1. Preserve source state:
+1. Keep source/PR state current:
    - Inspect `git status --short -- . ':!frontend/build' ':!materialsolutionsnj/.next'`.
-   - Commit the source changes on the current branch or open/update a PR if Chris approves.
-2. Run post-deploy live smoke:
+   - Commit/push any safe verification or continuity improvements to PR #20.
+2. Keep post-deploy live smoke green:
    - Backend `/health`.
    - Storefront `/api/inventory?limit=1`.
    - Authenticated read-only `/api/publish/platforms`.
    - Authenticated read-only `/api/publish/<inventoryId>/payload`.
+   - Authenticated `npm run smoke:fsm-dry-run` with production FSM auth env.
 3. Verify admin UI can login and render:
    - Dashboard Publish Button card.
    - Settings Publish Button Channels.
    - Inventory Publish Modal payload preview.
+   - Requires approved admin credential/session.
 4. Decide the next marketplace target:
    - Recommended: keep MaterialSolutionsNJ automatic as the canonical green path; implement one external channel at a time behind manual/guarded mode.
-5. Build a safe test-publish mode:
-   - Add `dryRun`/`testMode` affordance to live admin flow if missing.
-   - Ensure external platforms cannot receive accidental writes.
-6. Continue channel integrations in priority order:
+5. Continue channel integrations in priority order:
    - Craigslist/manual draft refresh.
    - Facebook Marketplace guarded draft.
    - eBay/OAuth feasibility.
@@ -131,4 +148,3 @@ Any closeout for this project should include:
 - Wiki pages loaded:
 - Prior work loaded:
 - Decision changed by memory:
-
