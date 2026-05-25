@@ -65,6 +65,8 @@ const REQUIRED_ADMIN_FALLBACK_MARKERS = [
   'Confirm approved Forkliftaction member account',
   'Confirm channel manager approval',
 ];
+const FETCH_RETRY_ATTEMPTS = Number(process.env.FSM_READINESS_FETCH_RETRIES || 3);
+const FETCH_RETRY_DELAY_MS = Number(process.env.FSM_READINESS_FETCH_RETRY_DELAY_MS || 750);
 
 function run(command, args, options = {}) {
   return spawnSync(command, args, {
@@ -86,6 +88,26 @@ function commandOk(command, args) {
 
 function boolEnv(name) {
   return ['1', 'true', 'yes', 'y'].includes(String(process.env[name] || '').trim().toLowerCase());
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withFetchRetry(label, operation) {
+  let lastError = null;
+  const attempts = Math.max(1, FETCH_RETRY_ATTEMPTS);
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await sleep(FETCH_RETRY_DELAY_MS * attempt);
+      }
+    }
+  }
+  throw new Error(`${label} failed after ${attempts} attempts: ${lastError?.message || 'unknown error'}`);
 }
 
 function adminAuthAvailable() {
@@ -330,39 +352,47 @@ function nextActionFor(classifiedBlockers) {
 }
 
 async function backendHealth() {
-  const response = await fetch(`${BACKEND_URL}/health`);
-  const body = await response.json().catch(() => null);
-  return {
-    ok: response.ok && body?.status === 'ok' && body?.database === 'connected',
-    status: response.status,
-    body,
-  };
+  return withFetchRetry('backend health', async () => {
+    const response = await fetch(`${BACKEND_URL}/health`);
+    const body = await response.json().catch(() => null);
+    return {
+      ok: response.ok && body?.status === 'ok' && body?.database === 'connected',
+      status: response.status,
+      body,
+    };
+  });
 }
 
 async function backendPublishAuthHealth() {
-  const response = await fetch(`${BACKEND_URL}/api/publish/platforms`);
-  return {
-    ok: response.status === 401,
-    status: response.status,
-  };
+  return withFetchRetry('backend publish auth health', async () => {
+    const response = await fetch(`${BACKEND_URL}/api/publish/platforms`);
+    return {
+      ok: response.status === 401,
+      status: response.status,
+    };
+  });
 }
 
 async function adminDeployHealth() {
-  const response = await fetch(ADMIN_URL);
-  const body = await response.text().catch(() => '');
-  return {
-    ok: response.ok && body.includes('<div id="root"></div>'),
-    status: response.status,
-  };
+  return withFetchRetry('admin deployment shell', async () => {
+    const response = await fetch(ADMIN_URL);
+    const body = await response.text().catch(() => '');
+    return {
+      ok: response.ok && body.includes('<div id="root"></div>'),
+      status: response.status,
+    };
+  });
 }
 
 async function fetchAdminText(path) {
-  const response = await fetch(`${ADMIN_URL}${path}`);
-  const body = await response.text().catch(() => '');
-  if (!response.ok) {
-    throw new Error(`${path} failed with HTTP ${response.status}`);
-  }
-  return body;
+  return withFetchRetry(`admin deployment ${path}`, async () => {
+    const response = await fetch(`${ADMIN_URL}${path}`);
+    const body = await response.text().catch(() => '');
+    if (!response.ok) {
+      throw new Error(`${path} failed with HTTP ${response.status}`);
+    }
+    return body;
+  });
 }
 
 async function adminBundleHealth() {
@@ -389,19 +419,21 @@ async function adminBundleHealth() {
 }
 
 async function storefrontInventoryHealth() {
-  const response = await fetch(`${STOREFRONT_URL}/api/inventory?limit=1`);
-  const body = await response.json().catch(() => null);
-  const total = Number(body?.total || 0);
-  const itemCount = Array.isArray(body?.items) ? body.items.length : 0;
-  const firstInventoryId = body?.items?.[0]?.id || null;
-  return {
-    ok: response.ok && body?.degraded === false && total > 0 && itemCount > 0 && Boolean(firstInventoryId),
-    status: response.status,
-    total,
-    itemCount,
-    degraded: body?.degraded,
-    firstInventoryId,
-  };
+  return withFetchRetry('storefront inventory bridge', async () => {
+    const response = await fetch(`${STOREFRONT_URL}/api/inventory?limit=1`);
+    const body = await response.json().catch(() => null);
+    const total = Number(body?.total || 0);
+    const itemCount = Array.isArray(body?.items) ? body.items.length : 0;
+    const firstInventoryId = body?.items?.[0]?.id || null;
+    return {
+      ok: response.ok && body?.degraded === false && total > 0 && itemCount > 0 && Boolean(firstInventoryId),
+      status: response.status,
+      total,
+      itemCount,
+      degraded: body?.degraded,
+      firstInventoryId,
+    };
+  });
 }
 
 async function storefrontPublishAuthHealth(inventoryId) {
@@ -412,16 +444,18 @@ async function storefrontPublishAuthHealth(inventoryId) {
     };
   }
 
-  const response = await fetch(`${STOREFRONT_URL}/api/publish/${inventoryId}`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      dryRun: true,
-      testMode: true,
-      platforms: ['materialsolutionsnj'],
-    }),
+  const response = await withFetchRetry('storefront publish auth health', () => {
+    return fetch(`${STOREFRONT_URL}/api/publish/${inventoryId}`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        dryRun: true,
+        testMode: true,
+        platforms: ['materialsolutionsnj'],
+      }),
+    });
   });
   return {
     ok: response.status === 403,

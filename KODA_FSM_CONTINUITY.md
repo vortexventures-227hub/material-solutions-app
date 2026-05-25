@@ -42,3 +42,5 @@ Recent continuity updates:
 - Current PR head after that update is `27f3a67`; required PR checks are green and readiness remains human-gated on PR draft/review, approved admin auth, and approved external publish target/account.
 - 2026-05-24 23:34 EDT: added `scripts/assert-fsm-platform-feasibility.js` and wired it into `npm run check:fsm-scripts`.
 - The platform assertion checks all 47 expected rows, connection-mode values, and the not-all-automatic guardrail so the feasibility matrix cannot silently drift.
+- 2026-05-24 23:52 EDT: added bounded live-fetch retries to `scripts/check-fsm-pr-readiness.js` after repeated transient admin deployment fetch failures during heartbeat checks.
+- `scripts/assert-fsm-readiness-contract.js` now statically requires `withFetchRetry` and `FSM_READINESS_FETCH_RETRIES` so the retry behavior stays in the readiness gate.

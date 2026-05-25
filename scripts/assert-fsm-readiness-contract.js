@@ -14,6 +14,8 @@ const requiredSnippets = [
   "owner: 'Koda'",
   "approved admin auth appears available",
   "Chris-approved external publish target appears available",
+  "withFetchRetry",
+  "FSM_READINESS_FETCH_RETRIES",
   "REQUIRED_PR_BODY_MARKERS",
   "assert-fsm-platform-feasibility",
   "FSM_PLATFORM_CONNECTION_FEASIBILITY.md",

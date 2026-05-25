@@ -383,3 +383,8 @@
 - Added `scripts/assert-fsm-platform-feasibility.js` and wired it into `npm run check:fsm-scripts`.
 - The assertion checks all 47 expected platform rows, connection-mode values, and the not-all-automatic guardrail in `FSM_PLATFORM_CONNECTION_FEASIBILITY.md`.
 - Tightened PR body and bootstrap freshness markers to require `assert-fsm-platform-feasibility`.
+
+## 2026-05-24 23:52 EDT
+- Added bounded fetch retries to `scripts/check-fsm-pr-readiness.js` for backend, admin, and storefront live probes after repeated transient admin deployment fetch failures during heartbeat checks.
+- The retry behavior is configurable with `FSM_READINESS_FETCH_RETRIES` and `FSM_READINESS_FETCH_RETRY_DELAY_MS`.
+- `scripts/assert-fsm-readiness-contract.js` now requires the retry helper and retry env marker so script-safety checks catch accidental removal.
