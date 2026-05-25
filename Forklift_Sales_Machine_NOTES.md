@@ -372,3 +372,9 @@
 ## 2026-05-22 16:55 EDT
 - Added `scripts/assert-fsm-readiness-contract.js` and wired it into `npm run check:fsm-scripts`.
 - The script statically asserts the expected `gateActions` IDs, Chris/Koda ownership branches, and agent-actionable readiness messages without requiring live credentials or deploy checks in CI.
+
+## 2026-05-24 23:17 EDT
+- Added `FSM_PLATFORM_CONNECTION_FEASIBILITY.md` and linked it from the fresh-chat bootstrap.
+- It maps the 47-platform registry scope into `automatic`, `api_or_feed`, `partner_or_portal`, and `guarded_manual` connection modes.
+- Important distinction: all 47 entries are connectable as Forklift Sales Machine destinations, but not all are safe fully automatic public posting targets.
+- Pushed PR #20 to `27f3a67`; GitHub checks are green for `FSM script checks`, `Backend tests`, `Admin frontend build`, and `Storefront build`.
