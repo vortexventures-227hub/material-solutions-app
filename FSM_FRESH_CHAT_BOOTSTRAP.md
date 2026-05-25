@@ -59,6 +59,10 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
   - Forkliftaction Forum dry-run includes member account approval, forum profile/rules review, category selection, commercial intent review, and Machine Listing/Business Listing/advertising path guardrails.
   - Google Business Profile dry-run includes owner/manager approval, `business.manage` OAuth readiness, accountId/locationId, Local Post, CTA, and no-Product-Posts API guardrails.
   - YouTube dry-run includes channel manager approval, OAuth upload scope, video asset readiness, metadata, privacy, made-for-kids, quota, and API audit/private-upload guardrails.
+- The 47-platform registry scope is clarified in `FSM_PLATFORM_CONNECTION_FEASIBILITY.md`:
+  - All 47 entries are connectable as Forklift Sales Machine destinations.
+  - They are not all safely connectable as fully automatic public posting targets.
+  - Valid connection modes are `automatic`, `api_or_feed`, `partner_or_portal`, and `guarded_manual`.
 - Draft PR is open:
   - `https://github.com/vortexventures-227hub/material-solutions-app/pull/20`
   - Branch: `codex/fsm-inventory-intake-media-20260429`
@@ -113,6 +117,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 - `.github/workflows/fsm-pr-checks.yml`
 - `.railwayignore`
 - `Forklift_Sales_Machine_NOTES.md`
+- `FSM_PLATFORM_CONNECTION_FEASIBILITY.md`
 - `KODA_FSM_CONTINUITY.md`
 - `FSM_PRODUCTION_AUTH.md`
 
@@ -140,6 +145,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
 
 ## What Is Not Complete Yet
 - True automatic posting to third-party marketplaces is not complete.
+- Full 47-platform coverage is not the same as full auto-posting; see `FSM_PLATFORM_CONNECTION_FEASIBILITY.md`.
 - Marketplace credential/OAuth/API integrations still need per-channel work:
   - Facebook Marketplace
   - MachineryTrader
@@ -170,6 +176,7 @@ Continue completing the Forklift Sales Machine backend/admin/storefront system f
    - Requires approved admin credential/session.
 5. Decide the next marketplace target:
    - Recommended: keep MaterialSolutionsNJ automatic as the canonical green path; implement one external channel at a time behind manual/guarded mode.
+   - Use `FSM_PLATFORM_CONNECTION_FEASIBILITY.md` to choose whether a target should be `automatic`, `api_or_feed`, `partner_or_portal`, or `guarded_manual`.
 6. Continue external channel work only after Chris approves a real target account/platform. Current safe manual readiness coverage is complete for the listed 11 Publish Button channels.
 
 ## Current Operational Rule
