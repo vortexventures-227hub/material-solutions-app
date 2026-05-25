@@ -378,3 +378,8 @@
 - It maps the 47-platform registry scope into `automatic`, `api_or_feed`, `partner_or_portal`, and `guarded_manual` connection modes.
 - Important distinction: all 47 entries are connectable as Forklift Sales Machine destinations, but not all are safe fully automatic public posting targets.
 - Pushed PR #20 to `27f3a67`; GitHub checks are green for `FSM script checks`, `Backend tests`, `Admin frontend build`, and `Storefront build`.
+
+## 2026-05-24 23:34 EDT
+- Added `scripts/assert-fsm-platform-feasibility.js` and wired it into `npm run check:fsm-scripts`.
+- The assertion checks all 47 expected platform rows, connection-mode values, and the not-all-automatic guardrail in `FSM_PLATFORM_CONNECTION_FEASIBILITY.md`.
+- Tightened PR body and bootstrap freshness markers to require `assert-fsm-platform-feasibility`.

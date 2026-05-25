@@ -40,3 +40,5 @@ Recent continuity updates:
 - 2026-05-24 23:17 EDT: added `FSM_PLATFORM_CONNECTION_FEASIBILITY.md` and linked it from `FSM_FRESH_CHAT_BOOTSTRAP.md`.
 - The 47-platform registry scope now has a durable source-of-truth matrix that distinguishes connectable destinations from fully automatic public posting targets.
 - Current PR head after that update is `27f3a67`; required PR checks are green and readiness remains human-gated on PR draft/review, approved admin auth, and approved external publish target/account.
+- 2026-05-24 23:34 EDT: added `scripts/assert-fsm-platform-feasibility.js` and wired it into `npm run check:fsm-scripts`.
+- The platform assertion checks all 47 expected rows, connection-mode values, and the not-all-automatic guardrail so the feasibility matrix cannot silently drift.
