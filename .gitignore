@@ -2,15 +2,18 @@
 node_modules/
 frontend/node_modules/
 backend/node_modules/
+materialsolutionsnj/node_modules/
 
 # Environment
 .env
 .env.local
+.env*.local
 .env.production
 
 # Build output
 frontend/build/
 frontend/dist/
+materialsolutionsnj/.next/
 
 # Logs
 *.log

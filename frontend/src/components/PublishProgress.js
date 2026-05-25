@@ -1,10 +1,10 @@
 import React from 'react';
-import { Loader2, CheckCircle2, AlertCircle, Mail } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, Mail, ShieldCheck } from 'lucide-react';
 
 /**
  * PublishProgress — shows real-time publish status
  */
-export default function PublishProgress({ progress, platforms, emailsSent, emailsQueued }) {
+export default function PublishProgress({ progress, platforms, emailsSent, emailsQueued, testMode = false }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
@@ -12,10 +12,10 @@ export default function PublishProgress({ progress, platforms, emailsSent, email
       <div className="relative bg-vortex-dark w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-2 border-vortex-yellow/30 overflow-hidden p-6">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-vortex-yellow/10 border-2 border-vortex-yellow mb-4">
-            <Loader2 size={32} className="text-vortex-yellow animate-spin" />
+            {testMode ? <ShieldCheck size={32} className="text-vortex-yellow" /> : <Loader2 size={32} className="text-vortex-yellow animate-spin" />}
           </div>
-          <h2 className="font-display text-2xl text-vortex-yellow tracking-widest uppercase">Publishing in Progress</h2>
-          <p className="text-gray-400 text-sm mt-1">Please wait while we distribute your listing...</p>
+          <h2 className="font-display text-2xl text-vortex-yellow tracking-widest uppercase">{testMode ? 'Publish Test Running' : 'Publishing in Progress'}</h2>
+          <p className="text-gray-400 text-sm mt-1">{testMode ? 'Checking selected channels without live writes.' : 'Please wait while we distribute your listing...'}</p>
         </div>
 
         {/* Platform Progress */}
@@ -72,7 +72,7 @@ export default function PublishProgress({ progress, platforms, emailsSent, email
         )}
 
         <div className="text-center">
-          <p className="text-gray-500 text-[10px] uppercase tracking-[0.2em]">Estimated time: 2-3 minutes</p>
+          <p className="text-gray-500 text-[10px] uppercase tracking-[0.2em]">{testMode ? 'No external submit' : 'Estimated time: 2-3 minutes'}</p>
         </div>
       </div>
     </div>

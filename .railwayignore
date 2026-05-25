@@ -1,0 +1,9 @@
+.git
+.vercel
+node_modules
+backend/node_modules
+frontend
+materialsolutionsnj
+docs
+*.log
+*.png

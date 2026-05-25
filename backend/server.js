@@ -16,6 +16,7 @@ const db = require('./db');
 
 // Initialize Express app
 const app = express();
+app.locals.db = db;
 
 // ─── Request ID Middleware ────────────────────────────────────────────────────
 app.use((req, res, next) => {

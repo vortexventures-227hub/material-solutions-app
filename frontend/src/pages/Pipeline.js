@@ -12,6 +12,13 @@ const PIPELINE_STAGES = [
   { key: 'sold', label: 'Closed', icon: <CheckCircle2 size={18} />, color: 'neon-green', description: 'Sold' },
 ];
 
+function rowsFromResponse(payload, collectionKey) {
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.[collectionKey])) return payload[collectionKey];
+  if (Array.isArray(payload)) return payload;
+  return [];
+}
+
 const Pipeline = () => {
   const [inventory, setInventory] = useState([]);
   const [leads, setLeads] = useState([]);
@@ -35,14 +42,14 @@ const Pipeline = () => {
 
         if (invRes.status === 'fulfilled') {
           const invData = invRes.value?.data;
-          setInventory(Array.isArray(invData?.inventory) ? invData.inventory : Array.isArray(invData) ? invData : []);
+          setInventory(rowsFromResponse(invData, 'inventory'));
         } else {
           console.error('Error fetching inventory:', invRes.reason);
         }
 
         if (leadsRes.status === 'fulfilled') {
           const leadsData = leadsRes.value?.data;
-          setLeads(Array.isArray(leadsData?.leads) ? leadsData.leads : Array.isArray(leadsData) ? leadsData : []);
+          setLeads(rowsFromResponse(leadsData, 'leads'));
         } else {
           console.error('Error fetching leads:', leadsRes.reason);
         }
@@ -79,12 +86,13 @@ const Pipeline = () => {
       }
       return safeInventory.filter((item) => {
         const matchesStage = item.status === stageKey;
+        const matchesSelected = !selectedItem || item.id === selectedItem;
         const matchesSearch = !q ||
           item.make?.toLowerCase().includes(q) ||
           item.model?.toLowerCase().includes(q) ||
           item.serial?.toLowerCase().includes(q) ||
           String(item.id || '').includes(searchQuery);
-        return matchesStage && matchesSearch;
+        return matchesStage && matchesSelected && matchesSearch;
       });
     } catch (err) {
       console.error('Error filtering pipeline stage:', stageKey, err);

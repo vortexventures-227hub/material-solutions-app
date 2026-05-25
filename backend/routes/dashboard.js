@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+function isOptionalDashboardSchemaError(err) {
+  return err && ['42P01', '42703', '23514'].includes(err.code);
+}
+
+async function optionalDashboardQuery(label, fn, fallbackRows = []) {
+  try {
+    return { result: await fn(), warning: null };
+  } catch (err) {
+    if (!isOptionalDashboardSchemaError(err)) throw err;
+    console.warn(`Dashboard optional surface ${label} unavailable: ${err.message}`);
+    return { result: { rows: fallbackRows }, warning: `${label} unavailable` };
+  }
+}
+
 // GET /kpis - Dashboard metrics
 router.get('/kpis', async (req, res, next) => {
   try {
@@ -46,6 +60,35 @@ router.get('/kpis', async (req, res, next) => {
        ORDER BY score DESC, created_at DESC
        LIMIT 3`
     );
+
+    const publishSummary = await optionalDashboardQuery('inventory_listings', () => db.query(
+      `SELECT
+        COUNT(*) as total,
+        COUNT(*) FILTER (WHERE status = 'published') as published,
+        COUNT(*) FILTER (WHERE status = 'manual_required') as manual_required,
+        COUNT(*) FILTER (WHERE status = 'failed') as failed
+       FROM inventory_listings`
+    ), [{ total: 0, published: 0, manual_required: 0, failed: 0 }]);
+
+    const manualPublishQueue = await optionalDashboardQuery('inventory_listings queue', () => db.query(
+      `SELECT
+        il.inventory_id,
+        il.platform,
+        il.status,
+        il.platform_url,
+        il.sync_error,
+        il.updated_at,
+        i.year,
+        i.make,
+        i.model
+       FROM inventory_listings il
+       LEFT JOIN inventory i ON i.id = il.inventory_id
+       WHERE il.status IN ('manual_required', 'failed', 'publishing')
+       ORDER BY il.updated_at DESC NULLS LAST, il.published_at DESC NULLS LAST
+       LIMIT 5`
+    ));
+
+    const ps = publishSummary.result.rows[0] || {};
     
     res.json({
       inventory: {
@@ -62,8 +105,17 @@ router.get('/kpis', async (req, res, next) => {
         avg_score: parseInt(leadsResult.rows[0].avg_score || 0),
         conversion_rate: parseFloat(conversionRate)
       },
+      publishing: {
+        total: parseInt(ps.total || 0),
+        published: parseInt(ps.published || 0),
+        manual_required: parseInt(ps.manual_required || 0),
+        failed: parseInt(ps.failed || 0),
+        degraded: !!publishSummary.warning,
+        warning: publishSummary.warning,
+      },
       recentListings: recentListings.rows,
       hotLeads: hotLeads.rows,
+      manualPublishQueue: manualPublishQueue.result.rows,
       timestamp: new Date().toISOString()
     });
   } catch (error) {

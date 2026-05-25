@@ -58,8 +58,8 @@ function schemaError(message, code = '42703') {
 
 test('dashboard KPIs do not require inventory.updated_at', async () => {
   const app = buildApp(async (sql) => {
-    assert.doesNotMatch(sql, /updated_at/);
-    if (/COUNT\(\*\) as total/.test(sql) && /FROM inventory/.test(sql)) {
+    assert.doesNotMatch(sql, /\binventory\.updated_at\b|\bi\.updated_at\b/);
+    if (/COUNT\(\*\) as total/.test(sql) && /FROM inventory\b/.test(sql)) {
       return { rows: [{ total: '1', listed: '1', sold: '0', revenue_30d: '0' }] };
     }
     if (/FROM leads/.test(sql) && /AVG\(score\)/.test(sql)) {
@@ -71,6 +71,11 @@ test('dashboard KPIs do not require inventory.updated_at', async () => {
     if (/FROM leads/.test(sql) && /LIMIT 3/.test(sql)) {
       return { rows: [] };
     }
+    if (/FROM inventory_listings/.test(sql)) {
+      const err = new Error('relation "inventory_listings" does not exist');
+      err.code = '42P01';
+      throw err;
+    }
     throw new Error(`Unexpected query: ${sql}`);
   });
 
@@ -79,6 +84,9 @@ test('dashboard KPIs do not require inventory.updated_at', async () => {
     assert.equal(res.status, 200, res.raw);
     assert.equal(res.body.inventory.total, 1);
     assert.equal(res.body.recentListings.length, 1);
+    assert.equal(res.body.publishing.degraded, true);
+    assert.equal(res.body.publishing.published, 0);
+    assert.deepEqual(res.body.manualPublishQueue, []);
   });
 });
 
@@ -88,6 +96,8 @@ test('analytics overview degrades when optional marketplace/email tables are mis
     if (/COUNT\(\*\) as total FROM inventory/.test(sql)) return { rows: [{ total: '1' }] };
     if (/email_recipients/.test(sql)) throw schemaError('relation "email_recipients" does not exist', '42P01');
     if (/inventory_listings/.test(sql)) throw schemaError('relation "inventory_listings" does not exist', '42P01');
+    if (/marketplace_analytics/.test(sql)) throw schemaError('relation "marketplace_analytics" does not exist', '42P01');
+    if (/GROUP BY COALESCE\(NULLIF\(source/.test(sql)) return { rows: [] };
     if (/email_sequences/.test(sql)) throw schemaError('relation "email_sequences" does not exist', '42P01');
     throw new Error(`Unexpected query: ${sql}`);
   });
@@ -97,8 +107,12 @@ test('analytics overview degrades when optional marketplace/email tables are mis
     assert.equal(res.status, 200, res.raw);
     assert.equal(res.body.kpis.totalInventory, 1);
     assert.equal(res.body.kpis.emailsSent, 0);
+    assert.equal(res.body.kpis.totalListingViews, 0);
+    assert.equal(res.body.kpis.marketplaceInquiries, 0);
+    assert.equal(res.body.kpis.leadsGenerated, 0);
     assert.equal(res.body.degraded, true);
     assert.deepEqual(res.body.platformBreakdown, []);
+    assert.deepEqual(res.body.leadSourceBreakdown, []);
   });
 });
 

@@ -62,6 +62,8 @@ function buildCraigslistDraft(payload, options = {}) {
       region,
       category,
       postUrl: `https://${region}.craigslist.org/search/${category}`,
+      reviewRequired: true,
+      submitDisabled: true,
     },
     fields: {
       title: clamp(normalized.title, 70),
@@ -74,6 +76,11 @@ function buildCraigslistDraft(payload, options = {}) {
       year: normalized.specs.year || null,
     },
     media: normalized.media,
+    reviewChecklist: [
+      'Confirm title, price, specs, and media match the inventory record',
+      'Paste content into Craigslist without using automated submit',
+      'Stop before final submit until Chris approves the target account/listing',
+    ],
   };
 }
 
@@ -97,6 +104,7 @@ async function runCraigslistBridge(job, options = {}) {
     browser: {
       mode: 'local_runner_required',
       mutationPerformed: false,
+      submitDisabled: true,
       plannedAutomation: [
         'Open local Brave profile manually or via future Playwright adapter',
         'Navigate to Craigslist create-post flow',
@@ -104,6 +112,11 @@ async function runCraigslistBridge(job, options = {}) {
         'Stop before submit for human review',
       ],
     },
+    guardrails: [
+      'No external marketplace write is performed by this receipt',
+      'No browser submit/click automation is enabled',
+      'Operator must get approval before final Craigslist submission',
+    ],
     draft,
   };
 

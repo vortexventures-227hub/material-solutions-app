@@ -132,6 +132,51 @@ test('publish POST with empty platforms is a no-op after inventory lookup', asyn
   });
 });
 
+test('publish POST dryRun returns selected channel readiness without write side effects', async () => {
+  const calls = [];
+  const app = buildApp(async (sql) => {
+    calls.push(sql);
+    if (/SELECT \* FROM inventory WHERE id/.test(sql)) {
+      return {
+        rows: [{
+          id: 'ddeb41d4-5261-4851-9324-e2f09ea8f807',
+          year: 2018,
+          make: 'Toyota',
+          model: '8FGCU25',
+          listing_price: '22500.00',
+          condition_notes: 'Clean used pneumatic forklift ready for review.',
+          images: ['https://cdn.example.com/forklift.jpg'],
+          status: 'intake',
+        }],
+      };
+    }
+    throw new Error(`Dry-run publish should not write optional Phase 6C tables or inventory status: ${sql}`);
+  });
+
+  await withServer(app, async (server) => {
+    const res = await request(server, 'POST', '/api/publish/ddeb41d4-5261-4851-9324-e2f09ea8f807', {
+      platforms: ['materialsolutionsnj', 'facebook_marketplace'],
+      options: {},
+      dryRun: true,
+      testMode: true,
+    });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.dryRun, true);
+    assert.equal(res.body.testMode, true);
+    assert.equal(res.body.results.length, 2);
+    assert.equal(res.body.results[0].platform, 'materialsolutionsnj');
+    assert.equal(res.body.results[0].status, 'dry_run_ready');
+    assert.equal(res.body.results[0].mutationPerformed, false);
+    assert.equal(res.body.results[1].platform, 'facebook_marketplace');
+    assert.equal(res.body.results[1].status, 'manual_required');
+    assert.equal(res.body.results[1].manualPasteRequired, true);
+    assert.equal(res.body.results[1].mutationPerformed, false);
+    assert.equal(calls.length, 1);
+    assert.equal(calls.filter((sql) => /INSERT|UPDATE|inventory_listings|inventory_seo|marketplace_analytics/.test(sql)).length, 0);
+  });
+});
+
 test('publish POST falls back to migration 006 SEO columns when legacy SEO columns drift', async () => {
   const calls = [];
   const valuesBySql = [];
@@ -370,6 +415,8 @@ test('publish POST returns not_implemented and manualPasteRequired:true for face
     assert.equal(result.status, 'not_implemented');
     assert.equal(result.manualPasteRequired, true);
     assert.equal(result.url, null);
+    assert.equal(result.draft.platform, 'facebook_marketplace');
+    assert.match(result.draft.fields.body, /Photos\/details: https:\/\/www\.materialsolutionsnj\.com\/inventory\//);
   });
 });
 
@@ -412,6 +459,8 @@ test('publish POST attaches a dry-run local publisher receipt for craigslist', a
     assert.equal(result.localPublisher.status, 'dry_run_ready');
     assert.equal(result.localPublisher.mutationPerformed, false);
     assert.equal(result.localPublisher.target.region, 'southjersey');
+    assert.equal(result.localPublisher.draft.target.submitDisabled, true);
+    assert.match(result.localPublisher.draft.reviewChecklist.join('\n'), /Chris approves/);
     assert.match(result.localPublisher.draft.fields.body, /Raymond/);
   });
 });
@@ -430,17 +479,101 @@ test('publish GET /platforms returns platform payload and is not treated as inve
     assert.equal(dbCalls, 0);
     assert.ok(Array.isArray(res.body.platforms));
     assert.ok(res.body.platforms.length > 0);
+    assert.ok(res.body.platforms.every((platform) => typeof platform.completion === 'number'));
+    assert.ok(res.body.platforms.every((platform) => platform.label));
+    assert.ok(res.body.platforms.every((platform) => platform.nextStep));
     assert.deepEqual(
       res.body.platforms.map((platform) => platform.key),
       [
+        'materialsolutionsnj',
         'craigslist',
         'facebook_marketplace',
         'machinerytrader',
         'equipfinder',
         'machineryats',
+        'ebay',
+        'linkedin',
+        'google_business_profile',
+        'forkliftaction_forum',
         'youtube',
       ]
     );
+  });
+});
+
+test('publish POST records MaterialSolutionsNJ website listing with live URL', async () => {
+  const app = buildApp(async (sql) => {
+    if (/SELECT \* FROM inventory WHERE id/.test(sql)) {
+      return {
+        rows: [{
+          id: 'ddeb41d4-5261-4851-9324-e2f09ea8f807',
+          year: 2018,
+          make: 'Raymond',
+          model: '752R45TT',
+          listing_price: '29500.00',
+          images: ['https://cdn.example.com/raymond.jpg'],
+          status: 'intake',
+        }],
+      };
+    }
+    if (/INSERT INTO inventory_seo/.test(sql)) return { rows: [] };
+    if (/UPDATE inventory SET status/.test(sql)) return { rows: [] };
+    if (/INSERT INTO inventory_listings/.test(sql)) return { rows: [{ id: 'listing-1' }] };
+    if (/UPDATE inventory_listings/.test(sql)) return { rows: [] };
+    throw new Error(`Unexpected query: ${sql}`);
+  });
+
+  await withServer(app, async (server) => {
+    const res = await request(server, 'POST', '/api/publish/ddeb41d4-5261-4851-9324-e2f09ea8f807', {
+      platforms: ['materialsolutionsnj'],
+      options: {},
+    });
+
+    assert.equal(res.status, 200);
+    const result = res.body.results[0];
+    assert.equal(result.platform, 'materialsolutionsnj');
+    assert.equal(result.status, 'published');
+    assert.equal(result.mock, false);
+    assert.equal(result.url, 'https://www.materialsolutionsnj.com/inventory/ddeb41d4-5261-4851-9324-e2f09ea8f807');
+  });
+});
+
+test('publish retry POST reruns one platform without publishing every channel', async () => {
+  const insertedPlatforms = [];
+  const app = buildApp(async (sql, values = []) => {
+    if (/SELECT \* FROM inventory WHERE id/.test(sql)) {
+      return {
+        rows: [{
+          id: 'ddeb41d4-5261-4851-9324-e2f09ea8f807',
+          year: 2018,
+          make: 'Raymond',
+          model: '752R45TT',
+          listing_price: '29500.00',
+          images: ['https://cdn.example.com/raymond.jpg'],
+          status: 'listed',
+        }],
+      };
+    }
+    if (/INSERT INTO inventory_seo/.test(sql)) return { rows: [] };
+    if (/UPDATE inventory SET status/.test(sql)) return { rows: [] };
+    if (/INSERT INTO inventory_listings/.test(sql)) {
+      insertedPlatforms.push(values[1]);
+      return { rows: [{ id: 'listing-1' }] };
+    }
+    if (/UPDATE inventory_listings/.test(sql)) return { rows: [] };
+    throw new Error(`Unexpected query: ${sql}`);
+  });
+
+  await withServer(app, async (server) => {
+    const res = await request(server, 'POST', '/api/publish/ddeb41d4-5261-4851-9324-e2f09ea8f807/facebook_marketplace/retry', {
+      options: { region: 'southjersey' },
+    });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.retry, true);
+    assert.equal(res.body.platform, 'facebook_marketplace');
+    assert.deepEqual(insertedPlatforms, ['facebook_marketplace']);
+    assert.equal(res.body.results[0].manualPasteRequired, true);
   });
 });
 
