@@ -15,6 +15,13 @@ const requiredSnippets = [
   "approved admin auth appears available",
   "Chris-approved external publish target appears available",
   "REQUIRED_PR_BODY_MARKERS",
+  "FSM_PLATFORM_CONNECTION_FEASIBILITY.md",
+  "47-platform registry scope",
+  "connectable as Forklift Sales Machine destinations",
+  "fully automatic public posting targets",
+  "api_or_feed",
+  "partner_or_portal",
+  "guarded_manual",
 ];
 
 const missing = requiredSnippets.filter((snippet) => !readinessScript.includes(snippet));

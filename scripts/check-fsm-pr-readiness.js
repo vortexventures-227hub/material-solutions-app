@@ -38,6 +38,13 @@ const REQUIRED_PR_BODY_MARKERS = [
   'assert-fsm-readiness-contract',
   'npm run smoke:admin-session',
   'gateActions',
+  'FSM_PLATFORM_CONNECTION_FEASIBILITY.md',
+  '47-platform registry scope',
+  'connectable as Forklift Sales Machine destinations',
+  'fully automatic public posting targets',
+  'api_or_feed',
+  'partner_or_portal',
+  'guarded_manual',
   'Remaining Gates',
   'Chris-approved target/platform/account',
 ];
@@ -214,6 +221,13 @@ function bootstrapFreshness(head = '') {
       'npm run check:fsm-scripts',
       'assert-fsm-readiness-contract',
       'gateActions',
+      'FSM_PLATFORM_CONNECTION_FEASIBILITY.md',
+      '47-platform registry scope',
+      'connectable as Forklift Sales Machine destinations',
+      'fully automatic public posting targets',
+      'api_or_feed',
+      'partner_or_portal',
+      'guarded_manual',
     ];
     const missingMarkers = requiredMarkers.filter((marker) => !body.includes(marker));
     return {
